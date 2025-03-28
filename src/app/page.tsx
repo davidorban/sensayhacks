@@ -10,58 +10,38 @@ export default function Home() {
     { name: 'Token-Guided Evolution', path: '/prototypes/TokenGuidedEvolution' },
     { name: 'Bonding Replicas', path: '/prototypes/BondingReplicas' },
     { name: 'Chatroom', path: '/prototypes/Chatroom' },
-  ];
+  ].sort((a, b) => a.name.localeCompare(b.name)); // Keep sorted
 
   return (
-    <main className="flex flex-col items-center p-8 sm:p-12 md:p-16 lg:p-24 font-[family-name:var(--font-geist-sans)]">
-      <div className="max-w-4xl w-full text-center">
-        <div className="flex justify-center mb-8">
-          <Image 
-            src="/img/sensayhacks.jpg" 
-            alt="Sensay Hacks Logo" 
-            width={200} 
-            height={100} 
-            priority 
-          />
-        </div>
-        <h1 className="text-4xl font-bold mb-6 text-gray-800">Sensay Hackathon Ideas Showcase</h1>
-        <p className="text-lg text-gray-700 mb-8">
-          This project showcases various UI prototypes for potential Sensay features, built using Next.js 14 (App Router), TypeScript, and Tailwind CSS.
-          Use the sidebar to explore the different mock prototypes.
-        </p>
-
-        <div className="mb-12 text-left inline-block">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Available Prototypes:</h2>
-          <ul className="list-disc list-inside space-y-2">
-            {prototypes.map((proto) => (
-              <li key={proto.path}>
-                <Link href={proto.path} className="text-indigo-600 hover:text-indigo-800 hover:underline">
-                  {proto.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-12 border-t border-gray-300 pt-8">
-          <p className="text-sm text-red-600 bg-red-100 border border-red-300 p-4 rounded-md shadow-sm max-w-2xl mx-auto">
-            <strong>Important Note:</strong> All interactions involving backend processes, token transactions, voice processing, or actual AI responses are <strong>simulated</strong> within the frontend for demonstration purposes.
-          </p>
-        </div>
-
+    <div className="flex-1 flex flex-col bg-gray-900 p-6"> {/* Outer Dark BG */}
+      {/* Header Area */}
+      <div className="flex justify-center mb-6">
+        <Image 
+          src="/img/sensayhacks.jpg" 
+          alt="Sensay Hacks Logo" 
+          width={180} // Slightly smaller?
+          height={90} 
+          priority 
+        />
       </div>
-      <footer className="mt-12 pt-6 border-t border-gray-200 text-center text-gray-500 text-sm">
-        <p>&copy; {new Date().getFullYear()} Sensay Hackathon Mockups. For demonstration purposes only.</p>
-        <div className="mt-2 space-x-4">
-          <Link href="/privacy" className="hover:underline hover:text-indigo-600">
-            Privacy Policy
-          </Link>
-          <span>|</span>
-          <Link href="/terms" className="hover:underline hover:text-indigo-600">
-            Terms & Conditions
-          </Link>
+      <h1 className="text-3xl font-bold mb-2 text-center text-gray-100">Sensay Hackathon Ideas Showcase</h1> {/* Light Text */}
+      <p className="text-lg text-gray-300 mb-8 text-center"> {/* Light Text */}
+        This project showcases various UI prototypes for potential Sensay features, built using Next.js 14 (App Router), TypeScript, and Tailwind CSS.
+      </p>
+
+      {/* Content Area - White Rounded Box */}
+      <div className="bg-white p-6 rounded-lg shadow-lg flex-1"> 
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">Available Prototypes:</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {prototypes.map((proto) => (
+            <Link key={proto.path} href={proto.path} className="block p-4 bg-gray-50 rounded-lg shadow hover:bg-gray-100 hover:shadow-md transition-all border border-gray-200">
+                <h3 className="text-lg font-medium text-indigo-700 mb-1">{proto.name}</h3>
+                {/* Optional: Add short description if available */}
+                <p className="text-sm text-gray-600">Explore the {proto.name.toLowerCase()} concept.</p>
+            </Link>
+          ))}
         </div>
-      </footer>
-    </main>
+      </div>
+    </div>
   );
 }
