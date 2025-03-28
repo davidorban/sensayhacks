@@ -7,7 +7,7 @@ export default function SignOutButton() {
   const supabase = createClient();
 
   const handleSignOut = async () => {
-    console.log('SignOutButton clicked'); // Add log
+    // console.log('SignOutButton clicked'); // Remove log
     await supabase.auth.signOut();
     // Force a full page reload to the home page.
     // This ensures the server renders the layout correctly for logged-out state.

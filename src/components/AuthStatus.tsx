@@ -19,7 +19,6 @@ export default function AuthStatus() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth State Change detected, session:', session);
       setSession(session);
     });
 
@@ -36,7 +35,6 @@ export default function AuthStatus() {
     );
   }
 
-  console.log('Rendering AuthStatus, session:', session);
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center space-x-3">
       {session ? (
