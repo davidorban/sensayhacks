@@ -4,17 +4,12 @@ import React, { useState } from 'react';
 
 interface McpOutput {
   status: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
-
-// Define a basic type for the expected mock output
-type MockOutputType = { 
-  [key: string]: any; // Allow any structure for the mock
-};
 
 const MCPClientPage = () => {
   const [inputData, setInputData] = useState('');
-  const [output, setOutput] = useState<MockOutputType | null>(null);
+  const [output, setOutput] = useState<McpOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleTriggerMcp = () => {
@@ -33,7 +28,7 @@ const MCPClientPage = () => {
           details: 'This is a simulated response from the MCP server.',
         },
       };
-      setOutput(mockResponse as MockOutputType);
+      setOutput(mockResponse);
       setIsLoading(false);
     }, 1500); // 1.5 second delay
   };
