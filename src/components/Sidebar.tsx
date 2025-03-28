@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import React from 'react';
+import Image from 'next/image';
 
 const Sidebar = ({ children }: { children?: React.ReactNode }) => {
   const prototypes = [
@@ -35,6 +36,16 @@ const Sidebar = ({ children }: { children?: React.ReactNode }) => {
         </ul>
       </nav>
       <div className="mt-auto">
+        {/* Logo at the bottom */}
+        <div className="mb-4">
+          <Image 
+            src="/img/sensayhacks.jpg" 
+            alt="Sensay Hacks Logo" 
+            width={200} 
+            height={50} 
+            style={{ objectFit: 'contain' }}
+          />
+        </div>
         {children}
       </div>
     </div>
