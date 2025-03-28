@@ -1,4 +1,4 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -12,10 +12,48 @@ const protectedInternalRoutesPrefix = '/prototypes';
 const requiredDomain = 'sensay.io';
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  // Create an unmodified response
+  let res = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
 
-  // Refresh session if expired - important to keep user logged in
+  // Create a Supabase client configured to use cookies
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          // If the cookie is set, update the request and response cookies
+          req.cookies.set({ name, value, ...options });
+          res = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          });
+          res.cookies.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          // If the cookie is removed, update the request and response cookies
+          req.cookies.set({ name, value: '', ...options });
+          res = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          });
+          res.cookies.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
+
+  // Refresh session if expired - important!
+  // This will also load the session into the client
   const { data: { session } } = await supabase.auth.getSession();
 
   const { pathname } = req.nextUrl;
@@ -52,7 +90,7 @@ export async function middleware(req: NextRequest) {
 
   // Allow access to any other authenticated routes (should not be any currently based on logic)
   console.log(`Middleware: Allowing access to ${pathname} for ${userEmail} (default)`);
-  return res;
+  return res; // Return the potentially modified response
 }
 
 // Configure the middleware to run on specific paths
