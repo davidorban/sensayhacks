@@ -46,10 +46,10 @@ const ChatroomPage = () => {
       timestamp,
     };
 
-    let currentMessages = [...messages, userMessage];
+    const currentMessages = [...messages, userMessage];
 
     // Mock responses from selected replicas
-    selectedReplicas.forEach((replicaId, index) => {
+    selectedReplicas.forEach((replicaId) => {
       const replica = availableReplicas.find(r => r.id === replicaId);
       if (replica) {
         const replicaResponse: ChatMessage = {
