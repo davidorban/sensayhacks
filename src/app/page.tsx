@@ -19,15 +19,14 @@ export default function Home() {
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6"> {/* Outer Dark BG */}
       {/* Header Area */}
-      <div className="flex justify-center mb-6">
-        <Image 
-          src="/img/sensayhacks.jpg" 
-          alt="Sensay Hacks Logo" 
-          width={180} // Slightly smaller?
-          height={90} 
-          priority 
-        />
-      </div>
+      <Image 
+        className="mx-auto mb-8"
+        src="/img/sensayhacks.jpg" 
+        alt="Sensay Hacks Logo" 
+        width={180} // Slightly smaller?
+        height={90} 
+        priority 
+      />
       {/* Remove wrapper div and Login Link */}
       <h1 className="text-3xl font-bold mb-2 text-center text-gray-100">Sensay Hackathon Ideas Showcase</h1>
       <p className="text-lg text-gray-300 mb-8 text-center"> {/* Light Text */}
