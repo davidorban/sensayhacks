@@ -14,6 +14,7 @@ We are using a consistent **dark theme** inspired by modern IDEs and development
 -   **Accent/Buttons:** Indigo (`bg-indigo-600`, `hover:bg-indigo-700`, `text-white`) is used for primary action buttons to draw attention.
 -   **Sidebar Background:** Dark gray (`bg-gray-800`).
 -   **Sidebar Text:** White/Light Gray (`text-white`, `text-gray-300`, `hover:text-gray-100`).
+-   **Input Fields:** Ensure text within input fields (`<input>`, `<textarea>`) is black (`text-black`) for optimal visibility against the default white background of these elements.
 
 ## Layout Principles
 
