@@ -2,15 +2,10 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
-interface McpOutput {
-  status: string;
-  data: Record<string, unknown>;
-}
-
 const MCPClientPage = () => {
   const [toolName, setToolName] = useState<string>(''); // Name of the MCP tool to invoke
   const [inputData, setInputData] = useState<string>(''); // Input data for the tool (as JSON string)
-  const [apiKey, setApiKey] = useState<string>(''); // Placeholder for potential MCP auth/config
+  const [apiKey, ] = useState<string>(''); // Placeholder for potential MCP auth/config
   const [response, setResponse] = useState<unknown | null>(null); // Store MCP response
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +25,7 @@ const MCPClientPage = () => {
     let parsedInputData: object;
     try {
       parsedInputData = JSON.parse(inputData);
-    } catch (parseError) {
+    } catch (_parseError) {
       setError('Invalid JSON in Input Data.');
       setIsLoading(false);
       return;
@@ -52,7 +47,7 @@ const MCPClientPage = () => {
 
       const data = await apiResponse.json();
       setResponse(data);
-    } catch (error) {
+    } catch (_error) {
       setError('Failed to invoke MCP tool.');
     } finally {
       setIsLoading(false);
@@ -115,10 +110,18 @@ const MCPClientPage = () => {
           {isLoading && (
             <p className="text-gray-500 italic">Processing request...</p>
           )}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{error}</span>
+            </div>
+          )}
           {response && (
-            <pre className="bg-gray-100 p-3 rounded-md text-sm text-gray-800 overflow-x-auto"><code>{JSON.stringify(response, null, 2)}</code></pre>
+            <pre className="bg-gray-100 p-3 rounded-md text-sm text-gray-800 overflow-x-auto">
+              <code>{response !== null ? JSON.stringify(response, null, 2) : 'Invalid Response'}</code>
+            </pre>
           )} 
-          {!isLoading && !response && (
+          {!isLoading && !response && !error && (
              <p className="text-gray-500 italic">Output will appear here after invoking MCP tool.</p>
           )}
         </div>
