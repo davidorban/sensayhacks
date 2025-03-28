@@ -52,7 +52,7 @@ const MCPClientPage = () => {
       // Stringify the response safely for rendering
       try {
         setResponseString(JSON.stringify(data, null, 2));
-      } catch (stringifyError) {
+      } catch { // No need for the variable if it's unused
         // Handle potential circular references or other stringify issues
         setError('Failed to stringify the response data.');
         setResponseString('[Error: Could not display response]');
