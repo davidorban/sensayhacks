@@ -7,6 +7,7 @@ const MCPClientPage = () => {
   const [inputData, setInputData] = useState<string>(''); // Input data for the tool (as JSON string)
   const [apiKey, ] = useState<string>(''); // Placeholder for potential MCP auth/config
   const [response, setResponse] = useState<unknown | null>(null); // Store MCP response
+  const [responseString, setResponseString] = useState<string | null>(null); // Store stringified response for rendering
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,6 +16,7 @@ const MCPClientPage = () => {
     setIsLoading(true);
     setError(null);
     setResponse(null);
+    setResponseString(null); // Clear previous response string
 
     if (!toolName || !inputData) {
       setError('Tool Name and Input Data cannot be empty.');
@@ -47,7 +49,15 @@ const MCPClientPage = () => {
 
       const data = await apiResponse.json();
       setResponse(data);
-    } catch {
+      // Stringify the response safely for rendering
+      try {
+        setResponseString(JSON.stringify(data, null, 2));
+      } catch (stringifyError) {
+        // Handle potential circular references or other stringify issues
+        setError('Failed to stringify the response data.');
+        setResponseString('[Error: Could not display response]');
+      }
+    } catch { // No need for the error variable if it's unused
       setError('Failed to invoke MCP tool.');
     } finally {
       setIsLoading(false);
@@ -116,12 +126,12 @@ const MCPClientPage = () => {
                 <span className="block sm:inline">{error}</span>
             </div>
           )}
-          {response && (
+          {response !== null && (
             <pre className="bg-gray-100 p-3 rounded-md text-sm text-gray-800 overflow-x-auto">
-              <code>{response !== null ? JSON.stringify(response, null, 2) : 'Invalid Response'}</code>
+              <code>{responseString}</code>
             </pre>
           )} 
-          {!isLoading && !response && !error && (
+          {!isLoading && responseString === null && !error && (
              <p className="text-gray-500 italic">Output will appear here after invoking MCP tool.</p>
           )}
         </div>
