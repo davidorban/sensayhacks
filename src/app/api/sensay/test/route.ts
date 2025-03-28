@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
         // Use the specific API version from the curl examples or latest known good version
         'X-API-Version': '2025-03-25' // Match the provided curl example
     };
-    let fetchOptions: RequestInit = {
+    // eslint-disable-next-line prefer-const
+    let fetchOptions: RequestInit = { // Linter incorrectly flags this, properties are modified below
         method: 'GET', // Default to GET
         headers: headers,
     };

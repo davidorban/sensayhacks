@@ -10,6 +10,16 @@ interface Replica {
     // Add other relevant fields from the API response if needed
 }
 
+// Define structure for the request body sent to our backend API
+interface TestApiRequestBody {
+    action: 'listReplicas' | 'createChatCompletion';
+    secret: string;
+    userId?: string;
+    replicaId?: string;
+    content?: string;
+    replicaSearchTerm?: string;
+}
+
 const SensayApiTestPage = () => {
     // Input States
     const [apiSecret, setApiSecret] = useState<string>('');
@@ -30,22 +40,27 @@ const SensayApiTestPage = () => {
         setError(null);
         setApiResponse(null); // Clear previous response
 
-        let requestBody: any = {
-            action: action,
-            secret: apiSecret,
-        };
+        let requestBody: TestApiRequestBody;
 
-        if (action === 'listReplicas') {
-            requestBody.replicaSearchTerm = replicaSearch;
-        } else if (action === 'createChatCompletion') {
+        if (action === 'createChatCompletion') {
             if (!selectedReplicaId || !userId || !chatContent) {
                 setError('Replica ID, User ID, and Chat Content are required for chat completion.');
                 setIsLoading(false);
                 return;
             }
-            requestBody.replicaId = selectedReplicaId;
-            requestBody.userId = userId;
-            requestBody.content = chatContent;
+            requestBody = {
+                action: action,
+                secret: apiSecret,
+                replicaId: selectedReplicaId,
+                userId: userId,
+                content: chatContent,
+            };
+        } else { // action === 'listReplicas'
+            requestBody = {
+                action: action,
+                secret: apiSecret,
+                replicaSearchTerm: replicaSearch || undefined, // Send undefined if empty
+            };
         }
 
         try {
@@ -68,12 +83,12 @@ const SensayApiTestPage = () => {
                     setReplicas(data);
                     // Auto-select first replica if list is not empty
                     if (data.length > 0 && !selectedReplicaId) {
-                       setSelectedReplicaId(data[0].id);
+                        setSelectedReplicaId(data[0].id);
                     }
                 } else if (action === 'listReplicas' && data && Array.isArray(data.replicas)) { // Handle potential { replicas: [] } structure
                     setReplicas(data.replicas);
-                     if (data.replicas.length > 0 && !selectedReplicaId) {
-                       setSelectedReplicaId(data.replicas[0].id);
+                    if (data.replicas.length > 0 && !selectedReplicaId) {
+                        setSelectedReplicaId(data.replicas[0].id);
                     }
                 }
             }
@@ -118,7 +133,7 @@ const SensayApiTestPage = () => {
 
             {/* List Replicas Section */}
             <div className="space-y-4 mb-6 p-4 border rounded">
-                 <h2 className="text-lg font-semibold">1. List Replicas</h2>
+                <h2 className="text-lg font-semibold">1. List Replicas</h2>
                 <div>
                     <label htmlFor="replicaSearch" className="block text-sm font-medium text-gray-700 mb-1">Replica Search Term (Optional):</label>
                     <input
@@ -130,7 +145,7 @@ const SensayApiTestPage = () => {
                         placeholder="e.g., Marco"
                     />
                 </div>
-                 <button
+                <button
                     onClick={() => handleApiCall('listReplicas')}
                     disabled={isLoading || !apiSecret}
                     className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 flex items-center justify-center"
@@ -143,7 +158,7 @@ const SensayApiTestPage = () => {
             {/* Create Chat Completion Section */}
             <div className="space-y-4 mb-6 p-4 border rounded">
                 <h2 className="text-lg font-semibold">2. Create Chat Completion</h2>
-                 <div>
+                <div>
                     <label htmlFor="replicaSelect" className="block text-sm font-medium text-gray-700 mb-1">Select Replica ID:</label>
                     <select
                         id="replicaSelect"
@@ -159,10 +174,10 @@ const SensayApiTestPage = () => {
                             </option>
                         ))}
                     </select>
-                     {replicas.length === 0 && <p className="text-xs text-gray-500">Run "List Replicas" first to populate this dropdown.</p>}
-                 </div>
+                    {replicas.length === 0 && <p className="text-xs text-gray-500">Run &quot;List Replicas&quot; first to populate this dropdown.</p>}
+                </div>
 
-                 <div>
+                <div>
                     <label htmlFor="chatContent" className="block text-sm font-medium text-gray-700 mb-1">Chat Content:</label>
                     <textarea
                         id="chatContent"
@@ -172,19 +187,19 @@ const SensayApiTestPage = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2"
                         placeholder="Enter your message here"
                     />
-                 </div>
+                </div>
 
                 <button
                     onClick={() => handleApiCall('createChatCompletion')}
                     disabled={isLoading || !apiSecret || !userId || !selectedReplicaId || !chatContent}
                     className="px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 flex items-center justify-center"
                 >
-                     {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
                     Send Chat Completion
                 </button>
             </div>
 
-             {/* Response Area */}
+            {/* Response Area */}
             <div className="mt-6">
                 <h2 className="text-lg font-semibold mb-2">API Response:</h2>
                 {error && (
@@ -196,10 +211,10 @@ const SensayApiTestPage = () => {
                 <pre className="bg-gray-900 text-white p-4 rounded-md overflow-x-auto text-sm">
                     {isLoading ? (
                         <div className="flex items-center justify-center space-x-2">
-                             <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                             <span>Loading...</span>
-                         </div>
-                     ) : (
+                        </div>
+                    ) : (
                         apiResponse ? JSON.stringify(apiResponse, null, 2) : 'No response yet. Trigger an API call.'
                     )}
                 </pre>
