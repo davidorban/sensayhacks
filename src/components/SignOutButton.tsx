@@ -10,10 +10,9 @@ export default function SignOutButton() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    // Redirect to home page after sign out.
-    // AuthStatus component will update via onAuthStateChange.
-    router.push('/'); 
-    // router.refresh(); // Remove refresh for now
+    // Force a full page reload to the home page.
+    // This ensures the server renders the layout correctly for logged-out state.
+    window.location.assign('/'); 
   };
 
   return (
