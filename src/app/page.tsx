@@ -26,6 +26,7 @@ export default function Home() {
         width={180} // Slightly smaller?
         height={90} 
         priority 
+        unoptimized={true} 
       />
       {/* Remove wrapper div and Login Link */}
       <h1 className="text-3xl font-bold mb-2 text-center text-gray-100">Sensay Hackathon Ideas Showcase</h1>
