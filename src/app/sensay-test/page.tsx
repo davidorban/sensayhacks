@@ -116,7 +116,7 @@ const SensayApiTestPage = () => {
                         id="apiSecret"
                         value={apiSecret}
                         onChange={(e) => setApiSecret(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
                         placeholder="Paste your API Secret here"
                     />
                 </div>
@@ -127,7 +127,7 @@ const SensayApiTestPage = () => {
                         id="userId"
                         value={userId}
                         onChange={(e) => setUserId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
                         placeholder="Enter the User ID for API calls"
                     />
                 </div>
@@ -143,7 +143,7 @@ const SensayApiTestPage = () => {
                         id="replicaSearch"
                         value={replicaSearch}
                         onChange={(e) => setReplicaSearch(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2 text-black"
                         placeholder="e.g., Marco"
                     />
                 </div>
@@ -186,7 +186,7 @@ const SensayApiTestPage = () => {
                         rows={3}
                         value={chatContent}
                         onChange={(e) => setChatContent(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2 text-black"
                         placeholder="Enter your message here"
                     />
                 </div>
