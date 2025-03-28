@@ -78,17 +78,19 @@ const SensayApiTestPage = () => {
             if (!response.ok) {
                 setError(`API Error (${response.status}): ${data.error || JSON.stringify(data)}`);
             } else {
-                // If listing replicas succeeded, update the replicas state
-                if (action === 'listReplicas' && Array.isArray(data)) { // Assuming list returns an array
-                    setReplicas(data);
-                    // Auto-select first replica if list is not empty
-                    if (data.length > 0 && !selectedReplicaId) {
-                        setSelectedReplicaId(data[0].id);
-                    }
-                } else if (action === 'listReplicas' && data && Array.isArray(data.replicas)) { // Handle potential { replicas: [] } structure
-                    setReplicas(data.replicas);
-                    if (data.replicas.length > 0 && !selectedReplicaId) {
-                        setSelectedReplicaId(data.replicas[0].id);
+                // If listing replicas succeeded, parse the items array and update state
+                if (action === 'listReplicas') {
+                    if (typeof data === 'object' && data !== null && 'items' in data && Array.isArray(data.items)) {
+                        const replicaItems: Replica[] = data.items; // Assume items match Replica structure
+                        setReplicas(replicaItems);
+                        // Auto-select first replica if list is not empty and none is selected
+                        if (replicaItems.length > 0 && !selectedReplicaId) {
+                            setSelectedReplicaId(replicaItems[0].id);
+                        }
+                    } else {
+                        // Handle unexpected structure or empty success response
+                        console.warn('List replicas response did not contain an items array:', data);
+                        setReplicas([]); // Clear replicas if structure is wrong
                     }
                 }
             }
