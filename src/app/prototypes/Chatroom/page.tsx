@@ -1,10 +1,6 @@
 "use client";
 import React, { useState, useRef } from 'react';
 
-export const metadata = {
-  title: 'Chatroom | Sensay Proto',
-};
-
 interface ChatMessage {
   id: number;
   sender: string; // 'User' or Replica name

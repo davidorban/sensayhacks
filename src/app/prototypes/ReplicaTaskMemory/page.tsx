@@ -2,10 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, Trash2, Undo2 } from 'lucide-react'; // Assuming lucide-react for icons
 
-export const metadata = {
-  title: 'Replica Task Memory | Sensay Proto',
-};
-
 interface Message {
   id: number;
   sender: 'User' | 'Replica';

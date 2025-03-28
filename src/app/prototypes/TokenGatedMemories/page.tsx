@@ -1,10 +1,6 @@
 "use client";
 import React, { useState } from 'react';
 
-export const metadata = {
-  title: 'Token-Gated Memories | Sensay Proto',
-};
-
 const TokenGatedMemoriesPage = () => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
