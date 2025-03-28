@@ -4,7 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import { createClient } from '@/lib/supabase/server'; 
 import { cookies } from 'next/headers'; 
-import SignOutButton from "@/components/SignOutButton"; 
+import AuthStatus from "@/components/AuthStatus"; 
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,17 +35,14 @@ export default async function RootLayout({
   const showSidebar = session && userEmail?.endsWith('@sensay.io');
 
   return (
-    <html lang="en" className="h-full bg-gray-100">
+    <html lang="en" className="h-full bg-gray-900">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex`}
       >
         {showSidebar ? (
-          <Sidebar>
-            <div className="mt-auto p-2">
-              <SignOutButton />
-            </div>
-          </Sidebar>
+          <Sidebar />
         ) : null} 
+        <AuthStatus />
         <main className="flex-1 flex flex-col overflow-y-auto">
           {children}
         </main>

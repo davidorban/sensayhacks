@@ -28,13 +28,8 @@ export default function Home() {
           priority 
         />
       </div>
-      {/* Wrap title and add Login Link */}
-      <div className="flex justify-center items-center mb-2 space-x-4">
-        <h1 className="text-3xl font-bold text-center text-gray-100">Sensay Hackathon Ideas Showcase</h1>
-        <Link href="/login" className="text-indigo-400 hover:text-indigo-300 text-lg">
-          Login
-        </Link>
-      </div>
+      {/* Remove wrapper div and Login Link */}
+      <h1 className="text-3xl font-bold mb-2 text-center text-gray-100">Sensay Hackathon Ideas Showcase</h1>
       <p className="text-lg text-gray-300 mb-8 text-center"> {/* Light Text */}
         This project showcases various UI prototypes for potential Sensay features, built using Next.js 14 (App Router), TypeScript, and Tailwind CSS.
       </p>
