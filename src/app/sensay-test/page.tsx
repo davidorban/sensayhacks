@@ -12,12 +12,14 @@ interface Replica {
 
 // Define structure for the request body sent to our backend API
 interface TestApiRequestBody {
-    action: 'listReplicas' | 'createChatCompletion';
+    action: 'listReplicas' | 'createChatCompletion' | 'createUserAndListReplicas';
     secret: string;
     userId?: string;
     replicaId?: string;
     content?: string;
     replicaSearchTerm?: string;
+    userName?: string; // Optional inputs for user creation
+    userEmail?: string;
 }
 
 const SensayApiTestPage = () => {
@@ -27,6 +29,9 @@ const SensayApiTestPage = () => {
     const [replicaSearch, setReplicaSearch] = useState<string>('');
     const [selectedReplicaId, setSelectedReplicaId] = useState<string>('');
     const [chatContent, setChatContent] = useState<string>('');
+    // Optional fields for user creation
+    const [userName, setUserName] = useState<string>('');
+    const [userEmail, setUserEmail] = useState<string>('');
 
     // Response/Data States
     const [replicas, setReplicas] = useState<Replica[]>([]);
@@ -35,7 +40,7 @@ const SensayApiTestPage = () => {
     const [error, setError] = useState<string | null>(null);
 
     // Handle API calls
-    const handleApiCall = async (action: 'listReplicas' | 'createChatCompletion') => {
+    const handleApiCall = async (action: TestApiRequestBody['action']) => {
         setIsLoading(true);
         setError(null);
         setApiResponse(null); // Clear previous response
@@ -55,11 +60,25 @@ const SensayApiTestPage = () => {
                 userId: userId,
                 content: chatContent,
             };
-        } else { // action === 'listReplicas'
+        } else if (action === 'listReplicas') {
             requestBody = {
                 action: action,
                 secret: apiSecret,
                 replicaSearchTerm: replicaSearch || undefined, // Send undefined if empty
+            };
+        } else { // action === 'createUserAndListReplicas'
+            if (!userId) {
+                setError('User ID is required for creating users and listing replicas.');
+                setIsLoading(false);
+                return;
+            }
+            requestBody = {
+                action: action,
+                secret: apiSecret,
+                userId: userId,
+                userName: userName || undefined, // Send undefined if empty
+                userEmail: userEmail || undefined, // Send undefined if empty
+                replicaSearchTerm: replicaSearch || undefined,
             };
         }
 
@@ -76,10 +95,10 @@ const SensayApiTestPage = () => {
             setApiResponse(data); // Store the raw JSON response
 
             if (!response.ok) {
-                setError(`API Error (${response.status}): ${data.error || JSON.stringify(data)}`);
+                setError(`API Error (${response.status}): ${data.error?.message || data.error || JSON.stringify(data)}`);
             } else {
                 // If listing replicas succeeded, parse the items array and update state
-                if (action === 'listReplicas') {
+                if (action === 'listReplicas' || action === 'createUserAndListReplicas') {
                     if (typeof data === 'object' && data !== null && 'items' in data && Array.isArray(data.items)) {
                         const replicaItems: Replica[] = data.items; // Assume items match Replica structure
                         setReplicas(replicaItems);
@@ -131,11 +150,30 @@ const SensayApiTestPage = () => {
                         placeholder="Enter the User ID for API calls"
                     />
                 </div>
+                {/* Optional fields for user creation */}
+                <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">User Name (Optional, for Create User):</label>
+                <input
+                    type="text"
+                    id="userName"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black mb-2"
+                    placeholder="e.g., John Doe (uses default if blank)"
+                />
+                <label htmlFor="userEmail" className="block text-sm font-medium text-gray-700 mb-1">User Email (Optional, for Create User):</label>
+                <input
+                    type="email"
+                    id="userEmail"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black mb-2"
+                    placeholder="e.g., user@example.com (uses default if blank)"
+                />
             </div>
 
             {/* List Replicas Section */}
             <div className="space-y-4 mb-6 p-4 border rounded">
-                <h2 className="text-lg font-semibold">1. List Replicas</h2>
+                <h2 className="text-lg font-semibold">1. Create User & List Replicas</h2>
                 <div>
                     <label htmlFor="replicaSearch" className="block text-sm font-medium text-gray-700 mb-1">Replica Search Term (Optional):</label>
                     <input
@@ -148,12 +186,12 @@ const SensayApiTestPage = () => {
                     />
                 </div>
                 <button
-                    onClick={() => handleApiCall('listReplicas')}
-                    disabled={isLoading || !apiSecret}
+                    onClick={() => handleApiCall('createUserAndListReplicas')}
+                    disabled={isLoading || !apiSecret || !userId}
                     className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 flex items-center justify-center"
                 >
                     {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                    List Replicas
+                    Create User & List Replicas
                 </button>
             </div>
 
@@ -176,7 +214,7 @@ const SensayApiTestPage = () => {
                             </option>
                         ))}
                     </select>
-                    {replicas.length === 0 && <p className="text-xs text-gray-500">Run &quot;List Replicas&quot; first to populate this dropdown.</p>}
+                    {replicas.length === 0 && <p className="text-xs text-gray-500">Run &quot;Create User & List Replicas&quot; first to populate this dropdown.</p>}
                 </div>
 
                 <div>

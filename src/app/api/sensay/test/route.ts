@@ -4,12 +4,14 @@ const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL || 'https://api.sensay.io
 
 // Define expected request body structure for this test route
 interface TestApiRequest {
-    action: 'listReplicas' | 'createChatCompletion';
+    action: 'listReplicas' | 'createChatCompletion' | 'createUserAndListReplicas';
     secret: string;
     userId?: string;          // Required for chat completion
     replicaId?: string;       // Required for chat completion
     content?: string;         // Required for chat completion
     replicaSearchTerm?: string; // Optional for listing replicas
+    userName?: string; // Optional for user creation (defaults will be used)
+    userEmail?: string; // Optional for user creation (defaults will be used)
 }
 
 export async function POST(request: NextRequest) {
@@ -23,24 +25,25 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error }, { status: 400 });
     }
 
-    const { action, secret, userId, replicaId, content, replicaSearchTerm } = body;
+    const { action, secret, userId, replicaId, content, replicaSearchTerm, userName, userEmail } = body;
 
     if (!secret) {
         return NextResponse.json({ error: 'API Secret (X-ORGANIZATION-SECRET) is required.' }, { status: 400 });
     }
 
     let targetUrl = '';
-    const headers: Record<string, string> = {
+    // Define headers common to most Sensay API calls
+    const sensayHeaders = (includeUserId = false): Record<string, string> => ({
         'Accept': 'application/json',
         'X-ORGANIZATION-SECRET': secret,
         'Content-Type': 'application/json',
-        // Use the specific API version from the curl examples or latest known good version
-        'X-API-Version': '2025-03-25' // Match the provided curl example
-    };
-    // eslint-disable-next-line prefer-const
-    let fetchOptions: RequestInit = { // Linter incorrectly flags this, properties are modified below
+        'X-API-Version': '2025-03-25', // Match the provided curl example
+        ...(includeUserId && userId && { 'X-USER-ID': userId }),
+    });
+
+    const fetchOptions: RequestInit = { 
         method: 'GET', // Default to GET
-        headers: headers,
+        headers: sensayHeaders(),
     };
     let requestBody = {};
 
@@ -54,6 +57,57 @@ export async function POST(request: NextRequest) {
                     targetUrl += `?${params.toString()}`;
                 }
                 fetchOptions.method = 'GET';
+                fetchOptions.headers = sensayHeaders(); // Use common headers
+                break;
+
+            case 'createUserAndListReplicas':
+                console.log('Action: createUserAndListReplicas');
+                if (!userId) {
+                    return NextResponse.json({ error: 'User ID is required for creating/listing.' }, { status: 400 });
+                }
+
+                // Step 1: Attempt to create the user
+                const createUserUrl = `${SENSAY_API_URL_BASE}/users`;
+                const userCreateName = userName || "Test User"; // Use provided or default
+                const userCreateEmail = userEmail || "test@example.com"; // Use provided or default
+
+                console.log(`Attempting to create user ${userId} (${userCreateName})`);
+                try {
+                    const userCreateResponse = await fetch(createUserUrl, {
+                        method: 'POST',
+                        headers: sensayHeaders(),
+                        body: JSON.stringify({
+                            id: userId,
+                            name: userCreateName,
+                            email: userCreateEmail,
+                        }),
+                    });
+
+                    const userCreateData = await userCreateResponse.json();
+
+                    // Allow proceeding if user creation succeeded (2xx) or if user already exists (e.g., 409 Conflict or similar)
+                    // Adjust the status code check if Sensay uses a different one for existing users
+                    if (!userCreateResponse.ok && userCreateResponse.status !== 409) { // Assuming 409 for existing user
+                        console.error(`Sensay User Create Error (${userCreateResponse.status}):`, userCreateData);
+                        return NextResponse.json({ error: 'Failed to create or verify user', details: userCreateData }, { status: userCreateResponse.status });
+                    }
+                    console.log(`User ${userId} created or already exists (Status: ${userCreateResponse.status}).`);
+
+                } catch (userError) {
+                    console.error('Error during Sensay User creation call:', userError);
+                    const errorMessage = userError instanceof Error ? userError.message : 'An unexpected error occurred during user creation';
+                    return NextResponse.json({ error: `User Creation Failed: ${errorMessage}` }, { status: 500 });
+                }
+
+                // Step 2: List Replicas (only if user creation/verification passed)
+                console.log('Proceeding to list replicas');
+                targetUrl = `${SENSAY_API_URL_BASE}/replicas`;
+                if (replicaSearchTerm) {
+                    const params = new URLSearchParams({ search: replicaSearchTerm });
+                    targetUrl += `?${params.toString()}`;
+                }
+                fetchOptions.method = 'GET';
+                fetchOptions.headers = sensayHeaders(); // Use common headers (no user ID needed for list)
                 break;
 
             case 'createChatCompletion':
@@ -62,8 +116,8 @@ export async function POST(request: NextRequest) {
                     return NextResponse.json({ error: 'Replica ID, User ID, and Content are required for chat completion.' }, { status: 400 });
                 }
                 targetUrl = `${SENSAY_API_URL_BASE}/replicas/${replicaId}/chat/completions`;
-                headers['X-USER-ID'] = userId;
                 fetchOptions.method = 'POST';
+                fetchOptions.headers = sensayHeaders(true); // Include User ID
                 requestBody = {
                     content: content,
                     // Add other chat completion params from curl example if needed
