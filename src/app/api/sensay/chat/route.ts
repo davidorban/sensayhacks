@@ -20,6 +20,39 @@ interface Task {
   completed: boolean;
 }
 
+// Define expected Sensay API response structures
+interface SensayChoice {
+  message?: {
+    content?: string | null;
+  };
+  // Add other choice properties if needed
+}
+
+interface SensaySuccessResponse {
+  choices?: SensayChoice[];
+  // Add other potential success properties if known
+}
+
+interface SensayErrorDetail {
+    message?: string;
+    // Add other potential error detail properties
+}
+
+interface SensayErrorResponse {
+  error?: string | SensayErrorDetail;
+  // Add other potential error properties if known
+}
+
+// Type guard to check if an object has an 'error' property (basic Sensay error check)
+function hasErrorProperty(data: unknown): data is { error: unknown } {
+    return typeof data === 'object' && data !== null && 'error' in data;
+}
+
+// Type guard to check if an object has a 'choices' property (basic Sensay success check)
+function hasChoicesProperty(data: unknown): data is { choices: unknown } {
+    return typeof data === 'object' && data !== null && 'choices' in data;
+}
+
 // Initialize Supabase client details (ensure these are in Vercel env vars)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -117,7 +150,7 @@ export async function POST(request: Request) {
   // --- Call Sensay API --- //
   const apiUrl = `${SENSAY_API_URL_BASE}/${replicaId}/chat/completions`;
 
-  let sensayResponseData: any;
+  let sensayResponseData: unknown;
   let replyContent: string | null | undefined;
 
   try {
@@ -137,22 +170,40 @@ export async function POST(request: Request) {
     sensayResponseData = await response.json(); // Parse JSON regardless of status first
 
     if (!response.ok) {
-      console.error(`Sensay API Error (${response.status}):`, sensayResponseData);
-      const errorMessage = sensayResponseData?.error?.message || sensayResponseData?.error || response.statusText || 'Unknown Sensay API error';
+      // Use type guard to safely access error property
+      let errorMessage = 'Unknown Sensay API error';
+      if (hasErrorProperty(sensayResponseData)) {
+          if (typeof sensayResponseData.error === 'string') {
+              errorMessage = sensayResponseData.error;
+          } else if (typeof sensayResponseData.error === 'object' && sensayResponseData.error !== null && 'message' in sensayResponseData.error && typeof sensayResponseData.error.message === 'string') {
+              errorMessage = sensayResponseData.error.message;
+          }
+      } else if (response.statusText) {
+          errorMessage = response.statusText;
+      }
+      console.error(`Sensay API Error (${response.status}):`, errorMessage, 'Raw Response:', sensayResponseData);
       // Return Sensay error, but still include the tasks fetched earlier
       return NextResponse.json({ error: `Sensay API Error: ${errorMessage}`, tasks: tasksFromSupabase }, { status: response.status });
     }
 
     // --- Response Parsing (Success Case) --- //
-    replyContent = sensayResponseData.choices?.[0]?.message?.content;
+    // Use type guard to safely access choices property
+    if (hasChoicesProperty(sensayResponseData) && Array.isArray(sensayResponseData.choices) && sensayResponseData.choices.length > 0) {
+        const firstChoice = sensayResponseData.choices[0];
+        if (typeof firstChoice === 'object' && firstChoice !== null && 'message' in firstChoice) {
+            const message = firstChoice.message;
+            if (typeof message === 'object' && message !== null && 'content' in message && typeof message.content === 'string') {
+                replyContent = message.content;
+            }
+        }
+    }
 
-    if (!replyContent) {
-      console.error('Could not extract reply content from Sensay response:', sensayResponseData);
-      replyContent = "[Error: Failed to parse reply content from Sensay]";
+    if (replyContent === undefined) {
+        console.error('Could not extract valid reply content from Sensay success response:', sensayResponseData);
+        replyContent = "[Error: Failed to parse reply content from Sensay]";
     }
 
     console.log('Sensay API Success. Reply:', replyContent);
-
   } catch (error: unknown) {
    console.error('Error calling Sensay API:', error);
    // Network or other fetch error, return generic error and tasks fetched earlier
