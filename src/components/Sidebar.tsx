@@ -2,14 +2,17 @@ import Link from 'next/link';
 
 const Sidebar = () => {
   const prototypes = [
-    { name: 'Replica Task Memory', path: '/prototypes/ReplicaTaskMemory' },
-    { name: 'Pure Voice', path: '/prototypes/PureVoice' },
-    { name: 'MCP Client/Server', path: '/prototypes/MCPClient' },
-    { name: 'Token-Gated Memories', path: '/prototypes/TokenGatedMemories' },
-    { name: 'Token-Guided Evolution', path: '/prototypes/TokenGuidedEvolution' },
     { name: 'Bonding Replicas', path: '/prototypes/BondingReplicas' },
     { name: 'Chatroom', path: '/prototypes/Chatroom' },
+    { name: 'MCP Client/Server', path: '/prototypes/MCPClient' },
+    { name: 'Pure Voice', path: '/prototypes/PureVoice' },
+    { name: 'Replica Task Memory', path: '/prototypes/ReplicaTaskMemory' },
+    { name: 'Token-Gated Memories', path: '/prototypes/TokenGatedMemories' },
+    { name: 'Token-Guided Evolution', path: '/prototypes/TokenGuidedEvolution' },
   ];
+
+  // Sort prototypes alphabetically by name
+  prototypes.sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="h-screen w-64 bg-gray-800 text-white p-5 fixed left-0 top-0">
@@ -18,7 +21,7 @@ const Sidebar = () => {
         <ul>
           <li className="mb-3">
             <Link href="/" className="hover:text-gray-300">
-              Dashboard
+              Home
             </Link>
           </li>
           {prototypes.map((proto) => (
