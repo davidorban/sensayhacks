@@ -1,3 +1,5 @@
+"use client"; // Add this directive for React hooks
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 
