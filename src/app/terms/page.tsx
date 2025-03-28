@@ -33,7 +33,7 @@ const TermsAndConditionsPage = () => {
 
         <h2 className="text-xl font-semibold pt-4 text-gray-800">4. No Warranties</h2>
         <p>
-          This application is provided "as is" without any warranties, express or implied. We make no guarantees regarding its 
+          This application is provided &quot;as is&quot; without any warranties, express or implied. We make no guarantees regarding its 
           functionality, accuracy, or availability.
         </p>
         

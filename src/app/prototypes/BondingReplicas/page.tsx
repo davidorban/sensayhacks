@@ -27,7 +27,7 @@ const BondingReplicasPage = () => {
     <div>
       <h1 className="text-2xl font-bold mb-4 text-gray-900">Bonding Replicas (Mock)</h1>
       <p className="mb-6 text-sm text-gray-600">
-        Concept: Simulates the idea of two or more replica instances "bonding" to share memory, state, or insights.
+        Concept: Simulates two or more Replicas interacting and sharing/updating a common state or &quot;bond&quot; (e.g., shared memory or goal).
       </p>
       <p className="mb-6 text-gray-600">Simulate the bonding of two replica instances, allowing shared memory/state.</p>
 
