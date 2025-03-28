@@ -12,7 +12,8 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, _session: Session | null) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_IN') {
         router.push('/');
       }
