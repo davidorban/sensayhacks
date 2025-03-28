@@ -173,7 +173,7 @@ const ReplicaTaskMemoryPage = () => {
         <div className="flex-1 flex flex-col bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
           {/* Message Display */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.map((msg, index) => (
+            {messages.map((msg) => ( // Remove unused 'index' parameter
               <div key={msg.id} className={`flex ${msg.sender === 'User' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`px-3 py-2 rounded-lg max-w-xs lg:max-w-md ${msg.sender === 'User' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
                   {msg.isLoading ? (
