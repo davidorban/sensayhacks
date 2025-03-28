@@ -46,6 +46,14 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-auto pt-8 pb-6 text-center text-gray-400 text-sm">
+        <Link href="/privacy" className="hover:text-gray-200 mx-2">Privacy Policy</Link>
+        |
+        <Link href="/terms" className="hover:text-gray-200 mx-2">Terms & Conditions</Link>
+      </footer>
+
     </div>
   );
 }
