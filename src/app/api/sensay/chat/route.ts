@@ -28,19 +28,9 @@ interface SensayChoice {
   // Add other choice properties if needed
 }
 
-interface SensaySuccessResponse {
-  choices?: SensayChoice[];
-  // Add other potential success properties if known
-}
-
 interface SensayErrorDetail {
     message?: string;
     // Add other potential error detail properties
-}
-
-interface SensayErrorResponse {
-  error?: string | SensayErrorDetail;
-  // Add other potential error properties if known
 }
 
 // Type guard to check if an object has an 'error' property (basic Sensay error check)
