@@ -90,8 +90,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ reply: replyContent });
 
-  } catch (error: any) {
+  } catch (error: unknown) { // Catch as unknown
     console.error('Error in /api/sensay/chat:', error);
-    return NextResponse.json({ error: `Internal Server Error: ${error.message || 'Unknown error'}` }, { status: 500 });
+    let errorMessage = 'Unknown error';
+    if (error instanceof Error) {
+      errorMessage = error.message; // Access message safely after type check
+    }
+    return NextResponse.json({ error: `Internal Server Error: ${errorMessage}` }, { status: 500 });
   }
 }
