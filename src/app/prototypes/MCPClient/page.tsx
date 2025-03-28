@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface McpOutput {
   status: string;
@@ -7,48 +8,86 @@ interface McpOutput {
 }
 
 const MCPClientPage = () => {
-  const [inputData, setInputData] = useState('');
-  const [output, setOutput] = useState<McpOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [toolName, setToolName] = useState<string>(''); // Name of the MCP tool to invoke
+  const [inputData, setInputData] = useState<string>(''); // Input data for the tool (as JSON string)
+  const [apiKey, setApiKey] = useState<string>(''); // Placeholder for potential MCP auth/config
+  const [response, setResponse] = useState<unknown | null>(null); // Store MCP response
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleTriggerMcp = () => {
+  // Handle triggering the MCP tool invocation via the backend
+  const handleTriggerMcp = async () => {
     setIsLoading(true);
-    setOutput(null);
-    console.log('(Mock) Triggering MCP with data:', inputData);
+    setError(null);
+    setResponse(null);
 
-    // Simulate API call delay
-    setTimeout(() => {
-      // Mock response from MCP
-      const mockResponse: McpOutput = {
-        status: 'Success',
-        data: {
-          processedInput: inputData,
-          result: `Mock result based on input - ${Date.now()}`,
-          details: 'This is a simulated response from the MCP server.',
-        },
-      };
-      setOutput(mockResponse);
+    if (!toolName || !inputData) {
+      setError('Tool Name and Input Data cannot be empty.');
       setIsLoading(false);
-    }, 1500); // 1.5 second delay
+      return;
+    }
+
+    let parsedInputData: object;
+    try {
+      parsedInputData = JSON.parse(inputData);
+    } catch (parseError) {
+      setError('Invalid JSON in Input Data.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // TODO: Update API endpoint and request structure if necessary
+      const apiResponse = await fetch('/api/mcp', { // Assuming a backend route at /api/mcp
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-MCP-Auth': apiKey, // Example auth header, adjust based on actual MCP SDK needs
+        },
+        body: JSON.stringify({
+          toolName: toolName,
+          inputData: parsedInputData,
+        }),
+      });
+
+      const data = await apiResponse.json();
+      setResponse(data);
+    } catch (error) {
+      setError('Failed to invoke MCP tool.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6"> 
-      <h1 className="text-2xl font-bold mb-2 text-gray-100">MCP Client/Server (Mock)</h1> 
+      <h1 className="text-2xl font-bold mb-2 text-gray-100">Model Context Protocol (MCP) Client Prototype</h1> 
       <p className="mb-6 text-sm text-gray-300"> 
-        Concept: Simulates a UI triggering a backend Micro-process Controller (MCP) with input data and displaying the processed output.
+        A prototype interface to interact with tools via the Model Context Protocol.
+        See <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">modelcontextprotocol.io</a> and the
+        <a href="https://github.com/modelcontextprotocol/typescript-sdk" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">TypeScript SDK</a> for details.
       </p>
 
       <div className="bg-white p-6 rounded-lg shadow-lg flex-1 flex flex-col">
 
         <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm"> 
-          <label htmlFor="mcpInput" className="block text-sm font-medium text-gray-700 mb-2">Input Data (e.g., JSON):</label>
+          <label htmlFor="toolName" className="block text-sm font-medium text-gray-700 mb-2">Tool Name:</label>
+          <input
+            type="text"
+            id="toolName"
+            value={toolName}
+            onChange={(e) => setToolName(e.target.value)}
+            placeholder='e.g., github.create_issue'
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2 text-black"
+          />
+
+          <label htmlFor="inputData" className="block text-sm font-medium text-gray-700 mb-2">Input Data (JSON):</label>
           <textarea
-            id="mcpInput"
-            rows={4}
+            id="inputData"
+            rows={10}
             value={inputData}
             onChange={(e) => setInputData(e.target.value)}
-            placeholder='{ "param1": "value1", "param2": 123 }'
+            placeholder='{ "owner": "octocat", "repo": "Spoon-Knife", "title": "New Issue Title" }'
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm text-black"
           />
           <button
@@ -62,28 +101,25 @@ const MCPClientPage = () => {
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" />
                 Processing...
               </>
             ) : (
-              'Trigger MCP (Mock)'
+              'Invoke Tool'
             )}
           </button>
         </div>
 
         <div className="flex-1 p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm min-h-[120px]"> 
-          <h2 className="text-lg font-semibold mb-2 text-gray-800">MCP Output (Mock):</h2>
+          <h2 className="text-lg font-semibold mb-2 text-gray-800">MCP Output:</h2>
           {isLoading && (
             <p className="text-gray-500 italic">Processing request...</p>
           )}
-          {output && (
-            <pre className="bg-gray-100 p-3 rounded-md text-sm text-gray-800 overflow-x-auto"><code>{JSON.stringify(output, null, 2)}</code></pre>
+          {response && (
+            <pre className="bg-gray-100 p-3 rounded-md text-sm text-gray-800 overflow-x-auto"><code>{JSON.stringify(response, null, 2)}</code></pre>
           )} 
-          {!isLoading && !output && (
-             <p className="text-gray-500 italic">Output will appear here after triggering MCP.</p>
+          {!isLoading && !response && (
+             <p className="text-gray-500 italic">Output will appear here after invoking MCP tool.</p>
           )}
         </div>
         
