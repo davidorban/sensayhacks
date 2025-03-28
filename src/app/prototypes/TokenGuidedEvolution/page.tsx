@@ -31,25 +31,30 @@ const TokenGuidedEvolutionPage = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4 text-gray-900">Token-Guided Evolution (Mock)</h1>
-      <p className="mb-6 text-gray-600">Guide the evolution of a digital entity (e.g., AI persona) using $SNSY tokens.</p>
+      <p className="mb-6 text-sm text-gray-600">
+        Concept: Allows a user to guide the development or "evolution" of a digital entity (e.g., AI persona) by spending $SNSY tokens.
+      </p>
+      {/* <p className="mb-6 text-gray-600">Guide the evolution of a digital entity (e.g., AI persona) using $SNSY tokens.</p> */}
 
-      <div className="mb-6 p-4 border border-gray-300 rounded-lg bg-gray-100 shadow">
-        <h2 className="text-lg font-semibold mb-2">Current State:</h2>
-        <p>Entity: Sensay Assistant Mk.I</p>
-        <p>Evolution Stage: <span className="font-bold">{evolutionStage}</span></p>
-        {evolutionStage === 1 && <p className="text-sm text-gray-500">Basic conversational abilities.</p>}
-        {evolutionStage === 2 && <p className="text-sm text-green-600">Enhanced with Advanced Analytical Skills.</p>}
-        {evolutionStage === 3 && <p className="text-sm text-purple-600">Further enhanced with Creative Writing specialization.</p>}
+      {/* Current State Area - Apply styling */}
+      <div className="mb-6 p-4 border border-gray-300 rounded-lg bg-white shadow-sm">
+        <h2 className="text-lg font-semibold mb-2 text-gray-700">Current State:</h2>
+        <p className="text-gray-800">Entity: Sensay Assistant Mk.I</p>
+        <p className="text-gray-800">Evolution Stage: <span className="font-bold">{evolutionStage}</span></p>
+        {evolutionStage === 1 && <p className="text-sm text-gray-500 mt-1">Basic conversational abilities.</p>}
+        {evolutionStage === 2 && <p className="text-sm text-green-600 mt-1">Enhanced with Advanced Analytical Skills.</p>}
+        {evolutionStage === 3 && <p className="text-sm text-purple-600 mt-1">Further enhanced with Creative Writing specialization.</p>}
       </div>
 
-      <h2 className="text-xl font-semibold mb-3">Available Evolutions:</h2>
+      <h2 className="text-xl font-semibold mb-3 text-gray-800">Available Evolutions:</h2>
+      {/* Evolution Paths Area - Apply styling to individual items */}
       <div className="space-y-4">
         {evolutionPaths.map((path) => (
           evolutionStage < path.stage && (
-            <div key={path.stage} className="p-4 border border-indigo-200 rounded-lg bg-indigo-50 flex items-center justify-between">
+            <div key={path.stage} className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm flex items-center justify-between transition-shadow hover:shadow-md">
               <div>
-                <p className="font-medium">Evolve to Stage {path.stage}: {path.description}</p>
-                <p className="text-sm text-indigo-700">Cost: {path.cost}</p>
+                <p className="font-medium text-gray-800">Evolve to Stage {path.stage}: {path.description}</p>
+                <p className="text-sm text-indigo-700 mt-1">Cost: {path.cost}</p>
               </div>
               <button
                 onClick={() => handleEvolve(path.stage)}
@@ -76,16 +81,16 @@ const TokenGuidedEvolutionPage = () => {
           )
         ))}
         {evolutionStage >= 3 && (
-          <p className="text-gray-500">No further evolutions available in this mock.</p>
+          <p className="text-gray-500 italic mt-4">No further evolutions available in this mock.</p>
         )}
       </div>
 
       {confirmation && (
-        <div className="mt-6 p-3 bg-green-100 text-green-800 rounded-md border border-green-300 shadow text-center">
+        <div className="mt-6 p-3 bg-green-100 text-green-800 rounded-md border border-green-300 shadow text-center text-sm">
           {confirmation}
         </div>
       )}
-      <p className="mt-4 text-sm text-gray-500">
+      <p className="mt-6 text-sm text-gray-500">
         (Note: $SNSY interaction and evolution logic are simulated.)
       </p>
     </div>

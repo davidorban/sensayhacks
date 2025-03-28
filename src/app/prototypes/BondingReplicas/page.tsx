@@ -25,7 +25,10 @@ const BondingReplicasPage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Bonding Replicas (Mock)</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-900">Bonding Replicas (Mock)</h1>
+      <p className="mb-6 text-sm text-gray-600">
+        Concept: Simulates the idea of two or more replica instances "bonding" to share memory, state, or insights.
+      </p>
       <p className="mb-6 text-gray-600">Simulate the bonding of two replica instances, allowing shared memory/state.</p>
 
       <div className="mb-6 flex items-center space-x-4">
@@ -55,8 +58,28 @@ const BondingReplicasPage = () => {
         </span>
       </div>
 
-      <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm min-h-[120px]"> 
-        <h2 className="text-lg font-semibold mb-2 text-gray-700">Shared Memory Pool (Mock):</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Replica 1 */}
+        <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm">
+          <h2 className="text-lg font-semibold mb-2 text-gray-700">Replica 1</h2>
+          <p className="text-sm text-gray-600 mb-3">Status: <span className="font-medium">{isBonded ? 'Bonded' : 'Not Bonded'}</span></p>
+        </div>
+
+        {/* Replica 2 */}
+        <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm">
+          <h2 className="text-lg font-semibold mb-2 text-gray-700">Replica 2</h2>
+          <p className="text-sm text-gray-600 mb-3">Status: <span className="font-medium">{isBonded ? 'Bonded' : 'Not Bonded'}</span></p>
+        </div>
+
+        {/* Shared State */}
+        <div className="p-4 border border-dashed border-purple-400 rounded-lg bg-purple-50 shadow-sm flex flex-col justify-center items-center">
+          <h2 className="text-lg font-semibold mb-2 text-purple-700">Shared Bond (Mock)</h2>
+          <p className="text-center text-sm text-purple-800 mb-1">{isBonded ? 'Bonded' : 'Not Bonded'}</p>
+        </div>
+      </div>
+
+      <div className="mt-6 p-4 border border-gray-300 rounded-lg bg-white shadow-sm min-h-[100px]">
+        <h3 className="text-md font-semibold mb-2 text-gray-700">Shared Memory Pool (Mock):</h3>
         {isBonded && sharedMemory.length > 0 ? (
           <ul className="list-disc list-inside space-y-1 text-gray-600 pl-4">
             {sharedMemory.map((item, index) => (
@@ -70,7 +93,7 @@ const BondingReplicasPage = () => {
         )}
       </div>
 
-      <p className="mt-4 text-sm text-gray-500">
+      <p className="mt-6 text-sm text-gray-500">
         (Note: Bonding interaction and shared memory are simulated.)
       </p>
     </div>

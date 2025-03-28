@@ -12,25 +12,34 @@ export default function Home() {
   ];
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <h1 className="text-3xl font-bold mb-6">Sensay Hackathon Ideas Showcase</h1>
-        <p className="mb-8 text-lg">
-          Welcome! This showcase presents UI mockups for various Sensay platform ideas explored during the hackathon.
-          Use the sidebar to navigate between the different prototypes.
+    <main className="flex flex-col items-center p-8 sm:p-12 md:p-16 lg:p-24 font-[family-name:var(--font-geist-sans)]">
+      <div className="max-w-4xl w-full text-center">
+        <h1 className="text-4xl font-bold mb-6 text-gray-900">Sensay Hackathon Ideas Showcase</h1>
+        <p className="text-lg text-gray-700 mb-8">
+          This project showcases various UI prototypes for potential Sensay features, built using Next.js 14 (App Router), TypeScript, and Tailwind CSS.
+          Use the sidebar to explore the different mock prototypes.
         </p>
 
-        <h2 className="text-2xl font-semibold mb-4">Available Prototypes:</h2>
-        <ul className="list-disc list-inside space-y-2">
-          {prototypes.map((proto) => (
-            <li key={proto.path}>
-              <Link href={proto.path} className="text-blue-500 hover:underline">
-                {proto.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </main>
-    </div>
+        <div className="mb-12 text-left inline-block">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Available Prototypes:</h2>
+          <ul className="list-disc list-inside space-y-2">
+            {prototypes.map((proto) => (
+              <li key={proto.path}>
+                <Link href={proto.path} className="text-indigo-600 hover:text-indigo-800 hover:underline">
+                  {proto.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-12 border-t border-gray-300 pt-8">
+          <p className="text-sm text-red-600 bg-red-100 border border-red-300 p-4 rounded-md shadow-sm max-w-2xl mx-auto">
+            <strong>Important Note:</strong> All interactions involving backend processes, token transactions, voice processing, or actual AI responses are <strong>simulated</strong> within the frontend for demonstration purposes.
+          </p>
+        </div>
+
+      </div>
+    </main>
   );
 }

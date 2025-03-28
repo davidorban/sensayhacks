@@ -65,68 +65,73 @@ const ReplicaTaskMemoryPage = () => {
   };
 
   return (
-    <div className="flex flex-1"> 
-      {/* Chat Area */} 
-      <div className="flex-1 flex flex-col bg-gray-100 p-4 border-r border-gray-300">
-        <h1 className="text-2xl font-bold mb-4 text-gray-900">Replica Task Memory</h1>
-        {/* Message Display */} 
-        <div className="flex-1 overflow-y-auto mb-4 space-y-4 p-2 bg-gray-100 rounded shadow"> 
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === 'User' ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`p-3 rounded-lg max-w-xs lg:max-w-md shadow 
-                 ${msg.sender === 'User' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black' 
-                }`}
-              >
-                <p>{msg.text}</p>
-                <span className="text-xs text-gray-500 block mt-1 text-right">{msg.timestamp}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Message Input */} 
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Type your message..."
-            className="flex-1 p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button
-            onClick={handleSendMessage}
-            className="p-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            Send
-          </button>
-        </div>
+    <div className="flex flex-col flex-1 bg-white"> 
+      <div className="p-4 border-b border-gray-300 bg-gray-50"> 
+        <h1 className="text-2xl font-bold text-gray-900">Replica Task Memory</h1>
+        <p className="mt-2 text-sm text-gray-600">
+          Concept: A chat interface where a user interacts with a replica that can manage a simple task list based on the conversation.
+        </p>
       </div>
-
-      {/* Task List */} 
-      <div className="w-80 bg-gray-50 p-4 overflow-y-auto flex-shrink-0"> 
-        <h2 className="text-xl font-semibold mb-4">Tasks</h2>
-        <ul className="space-y-2">
-          {tasks.map((task) => (
-            <li
-              key={task.id}
-              className={`flex items-center justify-between p-2 rounded transition-colors duration-150 hover:bg-gray-200 
-               ${task.completed ? 'bg-green-100' : 'bg-yellow-100'
-                }`}
+      <div className="flex flex-1 overflow-hidden"> 
+        <div className="flex-1 flex flex-col p-4 border-r border-gray-200"> 
+          <div className="flex-1 overflow-y-auto mb-4 space-y-4 p-4 bg-white border border-gray-300 rounded-lg shadow-sm"> 
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.sender === 'User' ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  className={`p-3 rounded-lg max-w-xs lg:max-w-md shadow 
+                   ${msg.sender === 'User' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black' 
+                  }`}
+                >
+                  <p>{msg.text}</p>
+                  <span className="text-xs text-gray-500 block mt-1 text-right">{msg.timestamp}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center border-t border-gray-200 pt-4"> 
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Type your message..."
+              className="flex-1 p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button
+              onClick={handleSendMessage}
+              className="p-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <span className={`${task.completed ? 'line-through text-gray-500' : ''}`}>
-                {task.text}
-              </span>
-              <button
-                onClick={() => toggleTask(task.id)}
-                className={`px-2 py-1 text-xs rounded ${task.completed ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'
-                  } text-white`}
-              >
-                {task.completed ? 'Undo' : 'Complete'}
-              </button>
-            </li>
-          ))}
-        </ul>
+              Send
+            </button>
+          </div>
+        </div>
+
+        <div className="w-80 bg-gray-50 p-4 overflow-y-auto flex-shrink-0"> 
+          <h2 className="text-xl font-bold mb-4">Tasks</h2>
+          <div className="flex-1 overflow-y-auto space-y-2 p-4 bg-white border border-gray-300 rounded-lg shadow-sm"> 
+            <ul className="space-y-2">
+              {tasks.map((task) => (
+                <li
+                  key={task.id}
+                  className={`flex items-center justify-between p-2 rounded transition-colors duration-150 hover:bg-gray-200 
+                   ${task.completed ? 'bg-green-100' : 'bg-yellow-100'
+                    }`}
+                >
+                  <span className={`${task.completed ? 'line-through text-gray-500' : ''}`}>
+                    {task.text}
+                  </span>
+                  <button
+                    onClick={() => toggleTask(task.id)}
+                    className={`px-2 py-1 text-xs rounded ${task.completed ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'
+                      } text-white`}
+                  >
+                    {task.completed ? 'Undo' : 'Complete'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

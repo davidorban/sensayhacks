@@ -25,7 +25,11 @@ const PureVoicePage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Pure Voice</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-900">Pure Voice (Mock)</h1>
+      {/* Concept from README */}
+      <p className="mb-6 text-sm text-gray-600">
+        Concept: A minimal interface demonstrating a voice-only interaction flow.
+      </p>
       <p className="mb-6 text-gray-600">Simulate a pure voice interaction by clicking the microphone.</p>
 
       <div className="flex items-center space-x-4 mb-6">
@@ -49,7 +53,7 @@ const PureVoicePage = () => {
       </div>
 
       {transcript && (
-        <div className="mt-6 p-4 bg-gray-100 rounded-md shadow border border-gray-200"> {/* Added border */} 
+        <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm min-h-[100px]">
           <p className="font-mono text-sm text-gray-800">{transcript}</p>
         </div>
       )}

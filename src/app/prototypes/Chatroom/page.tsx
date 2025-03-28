@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 interface ChatMessage {
   id: number;
@@ -26,6 +26,7 @@ const ChatroomPage = () => {
     { id: 1, sender: 'Assistant Alpha', text: 'Welcome to the multi-replica chatroom!', timestamp: '11:00 AM' },
   ]);
   const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleReplicaSelection = (replicaId: string) => {
     setSelectedReplicas(prev =>
@@ -75,11 +76,14 @@ const ChatroomPage = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 bg-gray-100"> {/* Darkened bg */}
+    <div className="flex flex-col h-[calc(100vh-4rem)]"> 
       <h1 className="text-2xl font-bold mb-4 px-4 pt-4 text-gray-900">Chatroom (Mock)</h1>
-      
+      <p className="mb-4 px-4 text-sm text-gray-600">
+        Concept: A simulated chatroom where multiple Replicas (and potentially the user) can interact.
+      </p>
+
       {/* Replica Selection */}
-      <div className="mb-4 px-4 pt-2 pb-4 bg-white border-b border-gray-300 shadow-sm"> {/* Darkened border */}
+      <div className="mb-4 px-4 pt-2 pb-4 bg-white border-b border-gray-300 shadow-sm"> 
         <label className="block text-sm font-medium text-gray-700 mb-2">Select Replicas to Chat With:</label> 
         <div className="flex flex-wrap gap-2">
           {availableReplicas.map(replica => (
@@ -98,24 +102,26 @@ const ChatroomPage = () => {
         </div>
       </div>
 
-      {/* Message Display */}
-      <div className="flex-1 overflow-y-auto mb-0 space-y-4 p-4 bg-gray-200"> {/* Darkened bg */}
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex flex-col ${msg.sender === 'User' ? 'items-end' : 'items-start'}`}>
-            <div
-              className={`p-3 rounded-lg max-w-xs lg:max-w-lg ${getBgColor(msg.sender)} shadow`}
-            >
-              <p className="font-semibold text-sm mb-1">{msg.sender}</p>
-              <p>{msg.text}</p>
-              <span className="text-xs opacity-70 block mt-1 text-right">{msg.timestamp}</span>
+      {/* Chat Display Area - Apply styling */}
+      <div className="flex-grow overflow-y-auto p-4 mb-4 mx-4 border border-gray-300 rounded-lg bg-white shadow-sm">
+        <div className="space-y-4">
+          {messages.map((msg, index) => (
+            <div key={index} className={`flex ${msg.sender === 'User' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow ${msg.sender === 'User' ? 'bg-indigo-500 text-white' : getBgColor(msg.sender)}`}>
+                <p className="text-sm font-semibold mb-0.5">{msg.sender}</p>
+                <p className="text-sm">{msg.text}</p>
+                <span className="text-xs opacity-70 block mt-1 text-right">{msg.timestamp}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+          {/* Auto-scroll to bottom */}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Message Input */}
-      <div className="p-4 border-t border-gray-300 bg-white"> {/* Darkened border */}
-        <div className="flex items-center">
+      {/* Input Area - Apply styling */}
+      <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center space-x-3">
           <input
             type="text"
             value={newMessage}
@@ -123,19 +129,19 @@ const ChatroomPage = () => {
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder={selectedReplicas.length > 0 ? "Type your message..." : "Select at least one replica to chat"}
             disabled={selectedReplicas.length === 0}
-            className="flex-1 p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+            className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
             onClick={handleSendMessage}
             disabled={newMessage.trim() === '' || selectedReplicas.length === 0}
-            className="p-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed"
+            className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Send
           </button>
         </div>
-         <p className="mt-2 text-xs text-gray-500">
-        (Note: Interactions are simulated. Select replicas above.)
-      </p>
+        <p className="mt-2 text-xs text-gray-500">
+          (Note: Interactions are simulated. Select replicas above.)
+        </p>
       </div>
     </div>
   );

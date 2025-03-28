@@ -20,10 +20,14 @@ const TokenGatedMemoriesPage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Token-Gated Memories (Mock)</h1>
-      <p className="mb-6 text-gray-600">Access exclusive memories by unlocking with $SNSY tokens.</p>
+      <h1 className="text-2xl font-bold mb-4 text-gray-900">Token-Gated Memories (Mock)</h1>
+      <p className="mb-6 text-sm text-gray-600">
+        Concept: Demonstrates accessing exclusive content (memories) by requiring a mock payment/unlock using $SNSY tokens.
+      </p>
+      {/* <p className="mb-6 text-gray-600">Access exclusive memories by unlocking with $SNSY tokens.</p> */}
 
-      <div className={`p-6 rounded-lg shadow border ${isUnlocked ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
+      {/* Content Area - Apply styling */}
+      <div className={`p-6 border rounded-lg shadow-sm transition-colors ${isUnlocked ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
         }`}>
         <h2 className="text-xl font-semibold mb-3 flex items-center">
           {isUnlocked ? (
@@ -39,7 +43,8 @@ const TokenGatedMemoriesPage = () => {
         </h2>
 
         {isUnlocked ? (
-          <div className="mt-4 space-y-2">
+          // Unlocked content - Apply styling
+          <div className="p-4 bg-white border border-gray-200 rounded-md shadow-md mt-4 space-y-2">
             <p className="text-green-800 font-medium">Exclusive Memory Content:</p>
             <ul className="list-disc list-inside text-gray-700 pl-4">
               <li>(Mock) Secret strategy for project Alpha.</li>
@@ -48,6 +53,7 @@ const TokenGatedMemoriesPage = () => {
             </ul>
           </div>
         ) : (
+          // Locked content placeholder
           <div className="mt-4">
             <p className="text-red-800 mb-4">You need to unlock access to view these exclusive memories.</p>
             <button
@@ -74,7 +80,8 @@ const TokenGatedMemoriesPage = () => {
           </div>
         )}
       </div>
-         <p className="mt-4 text-sm text-gray-500">
+
+      <p className="mt-4 text-sm text-gray-500">
         (Note: $SNSY interaction is simulated.)
       </p>
     </div>
