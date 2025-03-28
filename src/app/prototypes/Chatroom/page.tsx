@@ -77,7 +77,7 @@ const ChatroomPage = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]"> 
-      <h1 className="text-2xl font-bold mb-4 px-4 pt-4 text-gray-900">Chatroom (Mock)</h1>
+      <h1 className="text-2xl font-bold mb-4 px-4 pt-4 text-gray-800">Chatroom (Mock)</h1>
       <p className="mb-4 px-4 text-sm text-gray-600">
         Concept: A simulated chatroom where multiple Replicas (and potentially the user) can interact.
       </p>

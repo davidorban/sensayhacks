@@ -35,7 +35,7 @@ const MCPClientPage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4 text-gray-900">MCP Client/Server (Mock)</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">MCP Client/Server (Mock)</h1>
       <p className="mb-6 text-sm text-gray-600">
         Concept: Simulates a UI triggering a backend Micro-process Controller (MCP) with input data and displaying the processed output.
       </p>
@@ -75,7 +75,7 @@ const MCPClientPage = () => {
 
       {output && (
         <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm min-h-[120px]">
-          <h2 className="text-lg font-semibold mb-2 text-gray-700">MCP Output (Mock):</h2>
+          <h2 className="text-lg font-semibold mb-2 text-gray-800">MCP Output (Mock):</h2>
           <pre className="bg-gray-100 p-3 rounded-md text-sm text-gray-800 overflow-x-auto"><code>{JSON.stringify(output, null, 2)}</code></pre>
         </div>
       )}

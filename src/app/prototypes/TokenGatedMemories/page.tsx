@@ -20,7 +20,7 @@ const TokenGatedMemoriesPage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4 text-gray-900">Token-Gated Memories (Mock)</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Token-Gated Memories (Mock)</h1>
       <p className="mb-6 text-sm text-gray-600">
         Concept: Demonstrates accessing exclusive content (memories) by requiring a mock payment/unlock using $SNSY tokens.
       </p>

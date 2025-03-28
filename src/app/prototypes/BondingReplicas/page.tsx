@@ -25,7 +25,7 @@ const BondingReplicasPage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4 text-gray-900">Bonding Replicas (Mock)</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Bonding Replicas (Mock)</h1>
       <p className="mb-6 text-sm text-gray-600">
         Concept: Simulates two or more Replicas interacting and sharing/updating a common state or &quot;bond&quot; (e.g., shared memory or goal).
       </p>
@@ -61,13 +61,13 @@ const BondingReplicasPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Replica 1 */}
         <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm">
-          <h2 className="text-lg font-semibold mb-2 text-gray-700">Replica 1</h2>
+          <h2 className="text-lg font-semibold mb-2 text-gray-800">Replica 1</h2>
           <p className="text-sm text-gray-600 mb-3">Status: <span className="font-medium">{isBonded ? 'Bonded' : 'Not Bonded'}</span></p>
         </div>
 
         {/* Replica 2 */}
         <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm">
-          <h2 className="text-lg font-semibold mb-2 text-gray-700">Replica 2</h2>
+          <h2 className="text-lg font-semibold mb-2 text-gray-800">Replica 2</h2>
           <p className="text-sm text-gray-600 mb-3">Status: <span className="font-medium">{isBonded ? 'Bonded' : 'Not Bonded'}</span></p>
         </div>
 

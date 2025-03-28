@@ -67,7 +67,7 @@ const ReplicaTaskMemoryPage = () => {
   return (
     <div className="flex flex-col flex-1 bg-white"> 
       <div className="p-4 border-b border-gray-300 bg-gray-50"> 
-        <h1 className="text-2xl font-bold text-gray-900">Replica Task Memory</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Replica Task Memory</h1>
         <p className="mt-2 text-sm text-gray-600">
           Concept: A chat interface where a user interacts with a replica that can manage a simple task list based on the conversation.
         </p>
@@ -107,7 +107,7 @@ const ReplicaTaskMemoryPage = () => {
         </div>
 
         <div className="w-80 bg-gray-50 p-4 overflow-y-auto flex-shrink-0"> 
-          <h2 className="text-xl font-bold mb-4">Tasks</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-800">Tasks</h2>
           <div className="flex-1 overflow-y-auto space-y-2 p-4 bg-white border border-gray-300 rounded-lg shadow-sm"> 
             <ul className="space-y-2">
               {tasks.map((task) => (

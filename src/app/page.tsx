@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center p-8 sm:p-12 md:p-16 lg:p-24 font-[family-name:var(--font-geist-sans)]">
       <div className="max-w-4xl w-full text-center">
-        <h1 className="text-4xl font-bold mb-6 text-gray-900">Sensay Hackathon Ideas Showcase</h1>
+        <h1 className="text-4xl font-bold mb-6 text-gray-800">Sensay Hackathon Ideas Showcase</h1>
         <p className="text-lg text-gray-700 mb-8">
           This project showcases various UI prototypes for potential Sensay features, built using Next.js 14 (App Router), TypeScript, and Tailwind CSS.
           Use the sidebar to explore the different mock prototypes.
