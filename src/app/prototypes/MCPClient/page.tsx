@@ -25,7 +25,7 @@ const MCPClientPage = () => {
     let parsedInputData: object;
     try {
       parsedInputData = JSON.parse(inputData);
-    } catch (_parseError) {
+    } catch {
       setError('Invalid JSON in Input Data.');
       setIsLoading(false);
       return;
@@ -47,7 +47,7 @@ const MCPClientPage = () => {
 
       const data = await apiResponse.json();
       setResponse(data);
-    } catch (_error) {
+    } catch {
       setError('Failed to invoke MCP tool.');
     } finally {
       setIsLoading(false);
