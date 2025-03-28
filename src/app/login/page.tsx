@@ -1,9 +1,10 @@
 'use client';
+
 import { createClient } from '@/lib/supabase/client';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 export default function LoginPage() {
@@ -12,14 +13,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
-      if (session) {
-        // Redirect logged-in users away from login page
-        // Middleware will handle directing them to the correct page (prototypes or overview)
-        router.push('/'); 
+      if (event === 'SIGNED_IN') {
+        router.push('/');
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, [supabase, router]);
 
   return (
@@ -30,10 +31,8 @@ export default function LoginPage() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={['google']}
-          // Only allow specific email domains for signup if needed directly here
-          // (though middleware check is more robust)
-          // view="sign_in" 
-          redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`}
+          redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`}
+          theme="dark"
         />
       </div>
     </div>
