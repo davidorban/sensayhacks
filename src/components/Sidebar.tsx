@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import React from 'react';
 
-const Sidebar = () => {
+const Sidebar = ({ children }: { children?: React.ReactNode }) => {
   const prototypes = [
     { name: 'Bonding Replicas', path: '/prototypes/BondingReplicas' },
     { name: 'Chatroom', path: '/prototypes/Chatroom' },
@@ -33,6 +34,9 @@ const Sidebar = () => {
           ))}
         </ul>
       </nav>
+      <div className="mt-auto">
+        {children}
+      </div>
     </div>
   );
 };

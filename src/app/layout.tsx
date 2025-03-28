@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import { createClient } from '@/lib/supabase/server'; 
+import { cookies } from 'next/headers'; 
+import SignOutButton from "@/components/SignOutButton"; 
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,26 +18,37 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Sensay Hacks Showcase",
-  description: "UI Showcase for Sensay Hackathon Ideas",
+  title: "Sensay Prototypes", 
+  description: "Showcasing Sensay Hackathon Ideas",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const userEmail = session?.user?.email;
+  const showSidebar = session && userEmail?.endsWith('@sensay.io');
+
   return (
-    <html lang="en">
+    <html lang="en" className="h-full bg-gray-100">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex`}
       >
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 p-8 ml-64">
-            {children}
-          </main>
-        </div>
+        {showSidebar ? (
+          <Sidebar>
+            <div className="mt-auto p-2">
+              <SignOutButton />
+            </div>
+          </Sidebar>
+        ) : null} 
+        <main className="flex-1 flex flex-col overflow-y-auto">
+          {children}
+        </main>
       </body>
     </html>
   );

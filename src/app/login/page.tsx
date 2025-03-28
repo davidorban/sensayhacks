@@ -1,0 +1,41 @@
+'use client';
+import { createClient } from '@/lib/supabase/client';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
+
+export default function LoginPage() {
+  const supabase = createClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      if (session) {
+        // Redirect logged-in users away from login page
+        // Middleware will handle directing them to the correct page (prototypes or overview)
+        router.push('/'); 
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase, router]);
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center bg-gray-900 p-6">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">Sensay Prototypes Login</h1>
+        <Auth
+          supabaseClient={supabase}
+          appearance={{ theme: ThemeSupa }}
+          providers={['google']}
+          // Only allow specific email domains for signup if needed directly here
+          // (though middleware check is more robust)
+          // view="sign_in" 
+          redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`}
+        />
+      </div>
+    </div>
+  );
+}
