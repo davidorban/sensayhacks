@@ -55,7 +55,7 @@ const BondingReplicasPage = () => {
         </span>
       </div>
 
-      <div className="p-4 border border-gray-200 rounded-lg bg-white shadow-sm min-h-[120px]"> 
+      <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm min-h-[120px]"> 
         <h2 className="text-lg font-semibold mb-2 text-gray-700">Shared Memory Pool (Mock):</h2>
         {isBonded && sharedMemory.length > 0 ? (
           <ul className="list-disc list-inside space-y-1 text-gray-600 pl-4">

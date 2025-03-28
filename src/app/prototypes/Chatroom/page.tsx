@@ -75,11 +75,11 @@ const ChatroomPage = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 bg-gray-50"> 
+    <div className="flex flex-col flex-1 bg-gray-100"> {/* Darkened bg */}
       <h1 className="text-2xl font-bold mb-4 px-4 pt-4">Chatroom (Mock)</h1>
       
       {/* Replica Selection */}
-      <div className="mb-4 px-4 pt-2 pb-4 bg-white border-b border-gray-200 shadow-sm"> 
+      <div className="mb-4 px-4 pt-2 pb-4 bg-white border-b border-gray-300 shadow-sm"> {/* Darkened border */}
         <label className="block text-sm font-medium text-gray-700 mb-2">Select Replicas to Chat With:</label> 
         <div className="flex flex-wrap gap-2">
           {availableReplicas.map(replica => (
@@ -98,8 +98,8 @@ const ChatroomPage = () => {
         </div>
       </div>
 
-      {/* Message Display */} 
-      <div className="flex-1 overflow-y-auto mb-0 space-y-4 p-4 bg-gray-100"> 
+      {/* Message Display */}
+      <div className="flex-1 overflow-y-auto mb-0 space-y-4 p-4 bg-gray-200"> {/* Darkened bg */}
         {messages.map((msg) => (
           <div key={msg.id} className={`flex flex-col ${msg.sender === 'User' ? 'items-end' : 'items-start'}`}>
             <div
@@ -113,8 +113,8 @@ const ChatroomPage = () => {
         ))}
       </div>
 
-      {/* Message Input */} 
-      <div className="p-4 border-t border-gray-200 bg-white"> 
+      {/* Message Input */}
+      <div className="p-4 border-t border-gray-300 bg-white"> {/* Darkened border */}
         <div className="flex items-center">
           <input
             type="text"
