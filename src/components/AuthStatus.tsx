@@ -1,23 +1,48 @@
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
-import Link from 'next/link';
-import SignOutButton from './SignOutButton'; // We can reuse the existing button
-import { User } from 'lucide-react';
+'use client';
 
-export default async function AuthStatus() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const { data: { session } } = await supabase.auth.getSession();
+import { createClient } from '@/lib/supabase/client';
+import Link from 'next/link';
+import SignOutButton from './SignOutButton';
+import { User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+
+export default function AuthStatus() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [supabase.auth]);
+
+  if (loading) {
+    return (
+      <div className="fixed top-4 right-4 z-50">
+        <span className="text-sm text-gray-400">Loading...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center space-x-3">
       {session ? (
         <>
-          <span className="text-sm text-gray-300 hidden sm:inline" title={session.user.email}>
-            {session.user.email}
+          <span className="text-sm text-gray-300 hidden sm:inline" title={session.user.email ?? 'No Email'}>
+            {session.user.email ?? 'User'}
           </span>
-          {/* Optionally show only icon on small screens */}
-          <User className="h-5 w-5 text-gray-300 sm:hidden" /> 
+          <User className="h-5 w-5 text-gray-300 sm:hidden" />
           <SignOutButton />
         </>
       ) : (
