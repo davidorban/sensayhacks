@@ -1,39 +1,43 @@
 flowchart TD
-  Start[Start] --> Auth[User Authentication via Supabase Auth]
-  Auth --> Sidebar[Vertical Sidebar Navigation]
-  Sidebar --> ReplicaTaskMemory[Replica Task Memory]
-  Sidebar --> PureVoice[Pure Voice]
-  Sidebar --> MCPClientServer[MCP Client Server]
-  Sidebar --> TokenGatedMemories[Token Gated Memories]
-  Sidebar --> TokenGuidedEvolution[Token Guided Evolution]
-  Sidebar --> BondingReplicas[Bonding Replicas]
-  Sidebar --> Chatroom[Chatroom]
+    A[User visits any page] --> MW{Middleware Check}
 
-  ReplicaTaskMemory --> RTM1[Chat Interface]
-  RTM1 --> RTM2[Message Timestamps and Sender Labels]
-  RTM2 --> RTM3[Task List Display]
+    subgraph Public Routes
+        direction LR
+        P1[/]
+        P2[/login]
+        P3[/auth/callback]
+        P4[/privacy]
+        P5[/terms]
+        P6[Static Assets]
+    end
 
-  PureVoice --> PV1[Start Mock Voice Interaction Button]
-  PV1 --> PV2[Placeholder Voice Flow Text]
+    MW -- Public Route --> Allow(Allow Access)
 
-  MCPClientServer --> MCP1[Data Input Fields]
-  MCP1 --> MCP2[Process Request Button]
-  MCP2 --> MCP3[Structured Output Display]
+    MW -- Protected Route --> AuthCheck{Authenticated?}
 
-  TokenGatedMemories --> TGM1[Display Locked and Unlocked Memories]
-  TGM1 --> TGM2[Unlock Mock Button]
+    AuthCheck -- No --> RedirectLogin(Redirect to /login)
+    RedirectLogin --> LoginPage[/login Page]
+    LoginPage -- Login Attempt --> SupabaseAuth[Supabase Auth (Google/Email)]
+    SupabaseAuth -- Success --> Callback[/auth/callback]
+    Callback --> SetCookie[Set Session Cookie]
+    SetCookie --> RedirectHome(Redirect to /)
+    SupabaseAuth -- Failure --> LoginPage
 
-  TokenGuidedEvolution --> TGE1[Display Replica Level]
-  TGE1 --> TGE2[Evolve Mock SNSY Payment Button]
-  TGE2 --> TGE3[Mock NFT Display]
+    AuthCheck -- Yes --> DomainCheck{Email @sensay.io?}
 
-  BondingReplicas --> BR1[Display Bonding Status]
-  BR1 --> BR2[Toggle Mock Bond Button]
-  BR2 --> BR3[Chat Interface for Bonded State]
+    DomainCheck -- Yes --> AllowSensay(Allow Access)
+    AllowSensay --> SensayUserView[/ or /prototypes/*]
+    SensayUserView --> Sidebar[Show Sidebar]
+    Sidebar --> PrototypeView[Prototype Pages]
+    PrototypeView --> Interactions[Mock Interactions]
 
-  Chatroom --> CR1[Replica Selection]
-  CR1 --> CR2[Initial Prompt]
-  CR2 --> CR3[Start Replica Chat Button]
-  CR3 --> CR4[Conversation Transcript]
+    DomainCheck -- No --> PathCheck{Target /prototypes/*?}
+    PathCheck -- Yes --> RedirectOverview(Redirect to /overview)
+    PathCheck -- No --> AllowNonSensay(Allow Access)
+    AllowNonSensay --> NonSensayUserView[/ or /overview]
+    RedirectOverview --> NonSensayUserView
+    NonSensayUserView --> NoSidebar[Hide Sidebar]
 
-  Sidebar --> EnvConfig[Environment Config: SENSAY API KEY, SUPABASE URL, SUPABASE ANON KEY]
+    UserAction[User Action (e.g., Click Sign Out)] --> SignOutFunc[SignOutButton Click]
+    SignOutFunc --> SupabaseSignOut[Supabase auth.signOut()]
+    SupabaseSignOut --> ReloadHome[Full Page Reload to /]

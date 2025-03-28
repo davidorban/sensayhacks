@@ -18,30 +18,31 @@ Our frontend is all about providing a clear, easy-to-use interface for users to 
   - Adds a safety net by checking our code during development.
   - Helps reduce bugs and makes maintaining the project easier over time.
 
-- **Windsurf**
-  - Provides pre-built UI components that speed up development.
-  - Ensures a consistent, clean visual design that adheres to our objective for simplicity and clarity.
+- **Tailwind CSS**
+  - Provides utility classes for rapidly styling the application.
+  - Ensures a consistent, clean visual design adhering to the project's aesthetic.
 
-These tools work together to create a responsive and dynamic user interface. Users will benefit from clear navigation (via a vertical sidebar), interactive elements like buttons and forms, and timely feedback (with loading indicators and messages) as they explore each prototype feature.
+These tools work together to create a responsive and dynamic user interface. Users will benefit from clear navigation (via a conditional vertical sidebar), interactive elements like buttons and forms, and timely feedback as they explore each prototype feature.
 
 ## 2. Backend Technologies
 
 The backend is the engine of our application, handling everything from user authentication to data management and communication with external APIs. Here’s what’s under the hood:
 
-- **Next.js API Routes / Vercel Serverless Functions**
-  - Provide the backend logic needed for API calls within our Next.js framework.
-  - Enable rapid development and easy deployment of server-side functionality.
+- **Next.js (App Router Features)**
+  - **Route Handlers:** Used for specific backend endpoints like the `/auth/callback` for handling OAuth redirects.
+  - **Middleware:** Implemented in `app/src/middleware.ts` to manage authentication state checks and authorization logic (e.g., redirecting users based on login status and email domain) before requests reach the page.
 
 - **Supabase**
-  - Manages user authentication (sign up, log in, and log out) using Supabase Auth.
-  - Handles data storage and retrieval through our PostgreSQL database, helping us manage data like conversation histories, task lists, and mock token interactions.
+  - Manages user authentication (sign up, log in, log out) using Supabase Auth.
+  - **`@supabase/ssr`:** Library used extensively to handle session management and client creation securely across Server Components, Client Components, Route Handlers, and Middleware within the Next.js App Router.
+  - **`@supabase/auth-ui-react`:** Provides the pre-built React components used for the login form on the `/login` page.
+  - Provides the underlying PostgreSQL database, primarily managed by Supabase Auth for user/session data in this project.
+
+- **Sensay API (Simulated)**
+  - Interactions suggesting integration with a Sensay API (e.g., in the MCP prototype) are **mocked on the frontend**. This project focuses on UI/UX demonstration and does not include live backend API calls to Sensay services.
 
 - **PostgreSQL**
   - The database where all our project’s data is stored, accessed via Supabase.
-
-- **Sensay API**
-  - Interfaces with our prototype ideas, allowing us to simulate interactions and feature demonstrations.
-  - While some calls are fully functional, others (like Web3 or telephony) are mocked for the purposes of this hackathon demo.
 
 These components are carefully integrated so that the application remains responsive. For example, when a user sends a message or triggers a mock transaction, the backend quickly processes the request and updates the UI with the new state.
 
@@ -71,20 +72,16 @@ Together, these decisions support a robust deployment pipeline, ensuring our app
 Our project also leverages several external services that enhance functionality and support rapid development:
 
 - **Supabase** (Auth and Database)
-  - Provides both user authentication and data storage via PostgreSQL, making it easy to manage user data and application state.
+  - Provides user authentication (`@supabase/ssr`, `@supabase/auth-ui-react`) and the underlying PostgreSQL database for session/user management.
 
-- **Sensay API**
-  - Serves as the connection point for demonstrating various prototype features.
-  - While some interactions (like token payments and voice simulation) are mocked in this demo, the API integration lays a foundation for future enhancements.
-
-- **Mock Implementations for Web3 and Telephony**
-  - Simulate $SNSY token transactions in features such as Token-Gated Memories, Token-Guided Evolution, and Bonding Replicas.
-  - These mock implementations are clearly labeled in the UI, ensuring users know that these are not live transactions but simulations.
+- **Mock Implementations for Sensay API, Web3, and Telephony**
+  - Interactions related to potential Sensay API calls, $SNSY token transactions (Token-Gated Memories, Token-Guided Evolution, Bonding Replicas), and voice interactions (Pure Voice) are **simulated entirely on the frontend**.
+  - These mock implementations are clearly labeled in the UI, ensuring users understand these are demonstrations, not live operations.
 
 - **AI-enhanced Tools**
   - **Anthropic’s Claude 3.7 Sonnet** and **OpenAI GPT-4o** are part of our development toolkit, ensuring that we have cutting-edge assistance for coding and problem-solving, although they primarily serve to boost our development efficiency rather than direct live functionality within the app.
 
-These integrations allow us to mix robust backend solutions with rapid development tools, leading to a highly functional and demonstrative prototype.</n>
+These integrations allow us to mix robust backend solutions with rapid development tools, leading to a highly functional and demonstrative prototype.
 
 ## 5. Security and Performance Considerations
 
@@ -106,13 +103,13 @@ Together, these practices ensure that our application offers not only a secure e
 
 In summary, our tech stack is chosen to balance rapid development, user-friendly design, and secure, scalable infrastructure. Here’s a quick recap:
 
-- **Frontend**: Next.js, React, TypeScript, and Windsurf provide the building blocks for a responsive and visually consistent interface ideal for demonstrating multiple prototypes.
+- **Frontend**: Next.js (App Router), React, TypeScript, and Tailwind CSS provide the building blocks for a responsive and visually consistent interface ideal for demonstrating multiple prototypes.
 
-- **Backend**: Next.js API routes, Supabase (with its integrated PostgreSQL database), and Sensay API ensure that data management, authentication, and feature simulations run smoothly.
+- **Backend**: Next.js features (Route Handlers, Middleware), Supabase (Auth, `@supabase/ssr`, `@supabase/auth-ui-react`, PostgreSQL) handle authentication, authorization, and session management.
 
 - **Infrastructure**: Vercel’s deployment platform, combined with secure environment variable management and CI/CD pipelines, guarantees that the application is both robust and easy to update.
 
-- **Third-Party Integrations**: Using services like Supabase, the Sensay API, and even AI tools such as Claude 3.7 Sonnet and GPT-4o provides us with a powerful suite of tools that enhance both development speed and overall functionality.
+- **Third-Party Integrations**: Using services like Supabase, and AI tools such as Claude 3.7 Sonnet and GPT-4o provides us with a powerful suite of tools that enhance both development speed and overall functionality. Note that interactions suggesting external APIs (Sensay, Web3) are mocked frontend-only.
 
 The chosen tech stack not only meets the project’s rapid prototype needs for the hackathon but also lays a solid foundation for future, more complex enhancements. Overall, our decisions ensure that users will experience an intuitive, responsive, and secure interface, while developers enjoy a well-organized and scalable system architecture.
 
