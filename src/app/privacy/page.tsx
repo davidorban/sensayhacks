@@ -33,7 +33,7 @@ const PrivacyPolicyPage = () => {
 
         <h2 className="text-xl font-semibold pt-4 text-gray-800">Contact</h2>
         <p>
-          For any questions regarding this privacy notice (even though it's for a mock application), 
+          For any questions regarding this privacy notice (even though it&apos;s for a mock application), 
           you can hypothetically contact us at: <a href="mailto:privacy@sensayhacks.com" className="text-indigo-600 hover:underline">privacy@sensayhacks.com</a>.
         </p>
         
