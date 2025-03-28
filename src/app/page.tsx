@@ -40,6 +40,18 @@ export default function Home() {
         </div>
 
       </div>
+      <footer className="mt-12 pt-6 border-t border-gray-200 text-center text-gray-500 text-sm">
+        <p>&copy; {new Date().getFullYear()} Sensay Hackathon Mockups. For demonstration purposes only.</p>
+        <div className="mt-2 space-x-4">
+          <Link href="/privacy" className="hover:underline hover:text-indigo-600">
+            Privacy Policy
+          </Link>
+          <span>|</span>
+          <Link href="/terms" className="hover:underline hover:text-indigo-600">
+            Terms & Conditions
+          </Link>
+        </div>
+      </footer>
     </main>
   );
 }
