@@ -109,7 +109,7 @@ const ChatroomPage = () => {
             <div key={index} className={`flex ${msg.sender === 'User' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow ${msg.sender === 'User' ? 'bg-indigo-500 text-white' : getBgColor(msg.sender)}`}>
                 <p className="text-sm font-semibold mb-0.5">{msg.sender}</p>
-                <p className="text-sm">{msg.text}</p>
+                <p className={`text-sm ${msg.sender !== 'User' ? 'text-gray-900' : ''}`}>{msg.text}</p>
                 <span className="text-xs opacity-70 block mt-1 text-right">{msg.timestamp}</span>
               </div>
             </div>
