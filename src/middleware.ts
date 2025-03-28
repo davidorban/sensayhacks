@@ -1,9 +1,10 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createMiddlewareClient } from './lib/supabase/server';
 
 // List of routes accessible without authentication
-const publicRoutes = ['/', '/login', '/auth/callback', '/privacy', '/terms', '/overview'];
+const publicRoutes = ['/', '/login', '/auth/callback', '/privacy', '/terms'];
 
 // List of routes accessible only to authenticated users with specific domain
 const protectedInternalRoutesPrefix = '/prototypes';
@@ -12,48 +13,9 @@ const protectedInternalRoutesPrefix = '/prototypes';
 const requiredDomain = 'sensay.io';
 
 export async function middleware(req: NextRequest) {
-  // Create an unmodified response
-  let res = NextResponse.next({
-    request: {
-      headers: req.headers,
-    },
-  });
+  // Use the helper, which returns { supabase, response }
+  const { supabase, response } = createMiddlewareClient(req);
 
-  // Create a Supabase client configured to use cookies
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          // If the cookie is set, update the request and response cookies
-          req.cookies.set({ name, value, ...options });
-          res = NextResponse.next({
-            request: {
-              headers: req.headers,
-            },
-          });
-          res.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          // If the cookie is removed, update the request and response cookies
-          req.cookies.set({ name, value: '', ...options });
-          res = NextResponse.next({
-            request: {
-              headers: req.headers,
-            },
-          });
-          res.cookies.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
-
-  // Refresh session if expired - important!
-  // This will also load the session into the client
   const { data: { session } } = await supabase.auth.getSession();
 
   const { pathname } = req.nextUrl;
@@ -63,7 +25,7 @@ export async function middleware(req: NextRequest) {
 
   // Allow access to public routes regardless of auth status
   if (isPublicRoute) {
-    return res;
+    return response;
   }
 
   // If user is not logged in and trying to access a non-public route, redirect to login
@@ -80,7 +42,7 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith(protectedInternalRoutesPrefix)) {
     if (isAllowedDomain) {
       console.log(`Middleware: Access granted to ${pathname} for ${userEmail}`);
-      return res; // Allow access for correct domain
+      return response; // Allow access for correct domain
     } else {
       console.log(`Middleware: Access denied to ${pathname} for ${userEmail}, redirecting to /overview`);
       // Redirect non-sensay.io users trying to access prototypes to the overview page
@@ -90,7 +52,7 @@ export async function middleware(req: NextRequest) {
 
   // Allow access to any other authenticated routes (should not be any currently based on logic)
   console.log(`Middleware: Allowing access to ${pathname} for ${userEmail} (default)`);
-  return res; // Return the potentially modified response
+  return response; // Return the potentially modified response
 }
 
 // Configure the middleware to run on specific paths
@@ -101,8 +63,16 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - api/ (API routes, if any - none currently)
+     * - / (public home page)
+     * - /img/ (public images)
+     * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|img).*)',
+    // Ensure / is excluded if it should be public
+    // We can be more specific: include /prototypes, /overview, /login, /auth/callback
+    // '/prototypes/:path*',
+    // '/overview',
+    // '/login',
+    // '/auth/callback',
   ],
 };

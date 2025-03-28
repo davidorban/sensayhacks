@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
-import { createClient } from '@/lib/supabase/server'; 
-import { cookies } from 'next/headers'; 
+import { createServerComponentClient } from '@/lib/supabase/server'; 
 import AuthStatus from "@/components/AuthStatus"; 
 
 const geistSans = localFont({
@@ -27,8 +26,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = createServerComponentClient();
   const { data: { session } } = await supabase.auth.getSession();
 
   const userEmail = session?.user?.email;
