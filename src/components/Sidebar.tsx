@@ -16,9 +16,9 @@ const Sidebar = ({ children }: { children?: React.ReactNode }) => {
   prototypes.sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="h-screen w-64 bg-gray-800 text-white p-5 fixed left-0 top-0">
+    <div className="w-64 h-screen bg-gray-800 text-white p-5 flex flex-col">
       <h2 className="text-xl font-semibold mb-6">Prototypes</h2>
-      <nav>
+      <nav className="flex-grow">
         <ul>
           <li className="mb-3">
             <Link href="/" className="hover:text-gray-300">
@@ -28,7 +28,7 @@ const Sidebar = ({ children }: { children?: React.ReactNode }) => {
           {prototypes.map((proto) => (
             <li key={proto.path} className="mb-3">
               <Link href={proto.path} className="hover:text-gray-300">
-                  {proto.name}
+                {proto.name}
               </Link>
             </li>
           ))}

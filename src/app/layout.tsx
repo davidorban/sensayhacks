@@ -35,9 +35,9 @@ export default async function RootLayout({
   const showSidebar = session && userEmail?.endsWith('@sensay.io');
 
   return (
-    <html lang="en" className="h-full bg-gray-900">
+    <html lang="en" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex bg-gray-900`}
       >
         {showSidebar ? (
           <Sidebar />
