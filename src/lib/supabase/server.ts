@@ -13,6 +13,7 @@ export const createClient = (cookieStore: ReturnType<typeof cookies>) => {
         set(name: string, value: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value, ...options });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (_error) {
             // The `set` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
@@ -22,6 +23,7 @@ export const createClient = (cookieStore: ReturnType<typeof cookies>) => {
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value: '', ...options });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (_error) {
             // The `delete` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
