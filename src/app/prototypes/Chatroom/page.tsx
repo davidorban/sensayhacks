@@ -132,7 +132,7 @@ const ChatroomPage = () => {
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder={selectedReplicas.length > 0 ? "Type your message..." : "Select at least one replica to chat"}
               disabled={selectedReplicas.length === 0}
-              className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
             />
             <button
               onClick={handleSendMessage}

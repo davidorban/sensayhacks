@@ -49,7 +49,7 @@ const MCPClientPage = () => {
             value={inputData}
             onChange={(e) => setInputData(e.target.value)}
             placeholder='{ "param1": "value1", "param2": 123 }'
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm text-black"
           />
           <button
             onClick={handleTriggerMcp}
