@@ -20,19 +20,6 @@ interface Task {
   completed: boolean;
 }
 
-// Define expected Sensay API response structures
-interface SensayChoice {
-  message?: {
-    content?: string | null;
-  };
-  // Add other choice properties if needed
-}
-
-interface SensayErrorDetail {
-    message?: string;
-    // Add other potential error detail properties
-}
-
 // Type guard to check if an object has an 'error' property (basic Sensay error check)
 function hasErrorProperty(data: unknown): data is { error: unknown } {
     return typeof data === 'object' && data !== null && 'error' in data;
