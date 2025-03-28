@@ -81,7 +81,6 @@ export async function POST(request: Request) {
 
   // --- Fetch Tasks from Supabase --- //
   let tasksFromSupabase: Task[] = [];
-  let fetchErrorOccurred = false;
   try {
     const { data: tasksData, error: tasksError } = await supabase
       .from('tasks')
@@ -90,7 +89,6 @@ export async function POST(request: Request) {
       .order('created_at', { ascending: true }); // Order by creation time
 
     if (tasksError) {
-      fetchErrorOccurred = true;
       console.error('Supabase error fetching tasks:', tasksError);
       // Proceeding without tasks, but log it
     } else {
@@ -98,7 +96,6 @@ export async function POST(request: Request) {
       console.log(`Fetched ${tasksFromSupabase.length} tasks for user ${userId}`);
     }
   } catch (fetchError) {
-    fetchErrorOccurred = true;
     console.error('Error fetching tasks from Supabase:', fetchError);
     // Proceeding without tasks
   }
