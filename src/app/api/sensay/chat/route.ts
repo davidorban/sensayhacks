@@ -154,10 +154,10 @@ export async function POST(request: Request) {
     console.log('Sensay API Success. Reply:', replyContent);
 
   } catch (error: unknown) {
-    console.error('Error calling Sensay API:', error);
-    // Network or other fetch error, return generic error and tasks fetched earlier
-    // Use the tasks fetched *before* the failed Sensay call in the response
-    return NextResponse.json({ error: 'Failed to communicate with Sensay API', tasks: tasksFromSupabase }, { status: 500 });
+   console.error('Error calling Sensay API:', error);
+   // Network or other fetch error, return generic error and tasks fetched earlier
+   // Use the tasks fetched *before* the failed Sensay call in the response
+   return NextResponse.json({ error: 'Failed to communicate with Sensay API', tasks: tasksFromSupabase }, { status: 500 });
   }
 
   // --- Task Intent Detection & Modification (Simple Keyword Matching) --- //
