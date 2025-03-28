@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+export const metadata = {
+  title: 'Home | Sensay Proto',
+};
+
 export default function Home() {
   const prototypes = [
     { name: 'Replica Task Memory', path: '/prototypes/ReplicaTaskMemory' },

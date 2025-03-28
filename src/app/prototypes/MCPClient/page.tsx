@@ -1,6 +1,9 @@
 "use client";
-
 import React, { useState } from 'react';
+
+export const metadata = {
+  title: 'MCP Client | Sensay Proto',
+};
 
 interface McpOutput {
   status: string;

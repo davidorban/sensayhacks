@@ -1,7 +1,10 @@
 // src/app/prototypes/BondingReplicas/page.tsx
 "use client";
-
 import React, { useState } from 'react';
+
+export const metadata = {
+  title: 'Bonding Replicas | Sensay Proto',
+};
 
 const BondingReplicasPage = () => {
   const [isBonded, setIsBonded] = useState(false);

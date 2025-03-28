@@ -1,5 +1,9 @@
 import React from 'react';
 
+export const metadata = {
+  title: 'Terms & Conditions | Sensay Proto',
+};
+
 const TermsAndConditionsPage = () => {
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6"> 

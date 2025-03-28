@@ -3,6 +3,10 @@
 
 import React, { useState } from 'react';
 
+export const metadata = {
+  title: 'Pure Voice | Sensay Proto',
+};
+
 const PureVoicePage = () => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');

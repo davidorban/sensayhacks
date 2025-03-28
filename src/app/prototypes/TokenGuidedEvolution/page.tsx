@@ -1,6 +1,9 @@
 "use client";
-
 import React, { useState } from 'react';
+
+export const metadata = {
+  title: 'Token-Guided Evolution | Sensay Proto',
+};
 
 const TokenGuidedEvolutionPage = () => {
   const [evolutionStage, setEvolutionStage] = useState(1);

@@ -1,5 +1,9 @@
 import React from 'react';
 
+export const metadata = {
+  title: 'Privacy Policy | Sensay Proto',
+};
+
 const PrivacyPolicyPage = () => {
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6"> 
