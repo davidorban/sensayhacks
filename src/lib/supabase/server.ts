@@ -16,14 +16,14 @@ export function createServerComponentClient() {
         set(name: string, value: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value, ...options })
-          } catch (_error) {
+          } catch (_error) { // eslint-disable-next-line @typescript-eslint/no-unused-vars
             // Server Components cannot set cookies directly
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value: '', ...options })
-          } catch (_error) {
+          } catch (_error) { // eslint-disable-next-line @typescript-eslint/no-unused-vars
             // Server Components cannot delete cookies directly
           }
         },
