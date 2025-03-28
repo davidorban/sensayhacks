@@ -30,7 +30,7 @@ const TokenGuidedEvolutionPage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Token-Guided Evolution (Mock)</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-900">Token-Guided Evolution (Mock)</h1>
       <p className="mb-6 text-gray-600">Guide the evolution of a digital entity (e.g., AI persona) using $SNSY tokens.</p>
 
       <div className="mb-6 p-4 border border-gray-300 rounded-lg bg-gray-100 shadow">

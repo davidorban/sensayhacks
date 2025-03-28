@@ -76,7 +76,7 @@ const ChatroomPage = () => {
 
   return (
     <div className="flex flex-col flex-1 bg-gray-100"> {/* Darkened bg */}
-      <h1 className="text-2xl font-bold mb-4 px-4 pt-4">Chatroom (Mock)</h1>
+      <h1 className="text-2xl font-bold mb-4 px-4 pt-4 text-gray-900">Chatroom (Mock)</h1>
       
       {/* Replica Selection */}
       <div className="mb-4 px-4 pt-2 pb-4 bg-white border-b border-gray-300 shadow-sm"> {/* Darkened border */}

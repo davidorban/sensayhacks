@@ -68,7 +68,7 @@ const ReplicaTaskMemoryPage = () => {
     <div className="flex flex-1"> 
       {/* Chat Area */} 
       <div className="flex-1 flex flex-col bg-gray-100 p-4 border-r border-gray-300">
-        <h1 className="text-2xl font-bold mb-4">Replica Task Memory</h1>
+        <h1 className="text-2xl font-bold mb-4 text-gray-900">Replica Task Memory</h1>
         {/* Message Display */} 
         <div className="flex-1 overflow-y-auto mb-4 space-y-4 p-2 bg-gray-100 rounded shadow"> 
           {messages.map((msg) => (
