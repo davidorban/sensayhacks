@@ -64,6 +64,16 @@ console.log('Clean API Base URL:', SENSAY_API_URL_BASE);
 console.log('API Key Config:', SENSAY_ORGANIZATION_SECRET ? '[PROVIDED]' : '[MISSING]');
 console.log('Using API Version Date:', currentDate);
 
+// Helper function for consistent authentication headers
+function getAuthHeaders(userId: string) {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
+    'X-USER-ID': userId,
+    'X-API-Version': currentDate
+  };
+}
+
 export async function POST(request: NextRequest) {
   console.log('--- Request received at /api/chat-test ---');
   
@@ -84,15 +94,17 @@ export async function POST(request: NextRequest) {
     // Try to register the user first to avoid unauthorized errors
     try {
       const createUserUrl = `${SENSAY_API_URL_BASE}/v1/users`;
-      const createUserBody = { external_id: userId, metadata: { app: "SensayHacks" } };
+      const createUserBody = { 
+        external_id: userId, 
+        metadata: { 
+          app: "SensayHacks",
+          source: "api-integration"
+        }
+      };
       
       const createUserResponse = await fetch(createUserUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-          'X-API-Version': currentDate
-        },
+        headers: getAuthHeaders(userId),
         body: JSON.stringify(createUserBody),
       });
       
@@ -140,12 +152,7 @@ export async function POST(request: NextRequest) {
       
       const listReplicasResponse = await fetch(listReplicasUrl, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        }
+        headers: getAuthHeaders(userId)
       });
       
       const listReplicasText = await listReplicasResponse.text();
@@ -186,12 +193,7 @@ export async function POST(request: NextRequest) {
       
       const openAIStyleResponse = await fetch(openAIStyleApiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        },
+        headers: getAuthHeaders(userId),
         body: JSON.stringify(requestBody),
       });
       
@@ -246,15 +248,7 @@ export async function POST(request: NextRequest) {
       
       const standardResponse = await fetch(standardApiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-          'x-organization-secret': SENSAY_ORGANIZATION_SECRET, // Try lowercase version too
-          'Organization-Secret': SENSAY_ORGANIZATION_SECRET, // Try without X- prefix
-          'X-API-KEY': SENSAY_ORGANIZATION_SECRET, // Try as API key
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        },
+        headers: getAuthHeaders(userId),
         body: JSON.stringify(requestBody),
       });
       
@@ -309,15 +303,7 @@ export async function POST(request: NextRequest) {
       
       const experimentalResponse = await fetch(experimentalApiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-          'x-organization-secret': SENSAY_ORGANIZATION_SECRET,
-          'Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-          'X-API-KEY': SENSAY_ORGANIZATION_SECRET,
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        },
+        headers: getAuthHeaders(userId),
         body: JSON.stringify(requestBody),
       });
       
@@ -370,12 +356,7 @@ export async function POST(request: NextRequest) {
       
       const completionsResponse = await fetch(completionsApiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        },
+        headers: getAuthHeaders(userId),
         body: JSON.stringify(requestBody),
       });
       
@@ -409,300 +390,6 @@ export async function POST(request: NextRequest) {
       attemptResults.push({
         path: 'Completions API Path',
         url: completionsApiUrl,
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-
-    // Attempt 5: Different organization header - "Authorization" instead of "X-Organization-Secret"
-    try {
-      console.log('Attempting with Authorization header...');
-      const authApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
-      
-      const requestBody = {
-        messages: messages.map((msg: Message) => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content,
-        })),
-      };
-      
-      console.log('Auth API URL:', authApiUrl);
-      
-      const authResponse = await fetch(authApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      const authResponseText = await authResponse.text();
-      console.log('Auth API Response Status:', authResponse.status);
-      console.log('Auth API Response Body:', authResponseText);
-      
-      attemptResults.push({
-        path: 'Authorization Header API Path',
-        url: authApiUrl,
-        status: authResponse.status,
-        error: authResponse.statusText,
-        response: authResponseText
-      });
-      
-      if (authResponse.ok) {
-        const responseData = JSON.parse(authResponseText);
-        // Extract the reply
-        const reply = responseData?.choices?.[0]?.message?.content;
-        if (typeof reply === 'string') {
-          return NextResponse.json({ 
-            reply,
-            apiPathUsed: 'auth-header',
-            debug: { url: authApiUrl }
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error in auth header path attempt:', error);
-      const authApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
-      attemptResults.push({
-        path: 'Authorization Header API Path',
-        url: authApiUrl,
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-
-    // Attempt 6: Auth variations with lowercase 'key' and 'secret'
-    try {
-      console.log('Attempting with lowercase auth headers...');
-      const lowerCaseAuthUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
-      
-      const requestBody = {
-        messages: messages.map((msg: Message) => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content,
-        })),
-      };
-      
-      console.log('Lowercase Auth URL:', lowerCaseAuthUrl);
-      
-      const lowerCaseResponse = await fetch(lowerCaseAuthUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': SENSAY_ORGANIZATION_SECRET,
-          'x-user-id': userId,
-          'x-api-version': currentDate
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      const lowerCaseResponseText = await lowerCaseResponse.text();
-      console.log('Lowercase Auth Response Status:', lowerCaseResponse.status);
-      console.log('Lowercase Auth Response Body:', lowerCaseResponseText);
-      
-      attemptResults.push({
-        path: 'Lowercase Headers Path',
-        url: lowerCaseAuthUrl,
-        status: lowerCaseResponse.status,
-        error: lowerCaseResponse.statusText,
-        response: lowerCaseResponseText
-      });
-      
-      if (lowerCaseResponse.ok) {
-        const responseData = JSON.parse(lowerCaseResponseText);
-        // Extract the reply
-        const reply = responseData?.choices?.[0]?.message?.content;
-        if (typeof reply === 'string') {
-          return NextResponse.json({ 
-            reply,
-            apiPathUsed: 'lowercase-headers',
-            debug: { url: lowerCaseAuthUrl }
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error in lowercase headers attempt:', error);
-      const lowerCaseAuthUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
-      attemptResults.push({
-        path: 'Lowercase Headers Path',
-        url: lowerCaseAuthUrl,
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  
-    // Attempt 7: API key in URL query parameter
-    try {
-      console.log('Attempting with API key as query parameter...');
-      const queryParamUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions?api_key=${encodeURIComponent(SENSAY_ORGANIZATION_SECRET)}`;
-      
-      const requestBody = {
-        messages: messages.map((msg: Message) => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content,
-        })),
-      };
-      
-      console.log('Query Param Auth URL:', queryParamUrl.replace(SENSAY_ORGANIZATION_SECRET, '[REDACTED]'));
-      
-      const queryParamResponse = await fetch(queryParamUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      const queryParamResponseText = await queryParamResponse.text();
-      console.log('Query Param Auth Response Status:', queryParamResponse.status);
-      console.log('Query Param Auth Response Body:', queryParamResponseText);
-      
-      attemptResults.push({
-        path: 'Query Parameter Auth Path',
-        url: queryParamUrl.replace(SENSAY_ORGANIZATION_SECRET, '[REDACTED]'),
-        status: queryParamResponse.status,
-        error: queryParamResponse.statusText,
-        response: queryParamResponseText
-      });
-      
-      if (queryParamResponse.ok) {
-        const responseData = JSON.parse(queryParamResponseText);
-        // Extract the reply
-        const reply = responseData?.choices?.[0]?.message?.content;
-        if (typeof reply === 'string') {
-          return NextResponse.json({ 
-            reply,
-            apiPathUsed: 'query-param-auth',
-            debug: { url: queryParamUrl.replace(SENSAY_ORGANIZATION_SECRET, '[REDACTED]') }
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error in query param auth attempt:', error);
-      const queryParamUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions?api_key=[REDACTED]`;
-      attemptResults.push({
-        path: 'Query Parameter Auth Path',
-        url: queryParamUrl,
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  
-    // Attempt 8: Standard Bearer Token Auth
-    try {
-      console.log('Attempting with Bearer token authentication...');
-      const bearerAuthUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
-      
-      const requestBody = {
-        messages: messages.map((msg: Message) => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content,
-        })),
-      };
-      
-      console.log('Bearer Auth URL:', bearerAuthUrl);
-      
-      const bearerResponse = await fetch(bearerAuthUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      const bearerResponseText = await bearerResponse.text();
-      console.log('Bearer Auth Response Status:', bearerResponse.status);
-      console.log('Bearer Auth Response Body:', bearerResponseText);
-      
-      attemptResults.push({
-        path: 'Bearer Token Auth Path',
-        url: bearerAuthUrl,
-        status: bearerResponse.status,
-        error: bearerResponse.statusText,
-        response: bearerResponseText
-      });
-      
-      if (bearerResponse.ok) {
-        const responseData = JSON.parse(bearerResponseText);
-        // Extract the reply
-        const reply = responseData?.choices?.[0]?.message?.content;
-        if (typeof reply === 'string') {
-          return NextResponse.json({ 
-            reply,
-            apiPathUsed: 'bearer-auth',
-            debug: { url: bearerAuthUrl }
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error in Bearer token auth attempt:', error);
-      const bearerAuthUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
-      attemptResults.push({
-        path: 'Bearer Token Auth Path',
-        url: bearerAuthUrl,
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  
-    // Attempt 9: Experimental Bearer Token Auth
-    try {
-      console.log('Attempting with Bearer token on experimental path...');
-      const expBearerAuthUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
-      
-      const requestBody = {
-        messages: messages.map((msg: Message) => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content,
-        })),
-      };
-      
-      console.log('Experimental Bearer Auth URL:', expBearerAuthUrl);
-      
-      const expBearerResponse = await fetch(expBearerAuthUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
-          'X-USER-ID': userId,
-          'X-API-Version': currentDate
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      const expBearerResponseText = await expBearerResponse.text();
-      console.log('Experimental Bearer Auth Response Status:', expBearerResponse.status);
-      console.log('Experimental Bearer Auth Response Body:', expBearerResponseText);
-      
-      attemptResults.push({
-        path: 'Experimental Bearer Token Auth Path',
-        url: expBearerAuthUrl,
-        status: expBearerResponse.status,
-        error: expBearerResponse.statusText,
-        response: expBearerResponseText
-      });
-      
-      if (expBearerResponse.ok) {
-        const responseData = JSON.parse(expBearerResponseText);
-        // Extract the reply
-        const reply = responseData?.choices?.[0]?.message?.content;
-        if (typeof reply === 'string') {
-          return NextResponse.json({ 
-            reply,
-            apiPathUsed: 'experimental-bearer-auth',
-            debug: { url: expBearerAuthUrl }
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error in experimental Bearer token auth attempt:', error);
-      const expBearerAuthUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
-      attemptResults.push({
-        path: 'Experimental Bearer Token Auth Path',
-        url: expBearerAuthUrl,
         error: error instanceof Error ? error.message : String(error)
       });
     }
