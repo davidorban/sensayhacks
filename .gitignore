@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+Go with eslint# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
 app/node_modules
@@ -42,3 +42,8 @@ app/next-env.d.ts
 # Repomix output
 repomix-output.txt
 node_modules
+
+# Log files
+logs/
+*.log
+*.csv
