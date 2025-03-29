@@ -67,12 +67,52 @@ export default function SensayTestChatPage() {
 
       if (!response.ok) {
         let errorMessage = `API Error: ${response.statusText}`;
-        if (data && data.error) {
-            errorMessage = data.error; // Use error from backend if available
+        let errorDetails = '';
+        
+        if (data) {
+          if (data.error) {
+            errorMessage = data.error;
+          }
+          
+          // Add detailed error information if available
+          if (data.attempts) {
+            errorDetails = 'API Attempt Details:\n\n';
+            data.attempts.forEach((attempt: any, index: number) => {
+              errorDetails += `Attempt ${index + 1} (${attempt.path}):\n`;
+              errorDetails += `URL: ${attempt.url}\n`;
+              errorDetails += `Status: ${attempt.status || 'Unknown'}\n`;
+              
+              if (attempt.error) {
+                errorDetails += `Error: ${attempt.error}\n`;
+              }
+              
+              if (attempt.response) {
+                const truncatedResponse = attempt.response.length > 100 
+                  ? attempt.response.substring(0, 100) + '...' 
+                  : attempt.response;
+                errorDetails += `Response: ${truncatedResponse}\n`;
+              }
+              
+              errorDetails += '\n';
+            });
+          }
+          
+          if (data.replicaId) {
+            errorDetails += `Replica ID used: ${data.replicaId}\n`;
+          }
+          
+          if (data.baseApiUrl) {
+            errorDetails += `Base API URL: ${data.baseApiUrl}\n`;
+          }
         }
+        
         // Log the detailed error from backend if available
         console.error('Backend Error Details:', data?.error || 'No specific error message from backend.');
-        throw new Error(errorMessage);
+        if (errorDetails) {
+          console.error('Error Details:', errorDetails);
+        }
+        
+        throw new Error(errorMessage + (errorDetails ? `\n\n${errorDetails}` : ''));
       }
 
       // Add replica response to display

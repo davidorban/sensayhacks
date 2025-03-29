@@ -131,9 +131,10 @@ export async function POST(request: NextRequest) {
       console.log('Standard API Response Body:', standardResponseText);
       
       attemptResults.push({
-        path: 'standard',
+        path: 'Standard API Path',
         url: standardApiUrl,
         status: standardResponse.status,
+        error: standardResponse.statusText,
         response: standardResponseText
       });
       
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Error in standard path attempt:', error);
       attemptResults.push({
-        path: 'standard',
+        path: 'Standard API Path',
         url: standardApiUrl,
         error: error instanceof Error ? error.message : String(error)
       });
@@ -184,9 +185,10 @@ export async function POST(request: NextRequest) {
       console.log('Experimental API Response Body:', experimentalResponseText);
       
       attemptResults.push({
-        path: 'experimental',
+        path: 'Experimental API Path',
         url: experimentalApiUrl,
         status: experimentalResponse.status,
+        error: experimentalResponse.statusText,
         response: experimentalResponseText
       });
       
@@ -205,7 +207,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Error in experimental path attempt:', error);
       attemptResults.push({
-        path: 'experimental',
+        path: 'Experimental API Path',
         url: experimentalApiUrl,
         error: error instanceof Error ? error.message : String(error)
       });
@@ -239,9 +241,10 @@ export async function POST(request: NextRequest) {
       console.log('No v1 API Response Body:', noV1ResponseText);
       
       attemptResults.push({
-        path: 'no-v1-prefix',
+        path: 'No V1 Prefix API Path',
         url: noV1ApiUrl,
         status: noV1Response.status,
+        error: noV1Response.statusText,
         response: noV1ResponseText
       });
       
@@ -260,7 +263,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Error in no-v1-prefix path attempt:', error);
       attemptResults.push({
-        path: 'no-v1-prefix',
+        path: 'No V1 Prefix API Path',
         url: noV1ApiUrl,
         error: error instanceof Error ? error.message : String(error)
       });
@@ -291,9 +294,10 @@ export async function POST(request: NextRequest) {
       console.log('No chat segment API Response Body:', noChartResponseText);
       
       attemptResults.push({
-        path: 'no-chat-segment',
+        path: 'No Chat Segment API Path',
         url: noChartApiUrl,
         status: noChartResponse.status,
+        error: noChartResponse.statusText,
         response: noChartResponseText
       });
       
@@ -312,7 +316,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Error in no-chart-segment path attempt:', error);
       attemptResults.push({
-        path: 'no-chat-segment',
+        path: 'No Chat Segment API Path',
         url: noChartApiUrl,
         error: error instanceof Error ? error.message : String(error)
       });
@@ -347,9 +351,10 @@ export async function POST(request: NextRequest) {
       console.log('OpenAI-style API Response Body:', openAIStyleResponseText);
       
       attemptResults.push({
-        path: 'openai-style',
+        path: 'OpenAI-style API Path',
         url: openAIStyleUrl,
         status: openAIStyleResponse.status,
+        error: openAIStyleResponse.statusText,
         response: openAIStyleResponseText
       });
       
@@ -368,19 +373,23 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Error in openai-style path attempt:', error);
       attemptResults.push({
-        path: 'openai-style',
+        path: 'OpenAI-style API Path',
         url: openAIStyleUrl,
         error: error instanceof Error ? error.message : String(error)
       });
     }
     
     // If all attempts failed, return detailed error information
-    return NextResponse.json({ 
-      error: 'All API path attempts failed',
-      attempts: attemptResults,
-      replicaId,
-      baseApiUrl: SENSAY_API_URL_BASE
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'All API path attempts failed',
+        baseApiUrl: SENSAY_API_URL_BASE,
+        replicaId: replicaId,
+        attempts: attemptResults,
+        message: 'Attempted multiple API paths. See attempts for details.'
+      },
+      { status: 500 }
+    );
     
   } catch (error) {
     console.error('Error during API discovery process:', error);
