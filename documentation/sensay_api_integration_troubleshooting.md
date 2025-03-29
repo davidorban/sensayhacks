@@ -1,21 +1,4 @@
-# Sensay API Integration Troubleshooting
-
-## Overview
-
-This document tracks our efforts to troubleshoot and resolve integration issues with the Sensay API in our application. We've implemented multiple API path attempts and authentication methods to diagnose the root cause of the errors.
-
-## Test Results (March 29, 2025)
-
-Our implementation tests multiple API paths and authentication methods in sequence. Below are the detailed results from our latest tests:
-
-### Error Summary
-
-The application is currently receiving a `500 Internal Server Error` from our backend endpoint:
-```
-POST https://sensayhacks.com/api/chat-test 500 (Internal Server Error)
-```
-
-### Detailed API Attempt Results
+I've implemented multiple API path attempts and authentication methods to diagnose the root cause of the errors, without success. 
 
 All API path attempts are failing with either 404 (Not Found) or 401 (Unauthorized) errors:
 
@@ -61,6 +44,18 @@ All API path attempts are failing with either 404 (Not Found) or 401 (Unauthoriz
 - **Error**: Unauthorized
 - **Response**: `{"success":false,"error":"Unauthorized","fingerprint":"1cf042be21024f42b72c82f5dcd87c78","request_id...`
 
+#### Attempt 8 (Bearer Token Auth Path)
+- **URL**: `https://api.sensay.io/v1/replicas/16d38fcc-5cb0-4f94-9cee-3e8398ef4700/chat/completions`
+- **Status**: 401
+- **Error**: Unauthorized
+- **Response**: `{"success":false,"error":"Unauthorized","fingerprint":"9370cd51b06648e08712e2b6c8d743a2","request_id...`
+
+#### Attempt 9 (Experimental Bearer Token Auth Path)
+- **URL**: `https://api.sensay.io/v1/experimental/replicas/16d38fcc-5cb0-4f94-9cee-3e8398ef4700/chat/completions`
+- **Status**: 401
+- **Error**: Unauthorized
+- **Response**: `{"success":false,"error":"Unauthorized","fingerprint":"0eb3a733f03846228df03a84003b510a","request_id...`
+
 ### Configuration
 - **Replica ID used**: `16d38fcc-5cb0-4f94-9cee-3e8398ef4700`
 - **Base API URL**: `https://api.sensay.io`
@@ -79,6 +74,7 @@ All API path attempts are failing with either 404 (Not Found) or 401 (Unauthoriz
      - `Organization-Secret` (without X- prefix)
      - `X-API-KEY`
      - `x-api-key` (lowercase)
+     - `Authorization: Bearer {token}` (OAuth 2.0 standard)
    - Tried passing the API key as a query parameter
    - Added the `X-USER-ID` header to all requests
 
@@ -97,14 +93,18 @@ All API path attempts are failing with either 404 (Not Found) or 401 (Unauthoriz
 
 2. These paths are returning **401 Unauthorized** errors, not 404s, indicating the endpoints exist but authentication is failing.
 
-3. None of our authentication methods are being accepted by the Sensay API.
+3. **None of our authentication methods are being accepted**, including:
+   - Custom headers (X-Organization-Secret)
+   - Standard OAuth (Bearer token)
+   - Query parameters
+   - Various header case variations
 
 ## Questions and Next Steps
 
 1. **API Key Format**: Is the API key in the correct format? Does it need a prefix like "Bearer" or special encoding?
 
 2. **Header Requirements**: Are there additional required headers we haven't included?
-   - Example: Some APIs require `Authorization: Bearer {token}` instead of custom headers
+   - We've tried both custom X-headers and standard Bearer auth without success
 
 3. **API Key Permissions**: Does the API key have the correct permissions to access these endpoints?
    - Check if the key is restricted to specific replicas, endpoints, or operations
@@ -125,10 +125,8 @@ All API path attempts are failing with either 404 (Not Found) or 401 (Unauthoriz
 
 2. **Review API Documentation**: Find and review the most recent Sensay API documentation to verify endpoints and authentication methods.
 
-3. **Try Bearer Token Format**: Implement `Authorization: Bearer {token}` header format which is a common standard.
+3. **Verify API Key**: Confirm that the API key is active and has the correct permissions in the Sensay dashboard.
 
-4. **Verify API Key**: Confirm that the API key is active and has the correct permissions in the Sensay dashboard.
+4. **Check Logs**: Examine Vercel Function logs for any additional error details not visible in the browser console.
 
-5. **Check Logs**: Examine Vercel Function logs for any additional error details not visible in the browser console.
-
-6. **Test with Postman/Curl**: Attempt direct API requests using Postman or curl to isolate if the issue is in our application code or with the API credentials.
+5. **Test with Postman/Curl**: Attempt direct API requests using Postman or curl to isolate if the issue is in our application code or with the API credentials.
