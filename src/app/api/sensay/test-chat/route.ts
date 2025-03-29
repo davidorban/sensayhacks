@@ -55,31 +55,34 @@ export async function POST(request: NextRequest) {
   const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use the ID from the main chat route
 
   // --- Call Sensay API --- //
-  // Try NON-EXPERIMENTAL chat endpoint with the newer API version
-  const apiUrl = `${SENSAY_API_URL_BASE.replace('/v1/experimental', '/v1')}/replicas/${replicaId}/chat/completions`;
+  // Revert to EXPERIMENTAL endpoint and try OLDER API version
+  const apiUrl = `${SENSAY_API_URL_BASE}/replicas/${replicaId}/chat/completions`;
 
   // --- DEBUG LOGGING --- //
   console.log('Sending to Sensay API:');
-  console.log('URL:', apiUrl);
-  console.log('Headers:', {
-      'Accept': 'application/json', // Add missing Accept header
-      'Content-Type': 'application/json',
-      'X-ORGANIZATION-SECRET': SENSAY_API_KEY ? '********' : 'MISSING', // Use secret from env var, don't log actual value
-      'X-API-Version': '2025-03-25',
-  });
-  console.log('Body:', JSON.stringify({ messages: messages }, null, 2)); // Log the messages being sent
+  console.log('  URL:', apiUrl);
+  console.log('  Method:', 'POST');
+  console.log('  Headers:', JSON.stringify({
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-ORGANIZATION-SECRET': SENSAY_API_KEY ? '***' : 'MISSING', // Use ENV VAR, mask value
+    'X-API-VERSION': '2024-11-14'             // Try older version
+  }, null, 2));
+  console.log('  Body:', JSON.stringify({ messages, stream: false }, null, 2)); // Match working request body structure
   // --- END DEBUG LOGGING --- //
 
   try {
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Accept': 'application/json', // Add missing Accept header
         'Content-Type': 'application/json',
-        'X-ORGANIZATION-SECRET': SENSAY_API_KEY, // Send the secret value from the env var
-        'X-API-Version': '2025-03-25',
+        'Accept': 'application/json',
+        'X-ORGANIZATION-SECRET': SENSAY_API_KEY, // Use API key from environment variables
+        'X-API-VERSION': '2024-11-14' // Try older version
       },
-      body: JSON.stringify({ messages }), // Send only messages in the body to Sensay
+      body: JSON.stringify({
+        messages: messages,
+      }),
     });
 
     const responseText = await response.text(); // Get raw response text
