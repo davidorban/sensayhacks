@@ -219,6 +219,9 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
+        'x-organization-secret': SENSAY_ORGANIZATION_SECRET, // Try lowercase version too
+        'Organization-Secret': SENSAY_ORGANIZATION_SECRET, // Try without X- prefix
+        'X-API-KEY': SENSAY_ORGANIZATION_SECRET, // Try as API key
         'X-USER-ID': userId
       },
       body: JSON.stringify(requestBody),
@@ -278,6 +281,9 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
+        'x-organization-secret': SENSAY_ORGANIZATION_SECRET,
+        'Organization-Secret': SENSAY_ORGANIZATION_SECRET,
+        'X-API-KEY': SENSAY_ORGANIZATION_SECRET,
         'X-USER-ID': userId
       },
       body: JSON.stringify(requestBody),
@@ -429,6 +435,121 @@ export async function POST(request: NextRequest) {
     attemptResults.push({
       path: 'Authorization Header API Path',
       url: authApiUrl,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+
+  // Attempt 6: Auth variations with lowercase 'key' and 'secret'
+  try {
+    console.log('Attempting with lowercase auth headers...');
+    const lowerCaseAuthUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
+    
+    const requestBody = {
+      messages: messages.map((msg: Message) => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+      })),
+    };
+    
+    console.log('Lowercase Auth URL:', lowerCaseAuthUrl);
+    
+    const lowerCaseResponse = await fetch(lowerCaseAuthUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': SENSAY_ORGANIZATION_SECRET,
+        'x-user-id': userId
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    const lowerCaseResponseText = await lowerCaseResponse.text();
+    console.log('Lowercase Auth Response Status:', lowerCaseResponse.status);
+    console.log('Lowercase Auth Response Body:', lowerCaseResponseText);
+    
+    attemptResults.push({
+      path: 'Lowercase Headers Path',
+      url: lowerCaseAuthUrl,
+      status: lowerCaseResponse.status,
+      error: lowerCaseResponse.statusText,
+      response: lowerCaseResponseText
+    });
+    
+    if (lowerCaseResponse.ok) {
+      const responseData = JSON.parse(lowerCaseResponseText);
+      // Extract the reply
+      const reply = responseData?.choices?.[0]?.message?.content;
+      if (typeof reply === 'string') {
+        return NextResponse.json({ 
+          reply,
+          apiPathUsed: 'lowercase-headers',
+          debug: { url: lowerCaseAuthUrl }
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error in lowercase headers attempt:', error);
+    const lowerCaseAuthUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
+    attemptResults.push({
+      path: 'Lowercase Headers Path',
+      url: lowerCaseAuthUrl,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+  
+  // Attempt 7: API key in URL query parameter
+  try {
+    console.log('Attempting with API key as query parameter...');
+    const queryParamUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions?api_key=${encodeURIComponent(SENSAY_ORGANIZATION_SECRET)}`;
+    
+    const requestBody = {
+      messages: messages.map((msg: Message) => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+      })),
+    };
+    
+    console.log('Query Param Auth URL:', queryParamUrl.replace(SENSAY_ORGANIZATION_SECRET, '[REDACTED]'));
+    
+    const queryParamResponse = await fetch(queryParamUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-USER-ID': userId
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    const queryParamResponseText = await queryParamResponse.text();
+    console.log('Query Param Auth Response Status:', queryParamResponse.status);
+    console.log('Query Param Auth Response Body:', queryParamResponseText);
+    
+    attemptResults.push({
+      path: 'Query Parameter Auth Path',
+      url: queryParamUrl.replace(SENSAY_ORGANIZATION_SECRET, '[REDACTED]'),
+      status: queryParamResponse.status,
+      error: queryParamResponse.statusText,
+      response: queryParamResponseText
+    });
+    
+    if (queryParamResponse.ok) {
+      const responseData = JSON.parse(queryParamResponseText);
+      // Extract the reply
+      const reply = responseData?.choices?.[0]?.message?.content;
+      if (typeof reply === 'string') {
+        return NextResponse.json({ 
+          reply,
+          apiPathUsed: 'query-param-auth',
+          debug: { url: queryParamUrl.replace(SENSAY_ORGANIZATION_SECRET, '[REDACTED]') }
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error in query param auth attempt:', error);
+    const queryParamUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions?api_key=[REDACTED]`;
+    attemptResults.push({
+      path: 'Query Parameter Auth Path',
+      url: queryParamUrl,
       error: error instanceof Error ? error.message : String(error)
     });
   }
