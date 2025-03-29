@@ -150,7 +150,8 @@ export async function POST(request: Request) {
         'X-API-Version': '2025-03-25', // Updated to match working test route
       },
       // Send the messages array structured for OpenAI compatibility
-      body: JSON.stringify({ messages: messagesForApi }),
+      // Also include a placeholder model field, as its absence might cause issues
+      body: JSON.stringify({ messages: messagesForApi, model: "sensay-default" }),
     });
 
     // --- Handle Sensay Response --- //
