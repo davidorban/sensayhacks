@@ -13,6 +13,14 @@ interface Message {
   isLoading?: boolean;
 }
 
+interface ApiAttempt {
+  path: string;
+  url: string;
+  status?: number;
+  error?: string;
+  response?: string;
+}
+
 export default function SensayTestChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
@@ -77,7 +85,7 @@ export default function SensayTestChatPage() {
           // Add detailed error information if available
           if (data.attempts) {
             errorDetails = 'API Attempt Details:\n\n';
-            data.attempts.forEach((attempt: any, index: number) => {
+            data.attempts.forEach((attempt: ApiAttempt, index: number) => {
               errorDetails += `Attempt ${index + 1} (${attempt.path}):\n`;
               errorDetails += `URL: ${attempt.url}\n`;
               errorDetails += `Status: ${attempt.status || 'Unknown'}\n`;
