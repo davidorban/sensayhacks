@@ -17,10 +17,6 @@ interface SensayResponseMessage {
   content: string | null;
 }
 
-interface SensayChoice {
-  message: SensayResponseMessage;
-}
-
 // Environment variables
 const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE;
 const ORGANIZATION_SECRET = process.env.SENSAY_API_KEY; // Reverted: Use the env var name user has defined
