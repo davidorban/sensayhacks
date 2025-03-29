@@ -51,6 +51,9 @@ if (hasV1 || hasExperimental || hasReplicas) {
   }
 }
 
+// The API key should be stored in SENSAY_ORGANIZATION_SECRET or SENSAY_API_KEY
+// The correct header format may vary (x-api-key, Authorization, etc.)
+// We'll try multiple variations to find the right one
 const SENSAY_ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.env.SENSAY_API_KEY || '';
 
 // Log environment variable values on function execution (for debugging Vercel env)
