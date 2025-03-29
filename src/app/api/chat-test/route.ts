@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       });
       
       if (standardResponse.ok) {
-        let responseData = JSON.parse(standardResponseText);
+        const responseData = JSON.parse(standardResponseText);
         // Extract the reply
         const reply = responseData?.choices?.[0]?.message?.content;
         if (typeof reply === 'string') {
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
       });
       
       if (experimentalResponse.ok) {
-        let responseData = JSON.parse(experimentalResponseText);
+        const responseData = JSON.parse(experimentalResponseText);
         // Extract the reply
         const reply = responseData?.choices?.[0]?.message?.content;
         if (typeof reply === 'string') {
@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
       });
       
       if (noV1Response.ok) {
-        let responseData = JSON.parse(noV1ResponseText);
+        const responseData = JSON.parse(noV1ResponseText);
         // Extract the reply
         const reply = responseData?.choices?.[0]?.message?.content;
         if (typeof reply === 'string') {
@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
       });
       
       if (noChartResponse.ok) {
-        let responseData = JSON.parse(noChartResponseText);
+        const responseData = JSON.parse(noChartResponseText);
         // Extract the reply
         const reply = responseData?.choices?.[0]?.message?.content || responseData?.choices?.[0]?.text;
         if (typeof reply === 'string') {
@@ -354,7 +354,7 @@ export async function POST(request: NextRequest) {
       });
       
       if (openAIStyleResponse.ok) {
-        let responseData = JSON.parse(openAIStyleResponseText);
+        const responseData = JSON.parse(openAIStyleResponseText);
         // Extract the reply
         const reply = responseData?.choices?.[0]?.message?.content;
         if (typeof reply === 'string') {
