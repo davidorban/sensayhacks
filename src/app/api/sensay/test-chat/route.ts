@@ -11,12 +11,6 @@ interface RequestBody {
   messages: RequestMessage[];
 }
 
-// Define expected response message structure from Sensay (subset)
-interface SensayResponseMessage {
-  role: 'assistant';
-  content: string | null;
-}
-
 // Environment variables
 const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE;
 const ORGANIZATION_SECRET = process.env.SENSAY_API_KEY; // Reverted: Use the env var name user has defined
