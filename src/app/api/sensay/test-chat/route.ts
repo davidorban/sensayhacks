@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Extract the messages from the validated body
-  const { messages, model } = body;
+  const { messages } = body; // Only need messages now
 
   // Hardcoded replica UUID - replace with dynamic logic if needed
   const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use the ID from the main chat route
