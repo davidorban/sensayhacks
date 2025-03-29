@@ -74,6 +74,15 @@ function getAuthHeaders(userId: string) {
   };
 }
 
+// Helper function for organization-only auth headers (for initial user creation)
+function getOrgOnlyHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
+    'X-API-Version': currentDate
+  };
+}
+
 export async function POST(request: NextRequest) {
   console.log('--- Request received at /api/chat-test ---');
   
@@ -91,8 +100,51 @@ export async function POST(request: NextRequest) {
     let replicaId = body.replicaId || '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
     console.log('Using Replica ID:', replicaId);
     
-    // Try to register the user first to avoid unauthorized errors
+    // Array to store results of each user creation attempt
+    const userCreationResults: any[] = [];
+    
+    // Try to register the user first with X-Organization-Secret header
     try {
+      console.log('Attempting user registration with Organization Secret header...');
+      const createUserUrl = `${SENSAY_API_URL_BASE}/v1/users`;
+      const createUserBody = { 
+        external_id: userId, 
+        metadata: { 
+          app: "SensayHacks",
+          source: "api-integration"
+        }
+      };
+      
+      const createUserResponse = await fetch(createUserUrl, {
+        method: 'POST',
+        headers: getOrgOnlyHeaders(),
+        body: JSON.stringify(createUserBody),
+      });
+      
+      const createUserText = await createUserResponse.text();
+      console.log('User registration status (Org Secret):', createUserResponse.status);
+      console.log('User registration response (Org Secret):', createUserText);
+      
+      userCreationResults.push({
+        method: 'Organization Secret Header',
+        status: createUserResponse.status,
+        response: createUserText
+      });
+      
+      if (createUserResponse.ok) {
+        console.log('User registered successfully with Organization Secret header');
+      }
+    } catch (error) {
+      console.log('Error creating user with Organization Secret header:', error);
+      userCreationResults.push({
+        method: 'Organization Secret Header',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // Try to register the user with Bearer token
+    try {
+      console.log('Attempting user registration with Bearer token...');
       const createUserUrl = `${SENSAY_API_URL_BASE}/v1/users`;
       const createUserBody = { 
         external_id: userId, 
@@ -108,15 +160,25 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify(createUserBody),
       });
       
-      console.log('User registration status:', createUserResponse.status);
+      const createUserText = await createUserResponse.text();
+      console.log('User registration status (Bearer):', createUserResponse.status);
+      console.log('User registration response (Bearer):', createUserText);
+      
+      userCreationResults.push({
+        method: 'Bearer Token',
+        status: createUserResponse.status,
+        response: createUserText
+      });
+      
       if (createUserResponse.ok) {
-        console.log('User registered successfully');
-      } else {
-        const text = await createUserResponse.text();
-        console.log('User registration response:', text);
+        console.log('User registered successfully with Bearer token');
       }
     } catch (error) {
-      console.log('Error creating user (continuing anyway):', error);
+      console.log('Error creating user with Bearer token:', error);
+      userCreationResults.push({
+        method: 'Bearer Token',
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
     
     // Basic validation
@@ -144,96 +206,70 @@ export async function POST(request: NextRequest) {
     // Array to store results of each attempt
     const attemptResults: AttemptResult[] = [];
 
+    // Add more debug info about the configuration
+    console.log('Debug - Full headers being used:');
+    console.log('Auth headers:', JSON.stringify(getAuthHeaders(userId)));
+    console.log('Organization headers:', JSON.stringify(getOrgOnlyHeaders()));
+    
     // First try to list replicas to get valid IDs
     try {
       console.log('Attempting to list replicas...');
       const listReplicasUrl = `${SENSAY_API_URL_BASE}/v1/replicas`;
       console.log('List Replicas URL:', listReplicasUrl);
       
+      // Try with Bearer token first
       const listReplicasResponse = await fetch(listReplicasUrl, {
         method: 'GET',
         headers: getAuthHeaders(userId)
       });
       
       const listReplicasText = await listReplicasResponse.text();
-      console.log('List Replicas Status:', listReplicasResponse.status);
-      console.log('List Replicas Response:', listReplicasText);
+      console.log('List Replicas Status (Bearer):', listReplicasResponse.status);
+      console.log('List Replicas Response (Bearer):', listReplicasText);
       
-      if (listReplicasResponse.ok) {
+      // If Bearer token failed, try with Organization Secret
+      if (listReplicasResponse.status === 401) {
+        console.log('Trying list replicas with Organization Secret...');
+        const listReplicasOrgResponse = await fetch(listReplicasUrl, {
+          method: 'GET',
+          headers: getOrgOnlyHeaders()
+        });
+        
+        const listReplicasOrgText = await listReplicasOrgResponse.text();
+        console.log('List Replicas Status (Org):', listReplicasOrgResponse.status);
+        console.log('List Replicas Response (Org):', listReplicasOrgText);
+        
+        if (listReplicasOrgResponse.ok) {
+          try {
+            const replicasData = JSON.parse(listReplicasOrgText);
+            if (replicasData.replicas && replicasData.replicas.length > 0) {
+              // Use the first replica ID from the list
+              replicaId = replicasData.replicas[0].id;
+              console.log('Found valid replica ID (Org):', replicaId);
+            }
+          } catch (parseError) {
+            console.error('Error parsing replicas response (Org):', parseError);
+          }
+        }
+      } else if (listReplicasResponse.ok) {
         try {
           const replicasData = JSON.parse(listReplicasText);
           if (replicasData.replicas && replicasData.replicas.length > 0) {
             // Use the first replica ID from the list
             replicaId = replicasData.replicas[0].id;
-            console.log('Found valid replica ID:', replicaId);
+            console.log('Found valid replica ID (Bearer):', replicaId);
           }
         } catch (parseError) {
-          console.error('Error parsing replicas response:', parseError);
+          console.error('Error parsing replicas response (Bearer):', parseError);
         }
       }
     } catch (listError) {
       console.error('Error listing replicas:', listError);
     }
 
-    // Attempt 1: Standard OpenAI-style path - /v1/chat/completions
+    // Attempt 1: Standard API Path with Bearer token
     try {
-      console.log('Attempting OpenAI-style path...');
-      const openAIStyleApiUrl = `${SENSAY_API_URL_BASE}/v1/chat/completions`;
-      
-      const requestBody = {
-        messages: messages.map((msg: Message) => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content,
-        })),
-        model: 'sensay', // This may need to be adjusted based on Sensay API requirements
-      };
-      
-      console.log('OpenAI-style URL:', openAIStyleApiUrl);
-      console.log('OpenAI-style Request Body:', JSON.stringify(requestBody));
-      
-      const openAIStyleResponse = await fetch(openAIStyleApiUrl, {
-        method: 'POST',
-        headers: getAuthHeaders(userId),
-        body: JSON.stringify(requestBody),
-      });
-      
-      const openAIStyleResponseText = await openAIStyleResponse.text();
-      console.log('OpenAI-style Response Status:', openAIStyleResponse.status);
-      console.log('OpenAI-style Response Body:', openAIStyleResponseText);
-      
-      attemptResults.push({
-        path: 'OpenAI-style API Path',
-        url: openAIStyleApiUrl,
-        status: openAIStyleResponse.status,
-        error: openAIStyleResponse.statusText,
-        response: openAIStyleResponseText
-      });
-      
-      if (openAIStyleResponse.ok) {
-        const responseData = JSON.parse(openAIStyleResponseText);
-        // Extract the reply
-        const reply = responseData?.choices?.[0]?.message?.content;
-        if (typeof reply === 'string') {
-          return NextResponse.json({ 
-            reply,
-            apiPathUsed: 'openai-style',
-            debug: { url: openAIStyleApiUrl }
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error in openai-style path attempt:', error);
-      const openAIStyleApiUrl = `${SENSAY_API_URL_BASE}/v1/chat/completions`;
-      attemptResults.push({
-        path: 'OpenAI-style API Path',
-        url: openAIStyleApiUrl,
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-
-    // Attempt 2: Path with replica ID - /v1/replicas/{id}/chat/completions
-    try {
-      console.log('Attempting standard replica path...');
+      console.log('Attempting standard replica path with Bearer token...');
       const standardApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
       
       const requestBody = {
@@ -253,11 +289,11 @@ export async function POST(request: NextRequest) {
       });
       
       const standardResponseText = await standardResponse.text();
-      console.log('Standard API Response Status:', standardResponse.status);
-      console.log('Standard API Response Body:', standardResponseText);
+      console.log('Standard API Response Status (Bearer):', standardResponse.status);
+      console.log('Standard API Response Body (Bearer):', standardResponseText);
       
       attemptResults.push({
-        path: 'Standard API Path',
+        path: 'Standard API Path (Bearer)',
         url: standardApiUrl,
         status: standardResponse.status,
         error: standardResponse.statusText,
@@ -271,24 +307,85 @@ export async function POST(request: NextRequest) {
         if (typeof reply === 'string') {
           return NextResponse.json({ 
             reply,
-            apiPathUsed: 'standard',
+            apiPathUsed: 'standard-bearer',
             debug: { url: standardApiUrl }
           });
         }
       }
     } catch (error) {
-      console.error('Error in standard path attempt:', error);
+      console.error('Error in standard path attempt with Bearer:', error);
       const standardApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
       attemptResults.push({
-        path: 'Standard API Path',
+        path: 'Standard API Path (Bearer)',
         url: standardApiUrl,
         error: error instanceof Error ? error.message : String(error)
       });
     }
-
-    // Attempt 3: Experimental path - /v1/experimental/replicas/{id}/chat/completions
+    
+    // Attempt 2: Standard API Path with Organization Secret
     try {
-      console.log('Attempting experimental path...');
+      console.log('Attempting standard replica path with Organization Secret...');
+      const standardApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
+      
+      const requestBody = {
+        messages: messages.map((msg: Message) => ({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+        })),
+      };
+      
+      // Add user ID to Organization Secret headers
+      const orgHeadersWithUserId = {
+        ...getOrgOnlyHeaders(),
+        'X-USER-ID': userId
+      };
+      
+      console.log('Standard API URL (Org):', standardApiUrl);
+      console.log('Standard Request Body (Org):', JSON.stringify(requestBody));
+      
+      const standardOrgResponse = await fetch(standardApiUrl, {
+        method: 'POST',
+        headers: orgHeadersWithUserId,
+        body: JSON.stringify(requestBody),
+      });
+      
+      const standardOrgResponseText = await standardOrgResponse.text();
+      console.log('Standard API Response Status (Org):', standardOrgResponse.status);
+      console.log('Standard API Response Body (Org):', standardOrgResponseText);
+      
+      attemptResults.push({
+        path: 'Standard API Path (Org)',
+        url: standardApiUrl,
+        status: standardOrgResponse.status,
+        error: standardOrgResponse.statusText,
+        response: standardOrgResponseText
+      });
+      
+      if (standardOrgResponse.ok) {
+        const responseData = JSON.parse(standardOrgResponseText);
+        // Extract the reply
+        const reply = responseData?.choices?.[0]?.message?.content;
+        if (typeof reply === 'string') {
+          return NextResponse.json({ 
+            reply,
+            apiPathUsed: 'standard-org',
+            debug: { url: standardApiUrl }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in standard path attempt with Org Secret:', error);
+      const standardApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
+      attemptResults.push({
+        path: 'Standard API Path (Org)',
+        url: standardApiUrl,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // Attempt 3: Experimental path with Bearer token
+    try {
+      console.log('Attempting experimental path with Bearer token...');
       const experimentalApiUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
       
       const requestBody = {
@@ -296,6 +393,8 @@ export async function POST(request: NextRequest) {
           role: msg.role === 'user' ? 'user' : 'assistant',
           content: msg.content,
         })),
+        store: true,
+        source: "web"
       };
       
       console.log('Experimental API URL:', experimentalApiUrl);
@@ -308,11 +407,11 @@ export async function POST(request: NextRequest) {
       });
       
       const experimentalResponseText = await experimentalResponse.text();
-      console.log('Experimental API Response Status:', experimentalResponse.status);
-      console.log('Experimental API Response Body:', experimentalResponseText);
+      console.log('Experimental API Response Status (Bearer):', experimentalResponse.status);
+      console.log('Experimental API Response Body (Bearer):', experimentalResponseText);
       
       attemptResults.push({
-        path: 'Experimental API Path',
+        path: 'Experimental API Path (Bearer)',
         url: experimentalApiUrl,
         status: experimentalResponse.status,
         error: experimentalResponse.statusText,
@@ -326,70 +425,80 @@ export async function POST(request: NextRequest) {
         if (typeof reply === 'string') {
           return NextResponse.json({ 
             reply,
-            apiPathUsed: 'experimental',
+            apiPathUsed: 'experimental-bearer',
             debug: { url: experimentalApiUrl }
           });
         }
       }
     } catch (error) {
-      console.error('Error in experimental path attempt:', error);
+      console.error('Error in experimental path attempt with Bearer:', error);
       const experimentalApiUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
       attemptResults.push({
-        path: 'Experimental API Path',
+        path: 'Experimental API Path (Bearer)',
         url: experimentalApiUrl,
         error: error instanceof Error ? error.message : String(error)
       });
     }
-
-    // Attempt 4: Just completions, no chat segment - /v1/replicas/{id}/completions
+    
+    // Attempt 4: Experimental path with Organization Secret
     try {
-      console.log('Attempting completions without chat segment...');
-      const completionsApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/completions`;
+      console.log('Attempting experimental path with Organization Secret...');
+      const experimentalApiUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
       
       const requestBody = {
-        prompt: messages.map((msg: Message) => `${msg.role}: ${msg.content}`).join('\n'),
-        max_tokens: 500,
+        messages: messages.map((msg: Message) => ({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+        })),
+        store: true,
+        source: "web"
       };
       
-      console.log('Completions API URL:', completionsApiUrl);
-      console.log('Completions Request Body:', JSON.stringify(requestBody));
+      // Add user ID to Organization Secret headers
+      const orgHeadersWithUserId = {
+        ...getOrgOnlyHeaders(),
+        'X-USER-ID': userId
+      };
       
-      const completionsResponse = await fetch(completionsApiUrl, {
+      console.log('Experimental API URL (Org):', experimentalApiUrl);
+      console.log('Experimental Request Body (Org):', JSON.stringify(requestBody));
+      
+      const experimentalOrgResponse = await fetch(experimentalApiUrl, {
         method: 'POST',
-        headers: getAuthHeaders(userId),
+        headers: orgHeadersWithUserId,
         body: JSON.stringify(requestBody),
       });
       
-      const completionsResponseText = await completionsResponse.text();
-      console.log('Completions API Response Status:', completionsResponse.status);
-      console.log('Completions API Response Body:', completionsResponseText);
+      const experimentalOrgResponseText = await experimentalOrgResponse.text();
+      console.log('Experimental API Response Status (Org):', experimentalOrgResponse.status);
+      console.log('Experimental API Response Body (Org):', experimentalOrgResponseText);
       
       attemptResults.push({
-        path: 'Completions API Path',
-        url: completionsApiUrl,
-        status: completionsResponse.status,
-        error: completionsResponse.statusText,
-        response: completionsResponseText
+        path: 'Experimental API Path (Org)',
+        url: experimentalApiUrl,
+        status: experimentalOrgResponse.status,
+        error: experimentalOrgResponse.statusText,
+        response: experimentalOrgResponseText
       });
       
-      if (completionsResponse.ok) {
-        const responseData = JSON.parse(completionsResponseText);
-        // Extract the reply, this format might be different
-        const reply = responseData?.choices?.[0]?.text || responseData?.text;
+      if (experimentalOrgResponse.ok) {
+        const responseData = JSON.parse(experimentalOrgResponseText);
+        // Extract the reply
+        const reply = responseData?.choices?.[0]?.message?.content;
         if (typeof reply === 'string') {
           return NextResponse.json({ 
             reply,
-            apiPathUsed: 'completions',
-            debug: { url: completionsApiUrl }
+            apiPathUsed: 'experimental-org',
+            debug: { url: experimentalApiUrl }
           });
         }
       }
     } catch (error) {
-      console.error('Error in completions path attempt:', error);
-      const completionsApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/completions`;
+      console.error('Error in experimental path attempt with Org Secret:', error);
+      const experimentalApiUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
       attemptResults.push({
-        path: 'Completions API Path',
-        url: completionsApiUrl,
+        path: 'Experimental API Path (Org)',
+        url: experimentalApiUrl,
         error: error instanceof Error ? error.message : String(error)
       });
     }
@@ -400,6 +509,7 @@ export async function POST(request: NextRequest) {
         error: 'All API path attempts failed',
         baseApiUrl: SENSAY_API_URL_BASE,
         replicaId: replicaId,
+        userCreationResults,
         attempts: attemptResults,
         message: 'Attempted multiple API paths. See attempts for details.'
       },
