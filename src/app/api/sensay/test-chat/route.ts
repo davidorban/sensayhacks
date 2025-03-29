@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Validate body content (basic)
-  if (!body || typeof body !== 'object' || !Array.isArray(body.messages) || typeof body.secret !== 'undefined') {
+  if (!body || typeof body !== 'object' || !Array.isArray(body.messages)) { 
       const error = 'Invalid request format: requires messages array.';
       console.error(error, 'Received:', body);
       return NextResponse.json({ error }, { status: 400 });
