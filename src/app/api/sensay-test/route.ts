@@ -13,16 +13,6 @@ interface RequestBody {
   userId?: string;
 }
 
-// Define attempt result tracking
-interface AttemptResult {
-  path?: string;
-  url?: string;
-  method?: string;
-  status?: number;
-  error?: string;
-  response?: string;
-}
-
 // Environment variables - Make sure to set clean base API URL
 let SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io';
 
@@ -88,12 +78,16 @@ export async function POST(request: NextRequest) {
       console.log('Successfully retrieved replicas list from Sensay API');
     }
     
-    // Parse the replicas response
-    let replicas;
-    try {
-      replicas = JSON.parse(listReplicasText);
-    } catch (error) {
-      console.log('Error parsing replicas JSON response:', error);
+    // Check if list replicas was successful and parse response
+    if (listReplicasResponse.ok) {
+      try {
+        const replicas = JSON.parse(listReplicasText);
+        console.log('Successfully retrieved replicas list:', JSON.stringify(replicas));
+      } catch (error) {
+        console.log('Error parsing replicas JSON response:', error);
+      }
+    } else {
+      console.log('List Replicas API call failed with status:', listReplicasResponse.status);
     }
     
     // Now try the chat completion API with the same authentication approach
