@@ -86,7 +86,7 @@ const ReplicaTaskMemoryPage = () => {
           },
           body: JSON.stringify({
               messages: messagesForApi,
-              replicaId: 'rdavidorban' // Assuming this is still the target replica
+              // replicaId: 'rdavidorban' // Removed - API route now uses hardcoded UUID
           }),
       });
 

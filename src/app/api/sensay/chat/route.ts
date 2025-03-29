@@ -10,7 +10,6 @@ interface RequestMessage {
 // Define the expected request body structure
 interface RequestBody {
   messages: RequestMessage[];
-  replicaId: string;
 }
 
 // Define a basic Task interface (align with frontend and Supabase table)
@@ -53,6 +52,7 @@ const getSupabaseClient = (userId: string) => {
 // Use the official Sensay API endpoint and structure
 const SENSAY_API_URL_BASE = 'https://api.sensay.io/v1/replicas';
 const ORGANIZATION_SECRET = process.env.SENSAY_API_KEY; // Using SENSAY_API_KEY as the secret
+const TARGET_REPLICA_UUID = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Hardcoded Replica UUID
 
 export async function POST(request: Request) {
   // --- Environment Variables & Basic Validation ---
@@ -78,8 +78,8 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
     // Validate structure (basic check)
-    if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0 || !body.replicaId) {
-        throw new Error('Invalid request body structure. Expecting { messages: [...], replicaId: "..." }');
+    if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
+        throw new Error('Invalid request body structure. Expecting { messages: [...] }');
     }
   } catch (e) {
     const error = e instanceof Error ? e.message : 'Invalid JSON body';
@@ -87,7 +87,6 @@ export async function POST(request: Request) {
   }
 
   const userMessages = body.messages; // Messages from the client
-  const replicaId = body.replicaId;
 
   // --- Fetch Tasks from Supabase --- //
   let tasksFromSupabase: Task[] = [];
@@ -125,7 +124,7 @@ export async function POST(request: Request) {
   ];
 
   // --- Call Sensay API --- //
-  const apiUrl = `${SENSAY_API_URL_BASE}/${replicaId}/chat/completions`;
+  const apiUrl = `${SENSAY_API_URL_BASE}/${TARGET_REPLICA_UUID}/chat/completions`;
 
   let sensayResponseData: unknown;
   let replyContent: string | null | undefined;
