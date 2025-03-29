@@ -9,14 +9,16 @@ interface RequestMessage {
 // Define expected request body structure
 interface RequestBody {
   messages: RequestMessage[];
-  secret: string; // Expect the API secret in the request body
+  // secret: string; // No longer expect secret in the body
 }
 
 // Environment variables
 const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE;
+const SENSAY_API_KEY = process.env.SENSAY_API_KEY;
 
 // Log environment variable values on function execution (for debugging Vercel env)
 console.log('SENSAY_API_URL_BASE:', SENSAY_API_URL_BASE ? 'Loaded' : 'MISSING');
+console.log('SENSAY_API_KEY:', SENSAY_API_KEY ? 'Loaded' : 'MISSING');
 
 export async function POST(request: NextRequest) {
   console.log('--- Request received at /api/sensay/test-chat ---');
@@ -24,6 +26,10 @@ export async function POST(request: NextRequest) {
   // Basic validation
   if (!SENSAY_API_URL_BASE) { 
     console.error('API URL Base not configured.');
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
+  if (!SENSAY_API_KEY) { 
+    console.error('API Key not configured.');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
@@ -36,19 +42,14 @@ export async function POST(request: NextRequest) {
   }
 
   // Validate body content (basic)
-  if (!body || typeof body !== 'object' || !Array.isArray(body.messages) || typeof body.secret !== 'string') {
-      const error = 'Invalid request format: requires messages array and secret string.';
+  if (!body || typeof body !== 'object' || !Array.isArray(body.messages) || typeof body.secret !== 'undefined') {
+      const error = 'Invalid request format: requires messages array.';
       console.error(error, 'Received:', body);
       return NextResponse.json({ error }, { status: 400 });
   }
 
-  // Extract the messages and the secret from the validated body
-  const { messages, secret } = body;
-
-  // Check if secret was provided and is not empty
-  if (!secret || secret.trim() === '') {
-    return NextResponse.json({ error: 'API secret is missing or empty in the request body' }, { status: 400 });
-  }
+  // Extract the messages from the validated body
+  const { messages } = body;
 
   // Hardcoded replica UUID - replace with dynamic logic if needed
   const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use the ID from the main chat route
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
   console.log('Headers:', {
       'Accept': 'application/json', // Add missing Accept header
       'Content-Type': 'application/json',
-      'X-ORGANIZATION-SECRET': secret ? '********' : 'MISSING', // Use secret from body, don't log actual value
+      'X-ORGANIZATION-SECRET': SENSAY_API_KEY ? '********' : 'MISSING', // Use secret from env var, don't log actual value
       'X-API-Version': '2025-03-25',
       'X-USER-ID': 'test-user-001' // Hardcoded for now
   });
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
       headers: {
         'Accept': 'application/json', // Add missing Accept header
         'Content-Type': 'application/json',
-        'X-ORGANIZATION-SECRET': secret, // Send the secret value from the request body
+        'X-ORGANIZATION-SECRET': SENSAY_API_KEY, // Send the secret value from the env var
         'X-API-Version': '2025-03-25',
         'X-USER-ID': 'test-user-001' // Hardcoded for now
       },

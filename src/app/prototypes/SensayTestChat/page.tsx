@@ -16,7 +16,6 @@ interface Message {
 export default function SensayTestChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
-  const [apiSecret, setApiSecret] = useState(''); // State for API Secret
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null); // For auto-scrolling
@@ -47,13 +46,6 @@ export default function SensayTestChatPage() {
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setUserInput(''); // Clear input field
 
-    // Basic validation for the secret
-    if (apiSecret.trim() === '') {
-      setError('API Secret is required.');
-      setIsLoading(false);
-      return;
-    }
-
     // Prepare message for API
     const messagesForApi = [
       { role: 'user', content: trimmedInput } as const
@@ -67,14 +59,19 @@ export default function SensayTestChatPage() {
         },
         body: JSON.stringify({
           messages: messagesForApi,
-          secret: apiSecret // Send secret in the body
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || `API Error: ${response.statusText}`);
+        let errorMessage = `API Error: ${response.statusText}`;
+        if (data && data.error) {
+            errorMessage = data.error; // Use error from backend if available
+        }
+        // Log the detailed error from backend if available
+        console.error('Backend Error Details:', data?.error || 'No specific error message from backend.');
+        throw new Error(errorMessage);
       }
 
       // Add replica response to display
@@ -146,20 +143,7 @@ export default function SensayTestChatPage() {
           <div ref={messagesEndRef} />
         </CardContent>
         <CardFooter className="pt-4 border-t bg-gray-50 flex-col items-start">
-          {/* Input for API Secret */}
-          <div className="w-full mb-2">
-            <label htmlFor="api-secret" className="text-sm font-medium text-gray-700 mb-1 block">Sensay API Secret:</label>
-            <Input
-              id="api-secret"
-              type="password" // Use password type for basic masking
-              placeholder="Enter your Sensay API Secret (X-ORGANIZATION-SECRET)"
-              value={apiSecret}
-              onChange={(e) => setApiSecret(e.target.value)}
-              disabled={isLoading}
-              className="w-full"
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+          {error && <p className="text-red-500 text-sm mb-2 w-full">{error}</p>}
           <div className="flex w-full space-x-2">
             <Input
               type="text"
