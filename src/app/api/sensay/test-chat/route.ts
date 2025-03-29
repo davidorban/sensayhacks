@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
   }
 
   // --- Call Sensay API --- //
-  const apiUrl = `${SENSAY_API_URL_BASE}/${TARGET_REPLICA_UUID}/chat/completions`;
+  const apiUrl = `${SENSAY_API_URL_BASE.replace('/experimental', '')}/${TARGET_REPLICA_UUID}/chat/completions`;
 
   // --- DEBUG LOGGING --- //
   console.log('Sending to Sensay API:');
@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
       'X-API-Version': '2025-03-25',
       'X-USER-ID': 'test-user-001' // Log placeholder User ID
   });
-  console.log('Body:', JSON.stringify({ messages: userMessages, source: "web", store: true }, null, 2)); // Match docs
+  const userMessageContent = userMessages[userMessages.length - 1].content;
+  console.log('Body:', JSON.stringify({ content: userMessageContent }, null, 2)); // Log the simplified body structure
   // --- END DEBUG LOGGING ---
 
   let sensayResponseData: unknown;
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
         'X-API-Version': '2025-03-25',
         'X-USER-ID': 'test-user-001' // Placeholder User ID
       },
-      body: JSON.stringify({ messages: userMessages, source: "web", store: true }), // Match docs
+      body: JSON.stringify({ content: userMessageContent }),
     });
 
     // --- Handle Sensay Response --- //
@@ -111,17 +112,8 @@ export async function POST(request: NextRequest) {
       throw new Error(errorMessage);
     }
 
-    // Validate the structure of the successful response
-    const validatedResponse = sensayResponseData as SensayResponse;
-    if (!validatedResponse.choices || !Array.isArray(validatedResponse.choices) || validatedResponse.choices.length === 0) {
-      throw new Error('Invalid response structure from Sensay: Missing choices array.');
-    }
-    const firstChoice = validatedResponse.choices[0];
-    if (!firstChoice.message || typeof firstChoice.message !== 'object') {
-      throw new Error('Invalid response structure from Sensay: Missing message object in first choice.');
-    }
-
-    replyContent = firstChoice.message.content;
+    console.log("Raw Sensay Response Data:", JSON.stringify(sensayResponseData, null, 2));
+    replyContent = (sensayResponseData as any)?.response || (sensayResponseData as any)?.content || JSON.stringify(sensayResponseData);
 
   } catch (error) {
     console.error('Error during Sensay API call or response processing:', error);
@@ -132,9 +124,9 @@ export async function POST(request: NextRequest) {
   }
 
   // --- Return Success Response --- //
-  if (replyContent === null || replyContent === undefined) {
-    console.error('Sensay response parsed successfully, but content was null or undefined.');
-    return NextResponse.json({ error: 'Assistant response content was empty.', rawResponse: sensayResponseData }, { status: 500 });
+  if (!replyContent) {
+    console.error('Could not extract reply content from Sensay response:', sensayResponseData);
+    return NextResponse.json({ error: 'Failed to extract reply content from Sensay response.' }, { status: 500 });
   }
 
   console.log('Successfully got reply from Sensay:', replyContent);
