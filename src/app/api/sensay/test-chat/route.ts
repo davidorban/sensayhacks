@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
   const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use the ID from the main chat route
 
   // --- Call Sensay API --- //
-  // Revert to EXPERIMENTAL endpoint and try OLDER API version
-  const apiUrl = `${SENSAY_API_URL_BASE}/replicas/${replicaId}/chat/completions`;
+  // Use NON-EXPERIMENTAL path as per docs
+  const apiUrl = `${SENSAY_API_URL_BASE.replace('/v1/experimental', '/v1')}/replicas/${replicaId}/chat/completions`;
 
   // --- DEBUG LOGGING --- //
   console.log('Sending to Sensay API:');
@@ -66,10 +66,16 @@ export async function POST(request: NextRequest) {
   console.log('  Headers:', JSON.stringify({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'X-ORGANIZATION-SECRET': SENSAY_API_KEY ? '***' : 'MISSING', // Use ENV VAR, mask value
+    'X-ORGANIZATION-SECRET': SENSAY_API_KEY ? '***' : 'MISSING',
     'X-API-VERSION': '2025-03-25'             // Revert to newer version
   }, null, 2));
-  console.log('  Body:', JSON.stringify({ messages, model, stream: false }, null, 2)); // Add model parameter
+
+  // Extract the content of the last message (assuming it's the user's input)
+  const lastMessageContent = messages.length > 0 ? messages[messages.length - 1].content : '';
+
+  // Body should only contain 'content' as per docs
+  const requestBodyForSensay = { content: lastMessageContent };
+  console.log('  Body:', JSON.stringify(requestBodyForSensay, null, 2));
   // --- END DEBUG LOGGING --- //
 
   try {
@@ -81,11 +87,8 @@ export async function POST(request: NextRequest) {
         'X-ORGANIZATION-SECRET': SENSAY_API_KEY, // Use API key from environment variables
         'X-API-VERSION': '2025-03-25' // Revert to newer version
       },
-      body: JSON.stringify({
-        messages: messages,
-        model: model, // Add model parameter
-        stream: false
-      }),
+      // Send ONLY the content field in the body, as per docs
+      body: JSON.stringify(requestBodyForSensay),
     });
 
     const responseText = await response.text(); // Get raw response text
