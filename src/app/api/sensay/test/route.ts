@@ -115,17 +115,64 @@ export async function POST(request: NextRequest) {
                 if (!replicaId || !userId || content === undefined) {
                     return NextResponse.json({ error: 'Replica ID, User ID, and Content are required for chat completion.' }, { status: 400 });
                 }
-                targetUrl = `${SENSAY_API_URL_BASE}/replicas/${replicaId}/chat/completions`;
-                fetchOptions.method = 'POST';
-                fetchOptions.headers = sensayHeaders(true); // Include User ID
-                requestBody = {
-                    content: content,
-                    // Add other chat completion params from curl example if needed
-                    // source: "web", // Example if needed
-                    // skip_chat_history: false // Example if needed
-                };
-                fetchOptions.body = JSON.stringify(requestBody);
-                break;
+
+                try {
+                    console.log('Attempting chat completion with replica ID:', replicaId);
+                    console.log('Using headers:', {
+                        'Content-Type': 'application/json',
+                        'X-ORGANIZATION-SECRET': secret ? '***' : 'MISSING',
+                        'X-USER-ID': userId,
+                        'X-API-VERSION': '2025-03-25',
+                    });
+                    console.log('Request body:', JSON.stringify({
+                        content: content,
+                    }, null, 2));
+
+                    const chatCompletionResponse = await fetch(`${SENSAY_API_URL_BASE}/replicas/${replicaId}/chat/completions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-ORGANIZATION-SECRET': secret,
+                            'X-USER-ID': userId,
+                            'X-API-VERSION': '2025-03-25',
+                        },
+                        body: JSON.stringify({
+                            content: content,
+                        }),
+                    });
+
+                    // Log raw response before parsing
+                    const chatCompletionResponseText = await chatCompletionResponse.text();
+                    console.log('Chat completion status:', chatCompletionResponse.status);
+                    console.log('Chat completion response:', chatCompletionResponseText);
+                    
+                    // Only try to parse as JSON if we have a response
+                    let chatCompletionData;
+                    if (chatCompletionResponseText) {
+                        try {
+                            chatCompletionData = JSON.parse(chatCompletionResponseText);
+                        } catch (parseError) {
+                            console.error('Error parsing chat completion response:', parseError);
+                            return NextResponse.json({ error: 'Failed to parse chat completion response' }, { status: 500 });
+                        }
+                    } else {
+                        return NextResponse.json({ error: 'Empty response from chat completion endpoint' }, { status: chatCompletionResponse.status });
+                    }
+
+                    // If unsuccessful, provide detailed error
+                    if (!chatCompletionResponse.ok) {
+                        const errorMessage = chatCompletionData?.error || chatCompletionResponse.statusText || 'Unknown error';
+                        console.error(`Chat completion failed (${chatCompletionResponse.status}):`, errorMessage);
+                        return NextResponse.json({ error: errorMessage }, { status: chatCompletionResponse.status });
+                    }
+
+                    return NextResponse.json({ chatCompletionData });
+
+                } catch (error) {
+                    console.error('Error during chat completion call:', error);
+                    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+                    return NextResponse.json({ error: `Internal Server Error: ${errorMessage}` }, { status: 500 });
+                }
 
             default:
                 return NextResponse.json({ error: 'Invalid action specified.' }, { status: 400 });

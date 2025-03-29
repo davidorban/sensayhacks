@@ -52,7 +52,7 @@ export default function SensayTestChatPage() {
     ];
 
     try {
-      const response = await fetch('/api/sensay/test-chat', {
+      const response = await fetch('/api/chat-test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
