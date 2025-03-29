@@ -59,6 +59,7 @@ export default function SensayTestChatPage() {
         },
         body: JSON.stringify({
           messages: messagesForApi,
+          model: 'sensay-default' // Add the model parameter required by the backend
         }),
       });
 
