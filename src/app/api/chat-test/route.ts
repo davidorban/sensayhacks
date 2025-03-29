@@ -9,10 +9,11 @@ interface RequestMessage {
 // Define expected request body structure
 interface RequestBody {
   messages: RequestMessage[];
-  model: string; // Add model parameter
+  model?: string; // Make model optional
+  userId?: string; // Add userId field
 }
 
-// Define TypeScript interfaces for our API
+// Define message interface for API interactions
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string | null;
@@ -20,11 +21,7 @@ interface Message {
   isLoading?: boolean;
 }
 
-interface ApiRequestBody {
-  messages: Message[];
-  userId?: string;
-}
-
+// Define attempt result tracking
 interface AttemptResult {
   path: string;
   url: string;
@@ -56,25 +53,31 @@ export async function POST(request: NextRequest) {
 
   let body: RequestBody;
   try {
-    body = await request.json();
+    body = await request.json() as RequestBody;
+    
+    // Add default userId if not provided
+    if (!body.userId) {
+      body.userId = 'test-user-id';
+    }
+    
+    // Set default model if not provided
+    if (!body.model) {
+      body.model = 'sensay';
+    }
   } catch (e) {
     console.error('Failed to parse request body:', e);
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
   // Validate body content (basic)
-  if (!body || typeof body !== 'object' || !Array.isArray(body.messages) || !body.model) { 
-      const error = 'Invalid request format: requires messages array and model.';
+  if (!body || typeof body !== 'object' || !Array.isArray(body.messages)) { 
+      const error = 'Invalid request format: requires messages array.';
       console.error(error, 'Received:', body);
       return NextResponse.json({ error }, { status: 400 });
   }
 
   // Extract the messages from the validated body
-  const { messages } = body; // Only need messages now
-
-  // Get user ID from headers if available
-  const userId = request.headers.get('X-USER-ID') || 'test-user-id';
-  console.log('User ID being used:', userId);
+  const { messages, userId = body.userId || 'test-user-id' } = body;
 
   // Track the results of each attempt
   const attemptResults: AttemptResult[] = [];
