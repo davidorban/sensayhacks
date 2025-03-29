@@ -556,6 +556,122 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? error.message : String(error)
     });
   }
+  
+  // Attempt 8: Standard Bearer Token Auth
+  try {
+    console.log('Attempting with Bearer token authentication...');
+    const bearerAuthUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
+    
+    const requestBody = {
+      messages: messages.map((msg: Message) => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+      })),
+    };
+    
+    console.log('Bearer Auth URL:', bearerAuthUrl);
+    
+    const bearerResponse = await fetch(bearerAuthUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
+        'X-USER-ID': userId
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    const bearerResponseText = await bearerResponse.text();
+    console.log('Bearer Auth Response Status:', bearerResponse.status);
+    console.log('Bearer Auth Response Body:', bearerResponseText);
+    
+    attemptResults.push({
+      path: 'Bearer Token Auth Path',
+      url: bearerAuthUrl,
+      status: bearerResponse.status,
+      error: bearerResponse.statusText,
+      response: bearerResponseText
+    });
+    
+    if (bearerResponse.ok) {
+      const responseData = JSON.parse(bearerResponseText);
+      // Extract the reply
+      const reply = responseData?.choices?.[0]?.message?.content;
+      if (typeof reply === 'string') {
+        return NextResponse.json({ 
+          reply,
+          apiPathUsed: 'bearer-auth',
+          debug: { url: bearerAuthUrl }
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error in Bearer token auth attempt:', error);
+    const bearerAuthUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
+    attemptResults.push({
+      path: 'Bearer Token Auth Path',
+      url: bearerAuthUrl,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+  
+  // Attempt 9: Experimental Bearer Token Auth
+  try {
+    console.log('Attempting with Bearer token on experimental path...');
+    const expBearerAuthUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
+    
+    const requestBody = {
+      messages: messages.map((msg: Message) => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+      })),
+    };
+    
+    console.log('Experimental Bearer Auth URL:', expBearerAuthUrl);
+    
+    const expBearerResponse = await fetch(expBearerAuthUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
+        'X-USER-ID': userId
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    const expBearerResponseText = await expBearerResponse.text();
+    console.log('Experimental Bearer Auth Response Status:', expBearerResponse.status);
+    console.log('Experimental Bearer Auth Response Body:', expBearerResponseText);
+    
+    attemptResults.push({
+      path: 'Experimental Bearer Token Auth Path',
+      url: expBearerAuthUrl,
+      status: expBearerResponse.status,
+      error: expBearerResponse.statusText,
+      response: expBearerResponseText
+    });
+    
+    if (expBearerResponse.ok) {
+      const responseData = JSON.parse(expBearerResponseText);
+      // Extract the reply
+      const reply = responseData?.choices?.[0]?.message?.content;
+      if (typeof reply === 'string') {
+        return NextResponse.json({ 
+          reply,
+          apiPathUsed: 'experimental-bearer-auth',
+          debug: { url: expBearerAuthUrl }
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error in experimental Bearer token auth attempt:', error);
+    const expBearerAuthUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
+    attemptResults.push({
+      path: 'Experimental Bearer Token Auth Path',
+      url: expBearerAuthUrl,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
 
   // If all attempts failed, return detailed error information
   return NextResponse.json(
