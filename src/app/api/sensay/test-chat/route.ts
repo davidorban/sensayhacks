@@ -1,4 +1,3 @@
-
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Define expected request message structure (subset of OpenAI)
@@ -28,7 +27,7 @@ interface SensayResponse {
 
 // Environment variables
 const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE;
-const ORGANIZATION_SECRET = process.env.SENSAY_API_KEY;
+const ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET; // Corrected variable name
 
 // Hardcoded Replica UUID (from previous debugging)
 const TARGET_REPLICA_UUID = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
