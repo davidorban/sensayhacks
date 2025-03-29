@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         try {
             const jsonError = JSON.parse(responseText);
             errorDetail = jsonError.error || jsonError.message || responseText;
-        } catch (e) {
+        } catch /* istanbul ignore next -- ignore parse error */ {
             // If parsing fails, use the raw text
         }
         console.error(`Sensay API Error (${response.status}):`, errorDetail);
@@ -107,7 +107,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate the structure of the successful response (basic check)
-    if (typeof responseData !== 'object' || responseData === null || !('choices' in responseData) || !Array.isArray((responseData as any).choices) || (responseData as any).choices.length === 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof responseData !== 'object' || responseData === null || !('choices' in responseData) || !Array.isArray((responseData as any).choices) || (responseData as any).choices.length === 0) { // Basic check
       console.error("Unexpected Sensay API response structure:", responseData);
       throw new Error("Unexpected Sensay API response structure");
     }
