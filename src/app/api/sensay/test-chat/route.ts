@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
       'Content-Type': 'application/json',
       'X-ORGANIZATION-SECRET': SENSAY_API_KEY ? '********' : 'MISSING', // Use secret from env var, don't log actual value
       'X-API-Version': '2025-03-25',
-      'X-USER-ID': 'test-user-001' // Hardcoded for now
   });
   console.log('Body:', JSON.stringify({ messages: messages }, null, 2)); // Log the messages being sent
   // --- END DEBUG LOGGING --- //
@@ -79,7 +78,6 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'X-ORGANIZATION-SECRET': SENSAY_API_KEY, // Send the secret value from the env var
         'X-API-Version': '2025-03-25',
-        'X-USER-ID': 'test-user-001' // Hardcoded for now
       },
       body: JSON.stringify({ messages }), // Send only messages in the body to Sensay
     });
