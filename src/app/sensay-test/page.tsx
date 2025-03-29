@@ -83,12 +83,20 @@ const SensayApiTestPage = () => {
         }
 
         try {
-            const response = await fetch('/api/sensay/test', {
+            const response = await fetch('/api/sensay-test', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(requestBody),
+                body: JSON.stringify({
+                    messages: [
+                        {
+                            role: 'user',
+                            content: chatContent
+                        }
+                    ],
+                    userId: userId
+                }),
             });
 
             const data = await response.json();
