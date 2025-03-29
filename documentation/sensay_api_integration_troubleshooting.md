@@ -56,9 +56,20 @@ All API path attempts are failing with either 404 (Not Found) or 401 (Unauthoriz
 - **Error**: Unauthorized
 - **Response**: `{"success":false,"error":"Unauthorized","fingerprint":"0eb3a733f03846228df03a84003b510a","request_id...`
 
+#### Attempt 10 (Multiple Header Formats and Request Body Auth)
+- **URL**: `https://api.sensay.io/v1/replicas/16d38fcc-5cb0-4f94-9cee-3e8398ef4700/chat/completions`
+- **Status**: 401
+- **Error**: Unauthorized
+- **Response**: `{"success":false,"error":"Unauthorized","fingerprint":"9a2393c1d65347f0bf2752cb500b7f3c","request_id":"fra1:iad1::nsffw-1743268813892-33f05e3ae768"}`
+- **Authentication Method**: 
+  - Used both `Authorization: Bearer` and `X-Organization-Secret` headers
+  - Tried various header case formats (`X-USER-ID` and `X-User-Id`)
+  - Included organization secret in request body as well as headers
+
 ### Configuration
 - **Replica ID used**: `16d38fcc-5cb0-4f94-9cee-3e8398ef4700`
 - **Base API URL**: `https://api.sensay.io`
+- **User ID used**: `16d38fcc-5cb0-4f94-9cee-3e8398ef4700`
 
 ## Debugging Steps Taken
 
@@ -75,18 +86,25 @@ All API path attempts are failing with either 404 (Not Found) or 401 (Unauthoriz
      - `X-API-KEY`
      - `x-api-key` (lowercase)
      - `Authorization: Bearer {token}` (OAuth 2.0 standard)
+     - Combined multiple header formats in the same request
    - Tried passing the API key as a query parameter
-   - Added the `X-USER-ID` header to all requests
+   - Added the `X-USER-ID` header to all requests with both uppercase and dash-case formats
+   - Included the organization secret in request bodies as fallback authentication
 
-3. **Path Variations**:
+3. **User Registration**:
+   - Attempted to register the user using both `X-Organization-Secret` header and `Authorization: Bearer` token formats
+   - Added detailed logging for each registration attempt
+
+4. **Path Variations**:
    - Tested multiple API path formats:
      - OpenAI-style: `/v1/chat/completions`
      - Standard: `/v1/replicas/{id}/chat/completions`
      - Experimental: `/v1/experimental/replicas/{id}/chat/completions`
      - Completions-only: `/v1/replicas/{id}/completions`
 
-4. **API Versioning**:
+5. **API Versioning**:
    - Added the required `X-API-Version` header with the current date (YYYY-MM-DD format)
+   - Tried both uppercase (`X-API-Version`) and dash-case (`X-Api-Version`) formats
    - According to the Sensay documentation: "Our API uses date-based versioning via the X-API-Version header"
    - The header value should be "any valid date in the YYYY-MM-DD format"
    - We're using the current date, which should correspond to the latest stable API version
@@ -110,95 +128,24 @@ According to the official Sensay API documentation:
    X-USER-ID
    ```
 
-3. **API Versioning**:
-   ```
-   X-API-Version: YYYY-MM-DD
-   ```
-   - Any valid date in the YYYY-MM-DD format is allowed
-   - Including the header is optional; if omitted, the API defaults to the latest stable version
-   - Each API response includes an X-API-Version header that shows the version used
+## Questions for Sensay Support
 
-### Response Format
+Based on our extensive troubleshooting, we need clarification on the following:
 
-Responses can be of three base types:
-1. Successful response representing an Object:
-   ```json
-   {
-     "success": "true",
-     "some_key": {
-       "...": "..."
-     }
-   }
-   ```
+1. **Authentication Format**: We've tried multiple authentication formats including `X-Organization-Secret` headers and `Authorization: Bearer` token, but all return 401 Unauthorized. What is the exact format required for successful authentication?
 
-2. Successful response representing an Array:
-   ```json
-   {
-     "success": "true",
-     "items": [
-       {
-         "...": "..."
-       }
-     ]
-   }
-   ```
+2. **Header Case Sensitivity**: Are the header names case-sensitive? We've tried `X-USER-ID`, `X-User-Id`, and other case variations with no success.
 
-3. Error response:
-   ```json
-   {
-     "success": "false",
-     "message": "...",
-     "...": "..."
-   }
-   ```
+3. **Replica ID vs User ID**: We're using the same ID (`16d38fcc-5cb0-4f94-9cee-3e8398ef4700`) for both the replica ID and user ID. Is this correct, or should they be different?
 
-## Key Findings
+4. **Environment Variables**: Are there any additional environment variables or configuration settings required beyond:
+   - SENSAY_API_URL_BASE
+   - SENSAY_ORGANIZATION_SECRET
 
-1. The correct API paths appear to be:
-   - `/v1/replicas/{id}/chat/completions` (Standard)
-   - `/v1/experimental/replicas/{id}/chat/completions` (Experimental)
+5. **API Key Validation**: How can we validate that our API key/organization secret is correct and active?
 
-2. These paths are returning **401 Unauthorized** errors, not 404s, indicating the endpoints exist but authentication is failing.
+6. **User Registration**: Is user registration required before making API calls? We're attempting to register the user, but both registration attempts return 401 Unauthorized.
 
-3. **None of our authentication methods are being accepted**, including:
-   - Custom headers (X-Organization-Secret)
-   - Standard OAuth (Bearer token)
-   - Query parameters
-   - Various header case variations
+7. **API Version**: Is our approach to API versioning correct (using current date in YYYY-MM-DD format)?
 
-4. **API Documentation Requirements**:
-   - According to the Sensay API documentation, the following headers are required:
-     - `X-Organization-Secret` - For organization-level authentication
-     - `X-USER-ID` - To authenticate as a specific user in the organization
-     - `X-API-Version` - Date-based versioning (YYYY-MM-DD format)
-
-## Questions and Next Steps
-
-1. **API Key Format**: Is the API key in the correct format? Does it need a prefix or special encoding?
-   - The documentation suggests using the raw API key in the `X-ORGANIZATION-SECRET` header
-
-2. **User ID Requirements**: Is the `X-USER-ID` value in the correct format?
-   - According to the documentation: "The user's external ID is your organization's defined ID, and it can be any string that you wish."
-   - We might need to register/create this user ID in the Sensay system first
-
-3. **Replica ID**: Is the replica ID (`16d38fcc-5cb0-4f94-9cee-3e8398ef4700`) correct and accessible with our API key?
-   - This ID might need to be verified or could be wrong
-
-4. **Rate Limiting**: Could we be hitting rate limits which are causing authentication failures?
-
-5. **Alternative ID Types**: Should we be using a different ID type?
-   - The documentation mentions `X-USER-ID-TYPE` which defaults to "external"
-
-## Action Plan
-
-1. **Contact Sensay Support**: Share these detailed error messages with Sensay support to get specific guidance on authentication.
-
-2. **Verify API Key**: Confirm that the API key is active and has the correct permissions in the Sensay dashboard.
-   - Check if there are any organization or access restrictions
-
-3. **User Registration**: Determine if we need to register the user ID with Sensay first before using it.
-   - The documentation suggests the user must exist or an unauthorized error will be returned
-
-4. **Test with Postman/Curl**: Create a Postman collection or curl command with all required headers to isolate if the issue is in our application code or with the API credentials.
-
-5. **Verify Replica ID**: Confirm the replica ID is correct and accessible with the current credentials.
+8. **Sample Request**: Could you provide a complete working curl or Fetch example that includes all required headers and body structure?
