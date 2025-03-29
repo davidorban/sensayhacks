@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Hardcoded replica UUID - replace with dynamic logic if needed
-  const replicaId = 'ae911c9e-98a5-4270-8617-0c6b8f6f7a55';
+  const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use the ID from the main chat route
 
   // --- Call Sensay API --- //
   const apiUrl = `${SENSAY_API_URL_BASE.replace('/experimental', '')}/v1/replicas/${replicaId}/chat/completions`;
