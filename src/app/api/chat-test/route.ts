@@ -30,12 +30,31 @@ interface AttemptResult {
   response?: string;
 }
 
-// Environment variables
-const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io';
+// Environment variables - Make sure to set clean base API URL
+let SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io';
+
+// Remove any trailing slashes
+SENSAY_API_URL_BASE = SENSAY_API_URL_BASE.replace(/\/+$/, '');
+
+// Check if the URL already contains API version and path segments
+const hasV1 = SENSAY_API_URL_BASE.includes('/v1');
+const hasExperimental = SENSAY_API_URL_BASE.includes('/experimental');
+const hasReplicas = SENSAY_API_URL_BASE.includes('/replicas');
+
+// If URL already has path segments, use a cleaned version
+if (hasV1 || hasExperimental || hasReplicas) {
+  // Extract the base domain
+  const baseUrlMatch = SENSAY_API_URL_BASE.match(/(https?:\/\/[^\/]+)/);
+  if (baseUrlMatch) {
+    console.log('Detected already configured URL with path segments, using domain only');
+    SENSAY_API_URL_BASE = baseUrlMatch[1];
+  }
+}
+
 const SENSAY_ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.env.SENSAY_API_KEY || '';
 
 // Log environment variable values on function execution (for debugging Vercel env)
-console.log('API Base URL:', SENSAY_API_URL_BASE);
+console.log('Clean API Base URL:', SENSAY_API_URL_BASE);
 console.log('API Key Config:', SENSAY_ORGANIZATION_SECRET ? '[PROVIDED]' : '[MISSING]');
 
 export async function POST(request: NextRequest) {
