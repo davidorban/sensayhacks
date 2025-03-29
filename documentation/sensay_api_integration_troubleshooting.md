@@ -85,6 +85,73 @@ All API path attempts are failing with either 404 (Not Found) or 401 (Unauthoriz
      - Experimental: `/v1/experimental/replicas/{id}/chat/completions`
      - Completions-only: `/v1/replicas/{id}/completions`
 
+4. **API Versioning**:
+   - Added the required `X-API-Version` header with the current date (YYYY-MM-DD format)
+   - According to the Sensay documentation: "Our API uses date-based versioning via the X-API-Version header"
+   - The header value should be "any valid date in the YYYY-MM-DD format"
+   - We're using the current date, which should correspond to the latest stable API version
+
+## Sensay API Documentation Findings
+
+According to the official Sensay API documentation:
+
+### Authentication Requirements
+
+1. **Organization Authentication via Service Token**:
+   ```
+   Required headers:
+   X-ORGANIZATION-SECRET
+   ```
+
+2. **User Authentication via Service Token**:
+   ```
+   Required headers:
+   X-ORGANIZATION-SECRET
+   X-USER-ID
+   ```
+
+3. **API Versioning**:
+   ```
+   X-API-Version: YYYY-MM-DD
+   ```
+   - Any valid date in the YYYY-MM-DD format is allowed
+   - Including the header is optional; if omitted, the API defaults to the latest stable version
+   - Each API response includes an X-API-Version header that shows the version used
+
+### Response Format
+
+Responses can be of three base types:
+1. Successful response representing an Object:
+   ```json
+   {
+     "success": "true",
+     "some_key": {
+       "...": "..."
+     }
+   }
+   ```
+
+2. Successful response representing an Array:
+   ```json
+   {
+     "success": "true",
+     "items": [
+       {
+         "...": "..."
+       }
+     ]
+   }
+   ```
+
+3. Error response:
+   ```json
+   {
+     "success": "false",
+     "message": "...",
+     "...": "..."
+   }
+   ```
+
 ## Key Findings
 
 1. The correct API paths appear to be:
@@ -99,34 +166,39 @@ All API path attempts are failing with either 404 (Not Found) or 401 (Unauthoriz
    - Query parameters
    - Various header case variations
 
+4. **API Documentation Requirements**:
+   - According to the Sensay API documentation, the following headers are required:
+     - `X-Organization-Secret` - For organization-level authentication
+     - `X-USER-ID` - To authenticate as a specific user in the organization
+     - `X-API-Version` - Date-based versioning (YYYY-MM-DD format)
+
 ## Questions and Next Steps
 
-1. **API Key Format**: Is the API key in the correct format? Does it need a prefix like "Bearer" or special encoding?
+1. **API Key Format**: Is the API key in the correct format? Does it need a prefix or special encoding?
+   - The documentation suggests using the raw API key in the `X-ORGANIZATION-SECRET` header
 
-2. **Header Requirements**: Are there additional required headers we haven't included?
-   - We've tried both custom X-headers and standard Bearer auth without success
+2. **User ID Requirements**: Is the `X-USER-ID` value in the correct format?
+   - According to the documentation: "The user's external ID is your organization's defined ID, and it can be any string that you wish."
+   - We might need to register/create this user ID in the Sensay system first
 
-3. **API Key Permissions**: Does the API key have the correct permissions to access these endpoints?
-   - Check if the key is restricted to specific replicas, endpoints, or operations
+3. **Replica ID**: Is the replica ID (`16d38fcc-5cb0-4f94-9cee-3e8398ef4700`) correct and accessible with our API key?
+   - This ID might need to be verified or could be wrong
 
-4. **API Documentation**: Is there official documentation from Sensay that specifies the exact authentication method?
+4. **Rate Limiting**: Could we be hitting rate limits which are causing authentication failures?
 
-5. **User ID Requirements**: Is the `X-USER-ID` header required? Does it need to be in a specific format?
-
-6. **API Versioning**: Are we using the correct API version? Some of the paths include `/v1/` - is this correct?
-
-7. **Replica ID**: Is the replica ID (`16d38fcc-5cb0-4f94-9cee-3e8398ef4700`) correct and accessible with our API key?
-
-8. **Rate Limiting**: Could we be hitting rate limits which are causing authentication failures?
+5. **Alternative ID Types**: Should we be using a different ID type?
+   - The documentation mentions `X-USER-ID-TYPE` which defaults to "external"
 
 ## Action Plan
 
 1. **Contact Sensay Support**: Share these detailed error messages with Sensay support to get specific guidance on authentication.
 
-2. **Review API Documentation**: Find and review the most recent Sensay API documentation to verify endpoints and authentication methods.
+2. **Verify API Key**: Confirm that the API key is active and has the correct permissions in the Sensay dashboard.
+   - Check if there are any organization or access restrictions
 
-3. **Verify API Key**: Confirm that the API key is active and has the correct permissions in the Sensay dashboard.
+3. **User Registration**: Determine if we need to register the user ID with Sensay first before using it.
+   - The documentation suggests the user must exist or an unauthorized error will be returned
 
-4. **Check Logs**: Examine Vercel Function logs for any additional error details not visible in the browser console.
+4. **Test with Postman/Curl**: Create a Postman collection or curl command with all required headers to isolate if the issue is in our application code or with the API credentials.
 
-5. **Test with Postman/Curl**: Attempt direct API requests using Postman or curl to isolate if the issue is in our application code or with the API credentials.
+5. **Verify Replica ID**: Confirm the replica ID is correct and accessible with the current credentials.
