@@ -35,13 +35,8 @@ const TARGET_REPLICA_UUID = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
 export async function POST(request: NextRequest) {
   console.log('--- Request received at /api/sensay/test-chat ---');
 
-  // --- DEBUG: Log received environment variables --- //
-  console.log(`DEBUG: process.env.SENSAY_API_URL_BASE = ${process.env.SENSAY_API_URL_BASE}`);
-  console.log(`DEBUG: process.env.SENSAY_API_KEY = ${process.env.SENSAY_API_KEY ? 'Exists (masked)' : 'MISSING or EMPTY'}`);
-  // --- END DEBUG --- //
-
   // Basic validation
-  if (!SENSAY_API_URL_BASE || !ORGANIZATION_SECRET) {
+  if (!SENSAY_API_URL_BASE || !ORGANIZATION_SECRET) { // Fix typo
     console.error('API URL Base or Organization Secret not configured.');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
