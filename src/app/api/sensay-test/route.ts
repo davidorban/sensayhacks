@@ -42,8 +42,10 @@ function getAuthHeaders(userId: string) {
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
-    'X-USER-ID': userId,
-    'X-API-Version': currentDate
+    'X-User-Id': userId, // Try with dash format
+    'X-USER-ID': userId, // Try with uppercase format as well
+    'X-Api-Version': currentDate, // Try with dash format
+    'X-API-Version': currentDate // Try with uppercase format as well
   };
 }
 
@@ -52,7 +54,8 @@ function getOrgOnlyHeaders() {
   return {
     'Content-Type': 'application/json',
     'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-    'X-API-Version': currentDate
+    'X-Api-Version': currentDate, // Try with dash format
+    'X-API-Version': currentDate // Try with uppercase format as well
   };
 }
 
@@ -84,7 +87,8 @@ export async function POST(request: NextRequest) {
       console.log('Attempting user registration with Organization Secret header...');
       const createUserUrl = `${SENSAY_API_URL_BASE}/v1/users`;
       const createUserBody = { 
-        external_id: userId, 
+        external_id: userId,
+        organization_secret: SENSAY_ORGANIZATION_SECRET, // Try including in body too
         metadata: { source: 'SensayHacks API test' } 
       };
       
@@ -120,6 +124,7 @@ export async function POST(request: NextRequest) {
       const createUserUrl = `${SENSAY_API_URL_BASE}/v1/users`;
       const createUserBody = { 
         external_id: userId, 
+        organization_secret: SENSAY_ORGANIZATION_SECRET, // Try including in body too
         metadata: { source: 'SensayHacks API test with Bearer token' } 
       };
       
@@ -161,6 +166,7 @@ export async function POST(request: NextRequest) {
     // Define the request body
     const apiRequestBody = {
       messages: apiMessages,
+      organization_secret: SENSAY_ORGANIZATION_SECRET, // Try including in body too
       stream: false
     };
     
