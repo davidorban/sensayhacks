@@ -136,7 +136,7 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
         'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
         'X-USER-ID': userId,
-        'X-API-Version': '2025-03-18',
+        'X-API-Version': '2025-03-25', // Updated to match working test route
       },
       // Send the messages array structured for OpenAI compatibility
       body: JSON.stringify({ messages: messagesForApi }),
