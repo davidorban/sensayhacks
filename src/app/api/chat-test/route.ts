@@ -12,6 +12,27 @@ interface RequestBody {
   model: string; // Add model parameter
 }
 
+// Define TypeScript interfaces for our API
+interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string | null;
+  id?: string;
+  isLoading?: boolean;
+}
+
+interface ApiRequestBody {
+  messages: Message[];
+  userId?: string;
+}
+
+interface AttemptResult {
+  path: string;
+  url: string;
+  status?: number;
+  error?: string;
+  response?: string;
+}
+
 // Environment variables
 const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io';
 const SENSAY_ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.env.SENSAY_API_KEY || '';
@@ -56,7 +77,7 @@ export async function POST(request: NextRequest) {
   console.log('User ID being used:', userId);
 
   // Track the results of each attempt
-  const attemptResults: any[] = [];
+  const attemptResults: AttemptResult[] = [];
 
   // Hardcoded replicaId for this test - would eventually come from user settings or selection
   let replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
@@ -102,7 +123,7 @@ export async function POST(request: NextRequest) {
     const openAIStyleApiUrl = `${SENSAY_API_URL_BASE}/v1/chat/completions`;
     
     const requestBody = {
-      messages: messages.map((msg: any) => ({
+      messages: messages.map((msg: Message) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
       })),
@@ -162,7 +183,7 @@ export async function POST(request: NextRequest) {
     const standardApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
     
     const requestBody = {
-      messages: messages.map((msg: any) => ({
+      messages: messages.map((msg: Message) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
       })),
@@ -221,7 +242,7 @@ export async function POST(request: NextRequest) {
     const experimentalApiUrl = `${SENSAY_API_URL_BASE}/v1/experimental/replicas/${replicaId}/chat/completions`;
     
     const requestBody = {
-      messages: messages.map((msg: any) => ({
+      messages: messages.map((msg: Message) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
       })),
@@ -280,7 +301,7 @@ export async function POST(request: NextRequest) {
     const completionsApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/completions`;
     
     const requestBody = {
-      prompt: messages.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n'),
+      prompt: messages.map((msg: Message) => `${msg.role}: ${msg.content}`).join('\n'),
       max_tokens: 500,
     };
     
@@ -337,7 +358,7 @@ export async function POST(request: NextRequest) {
     const authApiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
     
     const requestBody = {
-      messages: messages.map((msg: any) => ({
+      messages: messages.map((msg: Message) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
       })),
