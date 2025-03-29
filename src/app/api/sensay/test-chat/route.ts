@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       'X-API-Version': '2025-03-25',
       'X-USER-ID': 'test-user-001' // Log placeholder User ID
   });
-  console.log('Body:', JSON.stringify({ messages: userMessages, model: "sensay-default" }, null, 2));
+  console.log('Body:', JSON.stringify({ messages: userMessages, source: "web", store: true }, null, 2)); // Match docs
   // --- END DEBUG LOGGING ---
 
   let sensayResponseData: unknown;
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         'X-API-Version': '2025-03-25',
         'X-USER-ID': 'test-user-001' // Placeholder User ID
       },
-      body: JSON.stringify({ messages: userMessages, model: "sensay-default" }),
+      body: JSON.stringify({ messages: userMessages, source: "web", store: true }), // Match docs
     });
 
     // --- Handle Sensay Response --- //
