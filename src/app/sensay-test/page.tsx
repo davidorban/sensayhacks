@@ -14,7 +14,7 @@ interface ApiResponse {
 
 const SensayApiTestPage = () => {
     // Input States
-    const [userId] = useState<string>('user-test-123'); // Default user ID
+    const [userId] = useState<string>('16d38fcc-5cb0-4f94-9cee-3e8398ef4700'); // Correct User ID
     const [chatContent, setChatContent] = useState<string>('');
 
     // Response/Data States
