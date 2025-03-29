@@ -52,184 +52,341 @@ export async function POST(request: NextRequest) {
   const { messages } = body; // Only need messages now
 
   // Get user ID from headers if available
-  const userId = request.headers.get('X-USER-ID');
-  if (userId) {
-    console.log('User ID found in headers:', userId);
-  } else {
-    console.log('No User ID found in headers');
-  }
+  const userId = request.headers.get('X-USER-ID') || 'test-user-id';
+  console.log('User ID being used:', userId);
 
-  // Hardcoded replica UUID - replace with dynamic logic if needed
-  const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Ensure this ID is correct
-
-  // Try both standard and experimental API paths
-  const standardApiUrl = `${SENSAY_API_URL_BASE}/replicas/${replicaId}/chat/completions`;
-  const experimentalApiUrl = `${SENSAY_API_URL_BASE}/experimental/replicas/${replicaId}/chat/completions`;
+  // --- First, let's attempt to list replicas to find valid IDs --- //
+  console.log('Attempting to list available replicas...');
   
-  console.log('Attempting to use standard API URL first:', standardApiUrl);
-
-  // Extract the content of the last message (assuming it's the user's input)
-  const lastMessageContent = messages.length > 0 ? messages[messages.length - 1].content : '';
-
-  // --- Try Standard API First --- //
   try {
-    // --- DEBUG LOGGING --- //
-    console.log('Sending to Sensay API (Standard):');
-    console.log('  URL:', standardApiUrl);
-    console.log('  Method:', 'POST');
-    console.log('  Headers:', JSON.stringify({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET ? '***' : 'MISSING',
-      'X-API-VERSION': '2025-03-25'
-    }, null, 2));
-
-    // Body should only contain 'content' as per docs
-    const requestBodyForSensay = { content: lastMessageContent };
-    console.log('  Body:', JSON.stringify(requestBodyForSensay, null, 2));
-    // --- END DEBUG LOGGING --- //
-
-    const standardResponse = await fetch(standardApiUrl, {
-      method: 'POST',
+    const listReplicasUrl = `${SENSAY_API_URL_BASE}/replicas`;
+    console.log('List Replicas URL:', listReplicasUrl);
+    
+    const replicasResponse = await fetch(listReplicasUrl, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET,
-        'X-API-VERSION': '2025-03-25',
-        ...(userId ? { 'X-USER-ID': userId } : {}) // Add user ID if available
-      },
-      body: JSON.stringify(requestBodyForSensay),
+        'X-API-VERSION': '2025-03-25'
+      }
     });
-
-    const standardResponseText = await standardResponse.text();
-    console.log('Raw Sensay API Response Status (Standard):', standardResponse.status);
-    console.log('Raw Sensay API Response Body (Standard):', standardResponseText);
-
-    if (standardResponse.ok) {
-      let responseData: unknown;
+    
+    const replicasText = await replicasResponse.text();
+    console.log('Replicas API Response Status:', replicasResponse.status);
+    console.log('Replicas API Response:', replicasText);
+    
+    let replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Default fallback
+    
+    if (replicasResponse.ok) {
       try {
-        responseData = JSON.parse(standardResponseText);
-        // Validate the structure of the successful response (basic check)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (typeof responseData !== 'object' || responseData === null || !('choices' in responseData) || !Array.isArray((responseData as any).choices) || (responseData as any).choices.length === 0) {
-          console.error("Unexpected Sensay API response structure:", responseData);
-          throw new Error("Unexpected Sensay API response structure");
+        const replicasData = JSON.parse(replicasText);
+        if (Array.isArray(replicasData) && replicasData.length > 0) {
+          // Use the first replica ID from the response
+          replicaId = replicasData[0].id || replicaId;
+          console.log('Found replica ID from API:', replicaId);
         }
-
-        // Extract the reply (adjust based on actual API response structure if needed)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const reply = (responseData as any)?.choices[0]?.message?.content;
-
-        if (typeof reply !== 'string') {
-          console.error("Could not extract reply content from Sensay response:", responseData);
-          throw new Error("Could not extract reply content from Sensay response");
-        }
-
-        return NextResponse.json({ reply, apiPath: 'standard' });
       } catch (e) {
-        console.error("Failed to parse Sensay API JSON response:", e);
-        throw new Error("Failed to parse Sensay API JSON response");
+        console.error('Failed to parse replicas response:', e);
       }
     }
+    
+    // Extract the content of the last message (assuming it's the user's input)
+    const lastMessageContent = messages.length > 0 ? messages[messages.length - 1].content : '';
 
-    // If standard API failed, try the experimental path
-    console.log('Standard API failed, trying experimental API path');
-  } catch (standardError) {
-    console.error('Error calling standard Sensay API:', standardError);
-  }
-
-  // --- Try Experimental API Next --- //
-  console.log('Attempting to use experimental API URL:', experimentalApiUrl);
-  
-  try {
-    // --- DEBUG LOGGING for Experimental --- //
-    console.log('Sending to Sensay API (Experimental):');
-    console.log('  URL:', experimentalApiUrl);
-    console.log('  Method:', 'POST');
-    console.log('  Headers:', JSON.stringify({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET ? '***' : 'MISSING',
-      'X-API-VERSION': '2025-03-25'
-    }, null, 2));
-
-    // For experimental, try the OpenAI format with messages array
-    const experimentalRequestBody = { messages: messages, model: "sensay-default" };
-    console.log('  Body (Experimental):', JSON.stringify(experimentalRequestBody, null, 2));
-    // --- END DEBUG LOGGING --- //
-
-    const experimentalResponse = await fetch(experimentalApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET,
-        'X-API-VERSION': '2025-03-25',
-        ...(userId ? { 'X-USER-ID': userId } : {}) // Add user ID if available
-      },
-      body: JSON.stringify(experimentalRequestBody),
-    });
-
-    const experimentalResponseText = await experimentalResponse.text();
-    console.log('Raw Sensay API Response Status (Experimental):', experimentalResponse.status);
-    console.log('Raw Sensay API Response Body (Experimental):', experimentalResponseText);
-
-    if (experimentalResponse.ok) {
-      let responseData: unknown;
-      try {
-        responseData = JSON.parse(experimentalResponseText);
-        // Validate the structure of the successful response (basic check)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (typeof responseData !== 'object' || responseData === null || !('choices' in responseData) || !Array.isArray((responseData as any).choices) || (responseData as any).choices.length === 0) {
-          console.error("Unexpected Sensay API response structure:", responseData);
-          throw new Error("Unexpected Sensay API response structure");
-        }
-
-        // Extract the reply (adjust based on actual API response structure if needed)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const reply = (responseData as any)?.choices[0]?.message?.content;
-
-        if (typeof reply !== 'string') {
-          console.error("Could not extract reply content from Sensay response:", responseData);
-          throw new Error("Could not extract reply content from Sensay response");
-        }
-
-        return NextResponse.json({ reply, apiPath: 'experimental' });
-      } catch (e) {
-        console.error("Failed to parse Sensay API JSON response:", e);
-        throw new Error("Failed to parse Sensay API JSON response");
-      }
-    }
-
-    // If both failed, combine error messages and throw
-    let errorDetail = experimentalResponseText;
+    // --- Try different API path variations --- //
+    // The following are possible paths we'll try in order:
+    // 1. /v1/replicas/{id}/chat/completions (standard)
+    // 2. /v1/experimental/replicas/{id}/chat/completions (experimental)
+    // 3. /replicas/{id}/chat/completions (no v1 prefix)
+    // 4. /replicas/{id}/completions (no chat segment)
+    // 5. /v1/chat/completions (OpenAI-style path)
+    
+    // Store all attempts and their results
+    const attemptResults = [];
+    
+    // --- 1. Try Standard Path --- //
+    const standardApiUrl = `${SENSAY_API_URL_BASE}/replicas/${replicaId}/chat/completions`;
+    console.log('1. Trying standard API URL:', standardApiUrl);
+    
     try {
-      const jsonError = JSON.parse(experimentalResponseText);
-      errorDetail = jsonError.error || jsonError.message || experimentalResponseText;
-    } catch {
-      // If parsing fails, use the raw text
-    }
-    console.error(`Sensay API Error (${experimentalResponse.status}):`, errorDetail);
-    throw new Error(`Sensay API Error (${experimentalResponse.status}): ${errorDetail}`);
-  } catch (error) {
-    console.error('Error calling Sensay API (both standard and experimental):', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    const status = errorMessage.includes('Sensay API Error (401)') ? 401
-                : errorMessage.includes('Sensay API Error (400)') ? 400
-                : errorMessage.includes('Sensay API Error (404)') ? 404
-                : 500; // Default to internal server error
-                
-    // Include more details in the error response
-    return NextResponse.json({ 
-      error: errorMessage,
-      details: {
-        standardApiUrl,
-        experimentalApiUrl,
-        requestSent: {
-          standard: { content: lastMessageContent },
-          experimental: { messages, model: "sensay-default" }
+      // Body should only contain 'content' as per docs
+      const standardRequestBody = { content: lastMessageContent };
+      console.log('Standard request body:', JSON.stringify(standardRequestBody, null, 2));
+      
+      const standardResponse = await fetch(standardApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET,
+          'X-API-VERSION': '2025-03-25',
+          'X-USER-ID': userId
+        },
+        body: JSON.stringify(standardRequestBody),
+      });
+
+      const standardResponseText = await standardResponse.text();
+      console.log('Standard API Response Status:', standardResponse.status);
+      console.log('Standard API Response Body:', standardResponseText);
+      
+      attemptResults.push({
+        path: 'standard',
+        url: standardApiUrl,
+        status: standardResponse.status,
+        response: standardResponseText
+      });
+      
+      if (standardResponse.ok) {
+        let responseData = JSON.parse(standardResponseText);
+        // Extract the reply
+        const reply = responseData?.choices?.[0]?.message?.content;
+        if (typeof reply === 'string') {
+          return NextResponse.json({ 
+            reply, 
+            apiPath: 'standard',
+            replicaId
+          });
         }
       }
-    }, { status });
+    } catch (error) {
+      console.error('Error in standard path attempt:', error);
+      attemptResults.push({
+        path: 'standard',
+        url: standardApiUrl,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // --- 2. Try Experimental Path --- //
+    const experimentalApiUrl = `${SENSAY_API_URL_BASE}/experimental/replicas/${replicaId}/chat/completions`;
+    console.log('2. Trying experimental API URL:', experimentalApiUrl);
+    
+    try {
+      // For experimental, try the OpenAI format with messages array
+      const experimentalRequestBody = { messages: messages, model: "sensay-default" };
+      console.log('Experimental request body:', JSON.stringify(experimentalRequestBody, null, 2));
+      
+      const experimentalResponse = await fetch(experimentalApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET,
+          'X-API-VERSION': '2025-03-25',
+          'X-USER-ID': userId
+        },
+        body: JSON.stringify(experimentalRequestBody),
+      });
+
+      const experimentalResponseText = await experimentalResponse.text();
+      console.log('Experimental API Response Status:', experimentalResponse.status);
+      console.log('Experimental API Response Body:', experimentalResponseText);
+      
+      attemptResults.push({
+        path: 'experimental',
+        url: experimentalApiUrl,
+        status: experimentalResponse.status,
+        response: experimentalResponseText
+      });
+      
+      if (experimentalResponse.ok) {
+        let responseData = JSON.parse(experimentalResponseText);
+        // Extract the reply
+        const reply = responseData?.choices?.[0]?.message?.content;
+        if (typeof reply === 'string') {
+          return NextResponse.json({ 
+            reply, 
+            apiPath: 'experimental',
+            replicaId
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in experimental path attempt:', error);
+      attemptResults.push({
+        path: 'experimental',
+        url: experimentalApiUrl,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // --- 3. Try No v1 Prefix Path --- //
+    // Remove v1 from base URL if it exists
+    const baseUrlWithoutV1 = SENSAY_API_URL_BASE.replace(/\/v1$/, '');
+    const noV1ApiUrl = `${baseUrlWithoutV1}/replicas/${replicaId}/chat/completions`;
+    console.log('3. Trying API URL without v1 prefix:', noV1ApiUrl);
+    
+    try {
+      // Try both content and messages formats
+      const noV1RequestBody = { content: lastMessageContent };
+      console.log('No v1 request body:', JSON.stringify(noV1RequestBody, null, 2));
+      
+      const noV1Response = await fetch(noV1ApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET,
+          'X-API-VERSION': '2025-03-25',
+          'X-USER-ID': userId
+        },
+        body: JSON.stringify(noV1RequestBody),
+      });
+
+      const noV1ResponseText = await noV1Response.text();
+      console.log('No v1 API Response Status:', noV1Response.status);
+      console.log('No v1 API Response Body:', noV1ResponseText);
+      
+      attemptResults.push({
+        path: 'no-v1-prefix',
+        url: noV1ApiUrl,
+        status: noV1Response.status,
+        response: noV1ResponseText
+      });
+      
+      if (noV1Response.ok) {
+        let responseData = JSON.parse(noV1ResponseText);
+        // Extract the reply
+        const reply = responseData?.choices?.[0]?.message?.content;
+        if (typeof reply === 'string') {
+          return NextResponse.json({ 
+            reply, 
+            apiPath: 'no-v1-prefix',
+            replicaId
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in no-v1-prefix path attempt:', error);
+      attemptResults.push({
+        path: 'no-v1-prefix',
+        url: noV1ApiUrl,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // --- 4. Try Direct Completions Path (no chat segment) --- //
+    const noChartApiUrl = `${SENSAY_API_URL_BASE}/replicas/${replicaId}/completions`;
+    console.log('4. Trying API URL without chat segment:', noChartApiUrl);
+    
+    try {
+      const noChartRequestBody = { content: lastMessageContent };
+      console.log('No chat segment request body:', JSON.stringify(noChartRequestBody, null, 2));
+      
+      const noChartResponse = await fetch(noChartApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET,
+          'X-API-VERSION': '2025-03-25',
+          'X-USER-ID': userId
+        },
+        body: JSON.stringify(noChartRequestBody),
+      });
+
+      const noChartResponseText = await noChartResponse.text();
+      console.log('No chat segment API Response Status:', noChartResponse.status);
+      console.log('No chat segment API Response Body:', noChartResponseText);
+      
+      attemptResults.push({
+        path: 'no-chat-segment',
+        url: noChartApiUrl,
+        status: noChartResponse.status,
+        response: noChartResponseText
+      });
+      
+      if (noChartResponse.ok) {
+        let responseData = JSON.parse(noChartResponseText);
+        // Extract the reply
+        const reply = responseData?.choices?.[0]?.message?.content || responseData?.choices?.[0]?.text;
+        if (typeof reply === 'string') {
+          return NextResponse.json({ 
+            reply, 
+            apiPath: 'no-chat-segment',
+            replicaId
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in no-chart-segment path attempt:', error);
+      attemptResults.push({
+        path: 'no-chat-segment',
+        url: noChartApiUrl,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // --- 5. Try OpenAI-style Path --- //
+    const openAIStyleUrl = `${SENSAY_API_URL_BASE}/chat/completions`;
+    console.log('5. Trying OpenAI-style URL:', openAIStyleUrl);
+    
+    try {
+      const openAIStyleRequestBody = { 
+        messages: messages, 
+        model: "sensay-default",
+        user: userId
+      };
+      console.log('OpenAI-style request body:', JSON.stringify(openAIStyleRequestBody, null, 2));
+      
+      const openAIStyleResponse = await fetch(openAIStyleUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-ORGANIZATION-SECRET': SENSAY_ORGANIZATION_SECRET,
+          'X-API-VERSION': '2025-03-25',
+          'X-USER-ID': userId
+        },
+        body: JSON.stringify(openAIStyleRequestBody),
+      });
+
+      const openAIStyleResponseText = await openAIStyleResponse.text();
+      console.log('OpenAI-style API Response Status:', openAIStyleResponse.status);
+      console.log('OpenAI-style API Response Body:', openAIStyleResponseText);
+      
+      attemptResults.push({
+        path: 'openai-style',
+        url: openAIStyleUrl,
+        status: openAIStyleResponse.status,
+        response: openAIStyleResponseText
+      });
+      
+      if (openAIStyleResponse.ok) {
+        let responseData = JSON.parse(openAIStyleResponseText);
+        // Extract the reply
+        const reply = responseData?.choices?.[0]?.message?.content;
+        if (typeof reply === 'string') {
+          return NextResponse.json({ 
+            reply, 
+            apiPath: 'openai-style',
+            replicaId
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in openai-style path attempt:', error);
+      attemptResults.push({
+        path: 'openai-style',
+        url: openAIStyleUrl,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // If all attempts failed, return detailed error information
+    return NextResponse.json({ 
+      error: 'All API path attempts failed',
+      attempts: attemptResults,
+      replicaId,
+      baseApiUrl: SENSAY_API_URL_BASE
+    }, { status: 500 });
+    
+  } catch (error) {
+    console.error('Error during API discovery process:', error);
+    return NextResponse.json({ 
+      error: 'API discovery process failed',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
