@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
   console.log('Sending to Sensay API:');
   console.log('URL:', apiUrl);
   console.log('Headers:', {
+      'Accept': 'application/json', // Add missing Accept header
       'Content-Type': 'application/json',
       'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET ? '********' : 'MISSING', // Don't log the actual key
       'X-API-Version': '2025-03-25',
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
+        'Accept': 'application/json', // Add missing Accept header
         'Content-Type': 'application/json',
         'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET, // Send the value from SENSAY_API_KEY env var
         'X-API-Version': '2025-03-25',
