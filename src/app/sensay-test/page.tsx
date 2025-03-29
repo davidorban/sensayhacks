@@ -6,9 +6,27 @@ import { Loader2 } from 'lucide-react';
 // Define structure for the request body sent to our backend API
 interface ApiResponse {
     success: boolean;
-    message?: any;
-    response?: any;
-    userCreationAttempts?: any[];
+    message?: {
+        role?: string;
+        content?: string;
+        [key: string]: unknown;
+    };
+    response?: {
+        choices?: Array<{
+            message?: {
+                role?: string;
+                content?: string;
+            }
+        }>;
+        [key: string]: unknown;
+    };
+    userCreationAttempts?: Array<{
+        method?: string;
+        status?: number;
+        response?: string;
+        error?: string;
+        [key: string]: unknown;
+    }>;
     error?: string;
 }
 
