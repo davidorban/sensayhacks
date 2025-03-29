@@ -9,6 +9,7 @@ interface RequestMessage {
 // Define expected request body structure
 interface RequestBody {
   messages: RequestMessage[];
+  model: string; // Add model parameter
   // secret: string; // No longer expect secret in the body
 }
 
@@ -42,14 +43,14 @@ export async function POST(request: NextRequest) {
   }
 
   // Validate body content (basic)
-  if (!body || typeof body !== 'object' || !Array.isArray(body.messages)) { 
-      const error = 'Invalid request format: requires messages array.';
+  if (!body || typeof body !== 'object' || !Array.isArray(body.messages) || !body.model) { 
+      const error = 'Invalid request format: requires messages array and model.';
       console.error(error, 'Received:', body);
       return NextResponse.json({ error }, { status: 400 });
   }
 
   // Extract the messages from the validated body
-  const { messages } = body;
+  const { messages, model } = body;
 
   // Hardcoded replica UUID - replace with dynamic logic if needed
   const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use the ID from the main chat route
@@ -66,9 +67,9 @@ export async function POST(request: NextRequest) {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'X-ORGANIZATION-SECRET': SENSAY_API_KEY ? '***' : 'MISSING', // Use ENV VAR, mask value
-    'X-API-VERSION': '2024-11-14'             // Try older version
+    'X-API-VERSION': '2025-03-25'             // Revert to newer version
   }, null, 2));
-  console.log('  Body:', JSON.stringify({ messages, stream: false }, null, 2)); // Match working request body structure
+  console.log('  Body:', JSON.stringify({ messages, model, stream: false }, null, 2)); // Add model parameter
   // --- END DEBUG LOGGING --- //
 
   try {
@@ -78,10 +79,12 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'X-ORGANIZATION-SECRET': SENSAY_API_KEY, // Use API key from environment variables
-        'X-API-VERSION': '2024-11-14' // Try older version
+        'X-API-VERSION': '2025-03-25' // Revert to newer version
       },
       body: JSON.stringify({
         messages: messages,
+        model: model, // Add model parameter
+        stream: false
       }),
     });
 
