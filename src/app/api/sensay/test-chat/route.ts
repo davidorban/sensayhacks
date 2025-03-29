@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       'Content-Type': 'application/json',
       'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET ? '********' : 'MISSING', // Don't log the actual key
       'X-API-Version': '2025-03-25',
+      'X-USER-ID': 'test-user-001' // Log placeholder User ID
   });
   console.log('Body:', JSON.stringify({ messages: userMessages, model: "sensay-default" }, null, 2));
   // --- END DEBUG LOGGING ---
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET, // Send the value from SENSAY_API_KEY env var
         'X-API-Version': '2025-03-25',
+        'X-USER-ID': 'test-user-001' // Placeholder User ID
       },
       body: JSON.stringify({ messages: userMessages, model: "sensay-default" }),
     });
