@@ -126,6 +126,17 @@ export async function POST(request: Request) {
   // --- Call Sensay API --- //
   const apiUrl = `${SENSAY_API_URL_BASE}/${TARGET_REPLICA_UUID}/chat/completions`;
 
+  // --- DEBUG LOGGING --- //
+  console.log('Sending to Sensay API:');
+  console.log('URL:', apiUrl);
+  console.log('Headers:', {
+      'Content-Type': 'application/json',
+      'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET ? '********' : 'MISSING', // Don't log the actual key
+      'X-API-Version': '2025-03-25',
+  });
+  console.log('Body (messages only):', JSON.stringify(messagesForApi, null, 2));
+  // --- END DEBUG LOGGING ---
+
   let sensayResponseData: unknown;
   let replyContent: string | null | undefined;
 
