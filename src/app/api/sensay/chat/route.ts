@@ -50,15 +50,15 @@ const getSupabaseClient = (userId: string) => {
 }
 
 // Use the official Sensay API endpoint and structure
-const SENSAY_API_URL_BASE = 'https://api.sensay.io/v1/replicas';
-const ORGANIZATION_SECRET = process.env.SENSAY_API_KEY; // Using SENSAY_API_KEY as the secret
+const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io/v1';
+const ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.env.SENSAY_API_KEY; // Support both variable names
 const TARGET_REPLICA_UUID = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Hardcoded Replica UUID
 
 export async function POST(request: Request) {
   // --- Environment Variables & Basic Validation ---
   if (!ORGANIZATION_SECRET) {
-    console.error('Sensay API Key not found in environment variables.');
-    return NextResponse.json({ error: 'Server configuration error: Missing API Key.' }, { status: 500 });
+    console.error('Sensay Organization Secret not found in environment variables.');
+    return NextResponse.json({ error: 'Server configuration error: Missing Organization Secret.' }, { status: 500 });
   }
 
   // --- Get User ID --- // Essential for Supabase RLS and Sensay
@@ -124,58 +124,110 @@ export async function POST(request: Request) {
   ];
 
   // --- Call Sensay API --- //
-  const apiUrl = `${SENSAY_API_URL_BASE}/${TARGET_REPLICA_UUID}/chat/completions`;
+  // Prepare both standard and experimental API URLs
+  const standardApiUrl = `${SENSAY_API_URL_BASE}/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
+  const experimentalApiUrl = `${SENSAY_API_URL_BASE}/experimental/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
 
   // --- DEBUG LOGGING --- //
-  console.log('Sending to Sensay API:');
-  console.log('URL:', apiUrl);
+  console.log('Attempting to call Sensay API with standard path first');
+  console.log('Standard URL:', standardApiUrl);
+  console.log('Experimental URL (fallback):', experimentalApiUrl);
   console.log('Headers:', {
       'Content-Type': 'application/json',
       'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET ? '********' : 'MISSING', // Don't log the actual key
       'X-API-Version': '2025-03-25',
   });
-  console.log('Body (messages only):', JSON.stringify(messagesForApi, null, 2));
+  
+  // Extract the content of the last message for standard API format
+  const lastMessageContent = userMessages.length > 0 ? userMessages[userMessages.length - 1].content : '';
+  console.log('Last message content:', lastMessageContent);
   // --- END DEBUG LOGGING ---
 
   let sensayResponseData: unknown;
   let replyContent: string | null | undefined;
+  let usedApiPath = 'unknown';
 
   try {
-    const response = await fetch(apiUrl, {
+    // --- First try standard API path --- //
+    console.log('Trying standard API path first...');
+    const standardRequestBody = { content: lastMessageContent };
+    console.log('Standard request body:', JSON.stringify(standardRequestBody, null, 2));
+    
+    const standardResponse = await fetch(standardApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
-        // 'X-USER-ID': userId, // Removed this header from the call to Sensay
-        'X-API-Version': '2025-03-25', // Updated to match working test route
+        'X-USER-ID': userId,  // Include user ID in headers
+        'X-API-Version': '2025-03-25',
       },
-      // Send the messages array structured for OpenAI compatibility
-      // Also include a placeholder model field, as its absence might cause issues
-      body: JSON.stringify({ messages: messagesForApi, model: "sensay-default" }),
+      body: JSON.stringify(standardRequestBody),
     });
 
-    // --- Handle Sensay Response --- //
-    sensayResponseData = await response.json(); // Parse JSON regardless of status first
+    const standardResponseText = await standardResponse.text();
+    console.log('Standard API response status:', standardResponse.status);
+    console.log('Standard API response body:', standardResponseText);
 
-    if (!response.ok) {
-      // Use type guard to safely access error property
-      let errorMessage = 'Unknown Sensay API error';
-      if (hasErrorProperty(sensayResponseData)) {
-          if (typeof sensayResponseData.error === 'string') {
-              errorMessage = sensayResponseData.error;
-          } else if (typeof sensayResponseData.error === 'object' && sensayResponseData.error !== null && 'message' in sensayResponseData.error && typeof sensayResponseData.error.message === 'string') {
-              errorMessage = sensayResponseData.error.message;
-          }
-      } else if (response.statusText) {
-          errorMessage = response.statusText;
+    if (standardResponse.ok) {
+      try {
+        sensayResponseData = JSON.parse(standardResponseText);
+        usedApiPath = 'standard';
+        console.log('Standard API call succeeded');
+      } catch (e) {
+        console.error('Failed to parse standard API response as JSON:', e);
+        throw new Error('Failed to parse standard API response');
       }
-      console.error(`Sensay API Error (${response.status}):`, errorMessage, 'Raw Response:', sensayResponseData);
-      // Return Sensay error, but still include the tasks fetched earlier
-      return NextResponse.json({ error: `Sensay API Error: ${errorMessage}`, tasks: tasksFromSupabase }, { status: response.status });
+    } else {
+      console.log('Standard API call failed, trying experimental path...');
     }
 
-    // --- Response Parsing (Success Case) --- //
-    // Use type guard to safely access choices property
+    // --- If standard failed, try experimental API path --- //
+    if (!standardResponse.ok) {
+      console.log('Trying experimental API path as fallback...');
+      const experimentalRequestBody = { messages: messagesForApi, model: "sensay-default" };
+      console.log('Experimental request body:', JSON.stringify(experimentalRequestBody, null, 2));
+      
+      const experimentalResponse = await fetch(experimentalApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
+          'X-USER-ID': userId,
+          'X-API-Version': '2025-03-25',
+        },
+        body: JSON.stringify(experimentalRequestBody),
+      });
+
+      const experimentalResponseText = await experimentalResponse.text();
+      console.log('Experimental API response status:', experimentalResponse.status);
+      console.log('Experimental API response body:', experimentalResponseText);
+
+      if (experimentalResponse.ok) {
+        try {
+          sensayResponseData = JSON.parse(experimentalResponseText);
+          usedApiPath = 'experimental';
+          console.log('Experimental API call succeeded');
+        } catch (e) {
+          console.error('Failed to parse experimental API response as JSON:', e);
+          throw new Error('Failed to parse experimental API response');
+        }
+      } else {
+        // Both API calls failed
+        let errorMessage = 'Unknown Sensay API error';
+        try {
+          const jsonError = JSON.parse(experimentalResponseText);
+          errorMessage = typeof jsonError.error === 'string' ? jsonError.error : 
+                        (jsonError.message || 'Unknown error format');
+        } catch {
+          // Use text if JSON parsing fails
+          errorMessage = experimentalResponseText || experimentalResponse.statusText;
+        }
+        console.error(`Both API paths failed. Last error (${experimentalResponse.status}):`, errorMessage);
+        throw new Error(`Sensay API Error (${experimentalResponse.status}): ${errorMessage}`);
+      }
+    }
+
+    // --- Parse the successful response --- //
     if (hasChoicesProperty(sensayResponseData) && Array.isArray(sensayResponseData.choices) && sensayResponseData.choices.length > 0) {
         const firstChoice = sensayResponseData.choices[0];
         if (typeof firstChoice === 'object' && firstChoice !== null && 'message' in firstChoice) {
@@ -191,12 +243,20 @@ export async function POST(request: Request) {
         replyContent = "[Error: Failed to parse reply content from Sensay]";
     }
 
-    console.log('Sensay API Success. Reply:', replyContent);
+    console.log(`Sensay API Success (${usedApiPath}). Reply:`, replyContent);
   } catch (error: unknown) {
-   console.error('Error calling Sensay API:', error);
-   // Network or other fetch error, return generic error and tasks fetched earlier
-   // Use the tasks fetched *before* the failed Sensay call in the response
-   return NextResponse.json({ error: 'Failed to communicate with Sensay API', tasks: tasksFromSupabase }, { status: 500 });
+    console.error('Error calling Sensay API:', error);
+    // Network or other fetch error, return generic error and tasks fetched earlier
+    // Use the tasks fetched *before* the failed Sensay call in the response
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Failed to communicate with Sensay API', 
+      tasks: tasksFromSupabase,
+      apiDetails: {
+        standardApiUrl,
+        experimentalApiUrl,
+        lastUsedPath: usedApiPath
+      }
+    }, { status: 500 });
   }
 
   // --- Task Intent Detection & Modification (Simple Keyword Matching) --- //
@@ -299,5 +359,4 @@ export async function POST(request: Request) {
   // --- Return Response --- //
   // Return the Sensay reply and the final tasks list (potentially updated)
   return NextResponse.json({ reply: replyContent, tasks: tasksFromSupabase });
-
 }
