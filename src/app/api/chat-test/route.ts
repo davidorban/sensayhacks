@@ -23,8 +23,9 @@ interface Message {
 
 // Define attempt result tracking
 interface AttemptResult {
-  path: string;
-  url: string;
+  path?: string;
+  url?: string;
+  method?: string;
   status?: number;
   error?: string;
   response?: string;
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
     console.log('Using Replica ID:', replicaId);
     
     // Array to store results of each user creation attempt
-    const userCreationResults: any[] = [];
+    const userCreationResults: AttemptResult[] = [];
     
     // Try to register the user first with X-Organization-Secret header
     try {
