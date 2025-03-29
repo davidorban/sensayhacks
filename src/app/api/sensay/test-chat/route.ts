@@ -55,8 +55,8 @@ export async function POST(request: NextRequest) {
   const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use the ID from the main chat route
 
   // --- Call Sensay API --- //
-  // Use the EXPERIMENTAL endpoint as the replica is found there
-  const apiUrl = `${SENSAY_API_URL_BASE}/replicas/${replicaId}/chat/completions`;
+  // Try NON-EXPERIMENTAL chat endpoint with the newer API version
+  const apiUrl = `${SENSAY_API_URL_BASE.replace('/v1/experimental', '/v1')}/replicas/${replicaId}/chat/completions`;
 
   // --- DEBUG LOGGING --- //
   console.log('Sending to Sensay API:');
