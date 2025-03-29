@@ -135,7 +135,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
         'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
-        'X-USER-ID': userId,
+        // 'X-USER-ID': userId, // Removed this header from the call to Sensay
         'X-API-Version': '2025-03-25', // Updated to match working test route
       },
       // Send the messages array structured for OpenAI compatibility
