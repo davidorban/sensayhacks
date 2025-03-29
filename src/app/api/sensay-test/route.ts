@@ -37,25 +37,12 @@ const SENSAY_ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || '';
 // Set API version to the current date
 const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
 
-// Helper function for consistent authentication headers
-function getAuthHeaders(userId: string) {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
-    'X-User-Id': userId, // Try with dash format
-    'X-USER-ID': userId, // Try with uppercase format as well
-    'X-Api-Version': currentDate, // Try with dash format
-    'X-API-Version': currentDate // Try with uppercase format as well
-  };
-}
-
-// Helper function for organization-only auth headers (for initial user creation)
-function getOrgOnlyHeaders() {
+// Helper function for consistent authentication headers - using the format that works
+function getAuthHeaders() {
   return {
     'Content-Type': 'application/json',
     'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-    'X-Api-Version': currentDate, // Try with dash format
-    'X-API-Version': currentDate // Try with uppercase format as well
+    'X-API-Version': currentDate
   };
 }
 
@@ -70,92 +57,47 @@ export async function POST(request: NextRequest) {
     const messages = requestBody.messages || [];
     console.log('Received messages:', JSON.stringify(messages));
     
-    // Extract or generate user ID
-    // In a real app, this would come from your auth system
-    const userId = requestBody.userId || `user-${Math.random().toString(36).substring(2, 10)}`;
+    // Use the known working user ID
+    const userId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
     console.log('Using User ID:', userId);
     
-    // Default replica ID - could be passed in the request if needed
-    const replicaId = 'default'; // or requestBody.model if supported
+    // Default replica ID - using the known working ID
+    const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
     console.log('Using Replica ID:', replicaId);
     
-    // Array to store results of each user creation attempt
-    const userCreationResults: AttemptResult[] = [];
+    // First, let's try the known working API call to list replicas
+    console.log('Attempting to list replicas (known working approach)...');
+    const listReplicasUrl = `${SENSAY_API_URL_BASE}/v1/replicas`;
     
-    // Try to register the user first with X-Organization-Secret header
-    try {
-      console.log('Attempting user registration with Organization Secret header...');
-      const createUserUrl = `${SENSAY_API_URL_BASE}/v1/users`;
-      const createUserBody = { 
-        external_id: userId,
-        organization_secret: SENSAY_ORGANIZATION_SECRET, // Try including in body too
-        metadata: { source: 'SensayHacks API test' } 
-      };
-      
-      const createUserResponse = await fetch(createUserUrl, {
-        method: 'POST',
-        headers: getOrgOnlyHeaders(),
-        body: JSON.stringify(createUserBody),
-      });
-      
-      const createUserText = await createUserResponse.text();
-      console.log('User registration response (Org Secret):', createUserText);
-      
-      userCreationResults.push({
-        method: 'Organization Secret Header',
-        status: createUserResponse.status,
-        response: createUserText
-      });
-      
-      if (createUserResponse.ok) {
-        console.log('User registered successfully with Organization Secret header');
-      }
-    } catch (error) {
-      console.log('Error creating user with Organization Secret header:', error);
-      userCreationResults.push({
-        method: 'Organization Secret Header',
-        error: error instanceof Error ? error.message : String(error)
-      });
+    // Log the headers we're sending
+    console.log('List Replicas Headers:', JSON.stringify(getAuthHeaders()));
+    
+    const listReplicasResponse = await fetch(listReplicasUrl, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    // Get the response as text first for logging
+    const listReplicasText = await listReplicasResponse.text();
+    console.log('List Replicas API response status:', listReplicasResponse.status);
+    console.log('List Replicas API response text:', listReplicasText);
+    
+    if (!listReplicasResponse.ok) {
+      console.log('List Replicas API call failed with status:', listReplicasResponse.status);
+    } else {
+      console.log('Successfully retrieved replicas list from Sensay API');
     }
     
-    // Try to register the user with Bearer token
+    // Parse the replicas response
+    let replicas;
     try {
-      console.log('Attempting user registration with Bearer token...');
-      const createUserUrl = `${SENSAY_API_URL_BASE}/v1/users`;
-      const createUserBody = { 
-        external_id: userId, 
-        organization_secret: SENSAY_ORGANIZATION_SECRET, // Try including in body too
-        metadata: { source: 'SensayHacks API test with Bearer token' } 
-      };
-      
-      const createUserResponse = await fetch(createUserUrl, {
-        method: 'POST',
-        headers: getAuthHeaders(userId),
-        body: JSON.stringify(createUserBody),
-      });
-      
-      const createUserText = await createUserResponse.text();
-      console.log('User registration response (Bearer token):', createUserText);
-      
-      userCreationResults.push({
-        method: 'Bearer Token',
-        status: createUserResponse.status,
-        response: createUserText
-      });
-      
-      if (createUserResponse.ok) {
-        console.log('User registered successfully with Bearer token');
-      }
+      replicas = JSON.parse(listReplicasText);
     } catch (error) {
-      console.log('Error creating user with Bearer token:', error);
-      userCreationResults.push({
-        method: 'Bearer Token',
-        error: error instanceof Error ? error.message : String(error)
-      });
+      console.log('Error parsing replicas JSON response:', error);
     }
     
-    // Attempt to call the Sensay API with consistent authentication
-    console.log('Attempting to call Sensay API...');
+    // Now try the chat completion API with the same authentication approach
+    console.log('Attempting to call Chat Completions API with working authentication...');
     
     // Format messages for the API
     const apiMessages = messages.map(msg => ({
@@ -166,7 +108,6 @@ export async function POST(request: NextRequest) {
     // Define the request body
     const apiRequestBody = {
       messages: apiMessages,
-      organization_secret: SENSAY_ORGANIZATION_SECRET, // Try including in body too
       stream: false
     };
     
@@ -175,12 +116,12 @@ export async function POST(request: NextRequest) {
     const chatCompletionUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
     
     // Log the headers and request body we're sending
-    console.log('Headers:', JSON.stringify(getAuthHeaders(userId)));
+    console.log('Headers:', JSON.stringify(getAuthHeaders()));
     console.log('Request body:', JSON.stringify(apiRequestBody));
     
     const apiResponse = await fetch(chatCompletionUrl, {
       method: 'POST',
-      headers: getAuthHeaders(userId),
+      headers: getAuthHeaders(),
       body: JSON.stringify(apiRequestBody),
     });
     
@@ -188,14 +129,6 @@ export async function POST(request: NextRequest) {
     const responseText = await apiResponse.text();
     console.log('API response status:', apiResponse.status);
     console.log('API response text:', responseText);
-    
-    // Prepare the user creation results for response
-    const detailedAttempts = userCreationResults.map(result => ({
-      method: result.method,
-      status: result.status,
-      response: result.response,
-      error: result.error
-    }));
     
     // If the API call fails, we'll still return the response with error details
     if (!apiResponse.ok) {
@@ -205,7 +138,6 @@ export async function POST(request: NextRequest) {
         success: false,
         status: apiResponse.status,
         response: responseText,
-        userCreationAttempts: detailedAttempts,
         error: `Sensay API call failed with status ${apiResponse.status}`
       }, { status: 500 });
     }
@@ -220,7 +152,6 @@ export async function POST(request: NextRequest) {
         success: false,
         status: apiResponse.status,
         response: responseText,
-        userCreationAttempts: detailedAttempts,
         error: 'Failed to parse JSON response from Sensay API'
       }, { status: 500 });
     }
@@ -234,7 +165,6 @@ export async function POST(request: NextRequest) {
         success: false,
         status: apiResponse.status,
         response: parsedResponse,
-        userCreationAttempts: detailedAttempts,
         error: 'No assistant message found in Sensay API response'
       }, { status: 500 });
     }
@@ -244,8 +174,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: assistantMessage,
-      response: parsedResponse,
-      userCreationAttempts: detailedAttempts
+      response: parsedResponse
     });
     
   } catch (error) {
