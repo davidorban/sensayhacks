@@ -19,11 +19,6 @@ interface Task {
   completed: boolean;
 }
 
-// Type guard to check if an object has an 'error' property (basic Sensay error check)
-function hasErrorProperty(data: unknown): data is { error: unknown } {
-    return typeof data === 'object' && data !== null && 'error' in data;
-}
-
 // Type guard to check if an object has a 'choices' property (basic Sensay success check)
 function hasChoicesProperty(data: unknown): data is { choices: unknown } {
     return typeof data === 'object' && data !== null && 'choices' in data;
