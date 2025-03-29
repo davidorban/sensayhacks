@@ -56,9 +56,13 @@ if (hasV1 || hasExperimental || hasReplicas) {
 // We'll try multiple variations to find the right one
 const SENSAY_ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.env.SENSAY_API_KEY || '';
 
+// Current date for API versioning
+const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
 // Log environment variable values on function execution (for debugging Vercel env)
 console.log('Clean API Base URL:', SENSAY_API_URL_BASE);
 console.log('API Key Config:', SENSAY_ORGANIZATION_SECRET ? '[PROVIDED]' : '[MISSING]');
+console.log('Using API Version Date:', currentDate);
 
 export async function POST(request: NextRequest) {
   console.log('--- Request received at /api/chat-test ---');
@@ -118,7 +122,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       }
     });
     
@@ -163,7 +168,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
@@ -225,7 +231,8 @@ export async function POST(request: NextRequest) {
         'x-organization-secret': SENSAY_ORGANIZATION_SECRET, // Try lowercase version too
         'Organization-Secret': SENSAY_ORGANIZATION_SECRET, // Try without X- prefix
         'X-API-KEY': SENSAY_ORGANIZATION_SECRET, // Try as API key
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
@@ -287,7 +294,8 @@ export async function POST(request: NextRequest) {
         'x-organization-secret': SENSAY_ORGANIZATION_SECRET,
         'Organization-Secret': SENSAY_ORGANIZATION_SECRET,
         'X-API-KEY': SENSAY_ORGANIZATION_SECRET,
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
@@ -344,7 +352,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'X-Organization-Secret': SENSAY_ORGANIZATION_SECRET,
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
@@ -403,7 +412,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
@@ -461,7 +471,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': SENSAY_ORGANIZATION_SECRET,
-        'x-user-id': userId
+        'x-user-id': userId,
+        'x-api-version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
@@ -518,7 +529,8 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
@@ -576,7 +588,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
@@ -634,7 +647,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${SENSAY_ORGANIZATION_SECRET}`,
-        'X-USER-ID': userId
+        'X-USER-ID': userId,
+        'X-API-Version': currentDate
       },
       body: JSON.stringify(requestBody),
     });
