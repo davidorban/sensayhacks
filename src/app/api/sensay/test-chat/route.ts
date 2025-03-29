@@ -21,10 +21,6 @@ interface SensayChoice {
   message: SensayResponseMessage;
 }
 
-interface SensayResponse {
-  choices: SensayChoice[];
-}
-
 // Environment variables
 const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE;
 const ORGANIZATION_SECRET = process.env.SENSAY_API_KEY; // Reverted: Use the env var name user has defined
@@ -113,7 +109,11 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Raw Sensay Response Data:", JSON.stringify(sensayResponseData, null, 2));
-    replyContent = (sensayResponseData as any)?.response || (sensayResponseData as any)?.content || JSON.stringify(sensayResponseData);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    replyContent = (sensayResponseData as any)?.response || 
+                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                   (sensayResponseData as any)?.content || 
+                   JSON.stringify(sensayResponseData);
 
   } catch (error) {
     console.error('Error during Sensay API call or response processing:', error);
