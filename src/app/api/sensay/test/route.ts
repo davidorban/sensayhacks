@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
         method: 'GET', // Default to GET
         headers: sensayHeaders(),
     };
-    let requestBody = {};
 
     try {
         switch (action) {
