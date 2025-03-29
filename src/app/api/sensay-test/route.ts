@@ -13,14 +13,6 @@ interface RequestBody {
   userId?: string;
 }
 
-// Define message interface for API interactions
-interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string | null;
-  id?: string;
-  isLoading?: boolean;
-}
-
 // Define attempt result tracking
 interface AttemptResult {
   path?: string;
