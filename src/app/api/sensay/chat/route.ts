@@ -43,9 +43,13 @@ const getSupabaseClient = (userId: string) => {
 }
 
 // Use the official Sensay API endpoint and structure
-const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io/v1';
+let SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io';
+// Remove any trailing slashes
+if (SENSAY_API_URL_BASE.endsWith('/')) {
+  SENSAY_API_URL_BASE = SENSAY_API_URL_BASE.slice(0, -1);
+}
 const ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.env.SENSAY_API_KEY; // Support both variable names
-const TARGET_REPLICA_UUID = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Hardcoded Replica UUID
+const TARGET_REPLICA_UUID = process.env.SENSAY_REPLICA_ID || '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use env var with fallback
 
 export async function POST(request: Request) {
   // --- Environment Variables & Basic Validation ---
@@ -115,8 +119,8 @@ export async function POST(request: Request) {
   */
 
   // --- Call Sensay API --- //
-  // Prepare API URL
-  const apiUrl = `${SENSAY_API_URL_BASE}/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
+  // Prepare API URL - match the format from the working test page
+  const apiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
 
   // --- DEBUG LOGGING --- //
   console.log('Attempting to call Sensay API');
@@ -148,7 +152,7 @@ export async function POST(request: Request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
+        'X-Organization-Secret': ORGANIZATION_SECRET,
         'X-USER-ID': userId  // Include user ID in headers
       },
       body: JSON.stringify(requestBody),
