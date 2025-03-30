@@ -3,13 +3,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageCircle, Users, Settings, Zap, BrainCircuit } from 'lucide-react';
 
 interface ChatMessage {
   id: number;
-  sender: string; // 'User' or Replica name
+  sender: string;
   text: string;
   timestamp: string;
 }
@@ -22,19 +22,28 @@ interface Replica {
 }
 
 const availableReplicas: Replica[] = [
-  { id: 'replica1', name: 'Memory Replica', specialty: 'Knowledge management and shared memory', color: 'bg-green-200' },
-  { id: 'replica2', name: 'Sync Replica', specialty: 'State synchronization and coordination', color: 'bg-purple-200' },
-  { id: 'replica3', name: 'Goal Replica', specialty: 'Collective goal planning and execution', color: 'bg-yellow-200' },
+  { id: 'replica1', name: 'Market Analyst', specialty: 'Business strategy and market trends', color: 'bg-blue-200' },
+  { id: 'replica2', name: 'Financial Advisor', specialty: 'Financial planning and investment', color: 'bg-purple-200' },
+  { id: 'replica3', name: 'Technical Expert', specialty: 'Technology implementation and architecture', color: 'bg-green-200' },
+  { id: 'replica4', name: 'Creative Director', specialty: 'Design thinking and innovation', color: 'bg-yellow-200' },
+];
+
+// Define conversation modes
+const conversationModes = [
+  { id: 'democratic', name: 'Democratic', description: 'All replicas contribute equally to the discussion' },
+  { id: 'moderated', name: 'Moderated', description: 'One replica acts as facilitator, directing the conversation flow' },
+  { id: 'structured', name: 'Structured', description: 'Following specific protocols (e.g., Six Thinking Hats, SWOT analysis)' },
+  { id: 'adversarial', name: 'Adversarial', description: 'Replicas intentionally take opposing viewpoints to explore tensions' },
 ];
 
 const ChatroomPage = () => {
-  const [selectedReplicas, setSelectedReplicas] = useState<string[]>([availableReplicas[0].id]); // Default to first replica
+  const [selectedReplicas, setSelectedReplicas] = useState<string[]>([availableReplicas[0].id, availableReplicas[1].id]); // Default to first two replicas
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 1, sender: 'Memory Replica', text: 'Welcome to the Bonded Replicas Chat! Select replicas and send a message to see how we collaborate with shared memory and state.', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit" }) },
+    { id: 1, sender: 'System', text: 'Welcome to the Sensay Chatroom! Select replicas and conversation mode to start a multi-participant discussion.', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit" }) },
   ]);
   const [newMessage, setNewMessage] = useState('');
-  const [bondingEnabled, setBondingEnabled] = useState(false);
-  const [sharedMemory, setSharedMemory] = useState<string[]>([]);
+  const [conversationMode, setConversationMode] = useState('democratic');
+  const [currentTopic, setCurrentTopic] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleReplicaSelection = (replicaId: string) => {
@@ -45,39 +54,44 @@ const ChatroomPage = () => {
     );
   };
 
-  const toggleBonding = () => {
-    const newBondingState = !bondingEnabled;
-    setBondingEnabled(newBondingState);
+  const handleModeChange = (mode: string) => {
+    const prevMode = conversationMode;
+    setConversationMode(mode);
     
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit" });
     
-    if (newBondingState) {
-      // Initialize shared memory when bonding is enabled
-      setSharedMemory([
-        "User is interested in AI collaboration",
-        "Current task: Exploring bonding capabilities"
-      ]);
-      
-      // Add system message about bonding being enabled
-      const bondingMessage: ChatMessage = {
-        id: messages.length + 1,
+    // Add system message about mode change
+    const modeChangeMessage: ChatMessage = {
+      id: messages.length + 1,
+      sender: 'System',
+      text: `Conversation mode changed from ${prevMode} to ${mode}.`,
+      timestamp
+    };
+    setMessages(prev => [...prev, modeChangeMessage]);
+    
+    // Add facilitator message for moderated mode
+    if (mode === 'moderated' && selectedReplicas.length > 0) {
+      const facilitator = availableReplicas.find(r => r.id === selectedReplicas[0]);
+      if (facilitator) {
+        const facilitatorMessage: ChatMessage = {
+          id: messages.length + 2,
+          sender: facilitator.name,
+          text: `I'll be facilitating this conversation. Let's make sure we stay focused on the topic and everyone gets a chance to contribute.`,
+          timestamp
+        };
+        setMessages(prev => [...prev, facilitatorMessage]);
+      }
+    }
+    
+    // Add structure message for structured mode
+    if (mode === 'structured') {
+      const structureMessage: ChatMessage = {
+        id: messages.length + 2,
         sender: 'System',
-        text: 'Bonding enabled between replicas. Shared memory and state synchronization activated.',
+        text: `Structured conversation initiated. We'll follow a SWOT analysis format: Strengths, Weaknesses, Opportunities, and Threats.`,
         timestamp
       };
-      setMessages(prev => [...prev, bondingMessage]);
-    } else {
-      // Clear shared memory when bonding is disabled
-      setSharedMemory([]);
-      
-      // Add system message about bonding being disabled
-      const bondingMessage: ChatMessage = {
-        id: messages.length + 1,
-        sender: 'System',
-        text: 'Bonding disabled. Replicas are now operating independently without shared memory.',
-        timestamp
-      };
-      setMessages(prev => [...prev, bondingMessage]);
+      setMessages(prev => [...prev, structureMessage]);
     }
   };
 
@@ -92,17 +106,27 @@ const ChatroomPage = () => {
       timestamp,
     };
 
-    const currentMessages = [...messages, userMessage];
-
-    // If bonding is enabled, add the user's message to shared memory
-    if (bondingEnabled) {
-      setSharedMemory(prev => [...prev, `User query: ${newMessage}`]);
+    // If this is the first user message, set it as the current topic
+    if (!currentTopic) {
+      setCurrentTopic(newMessage);
     }
 
-    // Generate more interactive and contextual responses based on bonding status
+    const currentMessages = [...messages, userMessage];
+
+    // Generate responses based on conversation mode
     setTimeout(() => {
-      // First pass: selected replicas generate their responses
-      selectedReplicas.forEach((replicaId, index) => {
+      // Select which replicas will respond based on the conversation mode
+      let respondingReplicas = [...selectedReplicas];
+      
+      if (conversationMode === 'moderated' && selectedReplicas.length > 1) {
+        // In moderated mode, the first replica responds first as the facilitator
+        const facilitatorId = selectedReplicas[0];
+        const otherReplicaId = selectedReplicas.find(id => id !== facilitatorId);
+        respondingReplicas = otherReplicaId ? [facilitatorId, otherReplicaId] : [facilitatorId];
+      }
+      
+      // Generate individual replica responses
+      respondingReplicas.forEach((replicaId, index) => {
         const replica = availableReplicas.find(r => r.id === replicaId);
         if (replica) {
           const delay = index * 800; // Stagger the responses
@@ -110,24 +134,21 @@ const ChatroomPage = () => {
           setTimeout(() => {
             let responseText = '';
             
-            if (bondingEnabled) {
-              // Bonded replicas reference shared memory and each other
-              switch (replica.name) {
-                case 'Memory Replica':
-                  responseText = `I've stored your query about "${newMessage}" in our shared memory. Based on our collective knowledge, we can provide a coordinated response.`;
-                  break;
-                case 'Sync Replica':
-                  responseText = `Synchronizing state with other replicas based on your query. I can see that Memory Replica has stored your question in our shared memory.`;
-                  break;
-                case 'Goal Replica':
-                  responseText = `I'm establishing a collective goal to address your query: "${newMessage}". Working with the other replicas to formulate a comprehensive response.`;
-                  break;
-                default:
-                  responseText = `Processing your query with access to our shared memory pool.`;
-              }
-            } else {
-              // Unbonded replicas give independent responses
-              responseText = `(Independent mode) ${replica.name} response: I'll process your query about "${newMessage}" individually, without coordination with other replicas.`;
+            switch (conversationMode) {
+              case 'democratic':
+                responseText = generateDemocraticResponse(replica, newMessage);
+                break;
+              case 'moderated':
+                responseText = generateModeratedResponse(replica, newMessage, index === 0);
+                break;
+              case 'structured':
+                responseText = generateStructuredResponse(replica, newMessage);
+                break;
+              case 'adversarial':
+                responseText = generateAdversarialResponse(replica, newMessage, index);
+                break;
+              default:
+                responseText = `I'll analyze your message about "${newMessage}" from my perspective as a ${replica.specialty} expert.`;
             }
             
             const replicaResponse: ChatMessage = {
@@ -142,31 +163,21 @@ const ChatroomPage = () => {
         }
       });
       
-      // Second pass: if bonded, add a collaborative follow-up after individual responses
-      if (bondingEnabled && selectedReplicas.length > 1) {
-        const collaborationDelay = selectedReplicas.length * 1000 + 500;
+      // For certain modes, add a summary or synthesis after individual responses
+      if ((conversationMode === 'democratic' || conversationMode === 'structured') && selectedReplicas.length > 1) {
+        const synthesisDelay = respondingReplicas.length * 1000 + 500;
         
         setTimeout(() => {
-          // Determine which replicas are involved
-          const involvedReplicas = selectedReplicas.map(id => 
-            availableReplicas.find(r => r.id === id)?.name
-          ).filter(Boolean).join(', ');
-          
-          // Generate a collaborative response
-          const collaborativeResponse: ChatMessage = {
-            id: currentMessages.length + selectedReplicas.length + 1,
-            sender: 'Collaborative Response',
-            text: `Based on our shared analysis (${involvedReplicas}), we've synthesized the following insights about "${newMessage}": This query relates to ${getQueryTopic()}. Our bonded state allows us to provide a unified perspective while leveraging our individual specialties.`,
+          // Generate a synthesis of the conversation
+          const synthesisMessage: ChatMessage = {
+            id: currentMessages.length + respondingReplicas.length + 1,
+            sender: 'Synthesis',
+            text: generateSynthesis(newMessage, conversationMode),
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit" }),
           };
           
-          setMessages(prev => [...prev, collaborativeResponse]);
-          
-          // Update shared memory with the collaborative insight
-          if (bondingEnabled) {
-            setSharedMemory(prev => [...prev, `Collaborative insight: ${getQueryTopic()}`]);
-          }
-        }, collaborationDelay);
+          setMessages(prev => [...prev, synthesisMessage]);
+        }, synthesisDelay);
       }
     }, 500);
 
@@ -174,25 +185,60 @@ const ChatroomPage = () => {
     setNewMessage('');
   };
 
-  // Helper function to generate a random topic (simplified mock)
-  const getQueryTopic = (): string => {
-    const topics = [
-      "AI collaboration mechanisms",
-      "shared memory systems",
-      "synchronized state management",
-      "collective intelligence",
-      "bonding protocols between AI systems"
-    ];
+  // Helper functions to generate different types of responses
+  const generateDemocraticResponse = (replica: Replica, query: string): string => {
+    const responses: Record<string, string> = {
+      'Market Analyst': `From a market perspective, "${query}" relates to current trends in customer behavior. We're seeing increased demand for personalized experiences.`,
+      'Financial Advisor': `Looking at the financial implications of "${query}", we should consider the investment required and potential ROI over a 3-5 year period.`,
+      'Technical Expert': `The technical feasibility of "${query}" is high. We could implement this using current technologies with moderate effort.`,
+      'Creative Director': `"${query}" presents an opportunity for innovative design thinking. We could approach this from several creative angles.`
+    };
     
-    // Simple mock logic - in a real system this would be more sophisticated
-    return topics[Math.floor(Math.random() * topics.length)];
+    return responses[replica.name] || `As a ${replica.specialty} expert, I believe "${query}" deserves careful consideration.`;
+  };
+  
+  const generateModeratedResponse = (replica: Replica, query: string, isFacilitator: boolean): string => {
+    if (isFacilitator) {
+      return `Thank you for bringing up "${query}". This is an important topic. I'd like to hear from my colleagues about their specialized perspectives before providing a synthesis.`;
+    } else {
+      return `Thanks for the opportunity to contribute. From my ${replica.specialty} perspective, "${query}" has several important dimensions we should explore.`;
+    }
+  };
+  
+  const generateStructuredResponse = (replica: Replica, query: string): string => {
+    const swotResponses: Record<string, string> = {
+      'Market Analyst': `STRENGTHS: "${query}" could give us a competitive advantage in emerging markets.`,
+      'Financial Advisor': `WEAKNESSES: The financial investment required for "${query}" might strain our current budget.`,
+      'Technical Expert': `OPPORTUNITIES: "${query}" opens up possibilities for technological innovation and integration with our existing systems.`,
+      'Creative Director': `THREATS: If we don't pursue "${query}", competitors might capture this market segment first.`
+    };
+    
+    return swotResponses[replica.name] || `SWOT Analysis for "${query}" from ${replica.specialty} perspective: [Analysis in progress]`;
+  };
+  
+  const generateAdversarialResponse = (replica: Replica, query: string, index: number): string => {
+    // Alternate between positive and negative perspectives
+    if (index % 2 === 0) {
+      return `I strongly support the idea of "${query}" because it aligns with our strategic goals and could provide significant benefits.`;
+    } else {
+      return `I must challenge the assumption that "${query}" is the right approach. There are several risks and downsides we need to consider.`;
+    }
+  };
+  
+  const generateSynthesis = (query: string, mode: string): string => {
+    if (mode === 'democratic') {
+      return `Based on our collective expertise, we've identified multiple perspectives on "${query}". The market analysis shows potential demand, financial considerations highlight investment needs, technical assessment confirms feasibility, and creative input suggests innovative approaches.`;
+    } else if (mode === 'structured') {
+      return `SWOT Analysis Summary for "${query}": We've identified key strengths in market positioning, weaknesses in resource allocation, opportunities for innovation, and threats from competitive pressure. This balanced assessment should inform our decision-making.`;
+    }
+    return `Synthesizing our discussion on "${query}", we've explored multiple facets of this topic and identified key considerations for moving forward.`;
   };
 
   // Helper to get background color based on sender
   const getBgColor = (sender: string) => {
     if (sender === 'User') return 'bg-indigo-600 text-white';
     if (sender === 'System') return 'bg-gray-200';
-    if (sender === 'Collaborative Response') return 'bg-blue-200';
+    if (sender === 'Synthesis') return 'bg-blue-200';
     
     const replica = availableReplicas.find(r => r.name === sender);
     return replica?.color || 'bg-gray-200';
@@ -205,7 +251,8 @@ const ChatroomPage = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6 text-gray-100">
-      <h1 className="text-3xl font-bold mb-4 text-center">Bonded Replicas Chat</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center">Sensay Chatroom</h1>
+      <p className="text-center mb-6">A dedicated space for real-time conversations between users and multiple Sensay replicas</p>
 
       {/* Interactive Chat Section */} 
       <Card className="flex-1 flex flex-col overflow-hidden bg-white text-gray-900"> 
@@ -227,21 +274,15 @@ const ChatroomPage = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="bonding-mode" 
-                checked={bondingEnabled}
-                onCheckedChange={toggleBonding}
-              />
-              <Label
-                className="cursor-pointer"
-                onClick={() => toggleBonding()}
-              >
-                Bonding Mode
-              </Label>
-              <Badge variant={bondingEnabled ? "default" : "outline"} className="ml-2">
-                {bondingEnabled ? "Enabled" : "Disabled"}
-              </Badge>
+            <div>
+              <CardTitle className="text-lg">Conversation Mode</CardTitle>
+              <Tabs value={conversationMode} onValueChange={handleModeChange} className="w-full">
+                <TabsList className="grid grid-cols-2 md:grid-cols-4 mt-2">
+                  {conversationModes.map(mode => (
+                    <TabsTrigger key={mode.id} value={mode.id}>{mode.name}</TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
             </div>
           </div>
         </CardHeader>
@@ -262,26 +303,57 @@ const ChatroomPage = () => {
             </div>
           </CardContent>
           
-          {/* Shared Memory Panel - only visible when bonding is enabled */}
-          <div className={`hidden md:block md:col-span-1 p-4 bg-gray-50 overflow-y-auto ${bondingEnabled ? '' : 'opacity-50'}`}>
-            <h3 className="font-medium text-gray-900 mb-2">Shared Memory Pool</h3>
-            {bondingEnabled ? (
-              <div>
-                {sharedMemory.length > 0 ? (
-                  <ul className="space-y-2">
-                    {sharedMemory.map((item, index) => (
-                      <li key={index} className="text-sm bg-white p-2 rounded border border-gray-200">
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-gray-500 italic">No shared memories yet.</p>
-                )}
+          {/* Participant Panel */}
+          <div className="hidden md:block md:col-span-1 p-4 bg-gray-50 overflow-y-auto">
+            <h3 className="font-medium text-gray-900 mb-2">Active Participants</h3>
+            <div className="space-y-2">
+              <div className="flex items-center p-2 bg-blue-50 rounded-md">
+                <div className="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-2">
+                  <span className="text-blue-600 font-semibold">U</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">User (You)</p>
+                </div>
               </div>
-            ) : (
-              <p className="text-sm text-gray-500 italic">Bonding disabled. Enable bonding to see shared memory.</p>
-            )}
+              
+              {selectedReplicas.map(replicaId => {
+                const replica = availableReplicas.find(r => r.id === replicaId);
+                if (!replica) return null;
+                
+                return (
+                  <div key={replica.id} className={`flex items-center p-2 rounded-md ${replica.color.replace('bg-', 'bg-').replace('200', '50')}`}>
+                    <div className={`${replica.color} rounded-full w-8 h-8 flex items-center justify-center mr-2`}>
+                      <span className={`${replica.color.replace('bg-', 'text-').replace('200', '600')} font-semibold`}>
+                        {replica.name.charAt(0)}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{replica.name}</p>
+                      <p className="text-xs text-gray-500">{replica.specialty}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              <div className="mt-6">
+                <h4 className="font-medium text-gray-900 mb-2">Current Mode</h4>
+                <Badge className="mb-1">
+                  {conversationModes.find(m => m.id === conversationMode)?.name || 'Democratic'}
+                </Badge>
+                <p className="text-xs text-gray-500 mt-1">
+                  {conversationModes.find(m => m.id === conversationMode)?.description || 'All replicas contribute equally to the discussion'}
+                </p>
+              </div>
+              
+              {currentTopic && (
+                <div className="mt-6">
+                  <h4 className="font-medium text-gray-900 mb-2">Current Topic</h4>
+                  <p className="text-sm p-2 bg-white rounded-md border border-gray-200">
+                    {currentTopic}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -306,14 +378,10 @@ const ChatroomPage = () => {
           </div>
           <div className="mt-2 flex justify-between items-center">
             <p className="text-xs text-gray-500">
-              (Note: Interactions are simulated. Toggle bonding to see different behaviors.)
+              (Note: Interactions are simulated. Change conversation mode to see different behaviors.)
             </p>
             <div className="text-xs text-gray-500">
-              {bondingEnabled ? (
-                <span className="text-green-600 font-medium">Bonded Mode: Replicas share memory and state</span>
-              ) : (
-                <span>Independent Mode: Replicas operate separately</span>
-              )}
+              <span>Mode: <span className="font-medium">{conversationModes.find(m => m.id === conversationMode)?.name || 'Democratic'}</span></span>
             </div>
           </div>
         </div>
