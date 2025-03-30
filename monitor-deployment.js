@@ -15,10 +15,14 @@ const { execSync, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const https = require('https');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
 const localLogFile = args.find(arg => arg.startsWith('--log='))?.split('=')[1];
+const vercelToken = args.find(arg => arg.startsWith('--token='))?.split('=')[1] || process.env.VERCEL_TOKEN;
+const vercelTeamId = args.find(arg => arg.startsWith('--team='))?.split('=')[1] || process.env.VERCEL_TEAM_ID;
+const verifyMode = args.includes('--verify');
 
 // Configuration
 const POLL_INTERVAL = 10000; // Time between deployment checks in milliseconds
@@ -307,68 +311,92 @@ async function monitorDeployment(deploymentId) {
   log(`Monitoring deployment: ${deploymentId}`, colors.cyan);
   
   let retries = 0;
-  let deploymentState = null;
+  let status = null;
+  let errorLog = null;
   
   while (retries < MAX_RETRIES) {
     try {
-      const output = await executeCommandAsync(`vercel inspect ${deploymentId}`);
+      // Get deployment status using Vercel CLI or API
+      let statusOutput;
       
-      // Extract state from the output
-      const stateMatch = output.match(/State:\s+(\w+)/);
-      if (stateMatch) {
-        deploymentState = stateMatch[1];
+      if (vercelToken) {
+        // Use Vercel API directly
+        const deploymentData = await fetchFromVercelApi(`/v13/deployments/${deploymentId}`, vercelToken, vercelTeamId);
+        status = deploymentData.readyState;
+        statusOutput = JSON.stringify(deploymentData, null, 2);
+        log(`Deployment status (via API): ${status}`, colors.blue);
+      } else {
+        // Fallback to CLI
+        statusOutput = execSync(`vercel inspect ${deploymentId}`).toString();
+        const statusMatch = statusOutput.match(/status\s+●\s+(\w+)/);
+        status = statusMatch ? statusMatch[1] : null;
+        log(`Deployment status (via CLI): ${status}`, colors.blue);
+      }
+      
+      // Log the command and timestamp for verification
+      const timestamp = new Date().toISOString();
+      log(`[${timestamp}] Checking deployment status with command: ${vercelToken ? 'Vercel API' : `vercel inspect ${deploymentId}`}`, colors.cyan);
+      
+      if (status === 'ERROR' || status === 'Error') {
+        log(`Deployment failed with status: ${status}`, colors.red);
         
-        if (deploymentState === 'READY') {
-          log(`✅ Deployment successful!`, colors.green + colors.bold);
-          return { success: true };
-        } else if (deploymentState === 'ERROR') {
-          log(`❌ Deployment failed!`, colors.red + colors.bold);
-          
-          // Get build logs
-          try {
-            const logs = await executeCommandAsync(`vercel logs ${deploymentId} --output=json`);
-            if (logs) {
-              // Save logs to file
-              fs.writeFileSync(ERROR_LOG_FILE, logs);
-              log(`Build logs saved to ${ERROR_LOG_FILE}`, colors.blue);
-              
-              // Extract and display errors
-              const errorLines = extractErrorsFromLog(logs);
-              displayErrors(errorLines);
-              
-              // Suggest fixes
-              suggestFixesForErrors(logs);
-              
-              // Offer to fix common issues
-              await fixCommonIssues(logs);
-            }
-          } catch (logError) {
-            log(`Failed to get logs: ${logError.message}`, colors.red);
+        // Get build logs directly from API if token is available
+        if (vercelToken) {
+          const logFilePath = await getDeploymentBuildLogs(deploymentId);
+          if (logFilePath) {
+            errorLog = fs.readFileSync(logFilePath, 'utf8');
             
-            // Try with regular logs command as fallback
-            try {
-              const regularLogs = await executeCommandAsync(`vercel logs ${deploymentId}`);
-              if (regularLogs) {
-                fs.writeFileSync(ERROR_LOG_FILE, regularLogs);
-                log(`Basic logs saved to ${ERROR_LOG_FILE}`, colors.blue);
-                
-                // Process logs
-                const errorLines = extractErrorsFromLog(regularLogs);
-                displayErrors(errorLines);
-                suggestFixesForErrors(regularLogs);
-                await fixCommonIssues(regularLogs);
-              }
-            } catch (fallbackError) {
-              log(`Failed to get logs with fallback method: ${fallbackError.message}`, colors.red);
+            // Verify we're using real data if in verify mode
+            const verified = await verifyDataSource(`Vercel API logs for deployment ${deploymentId}`, errorLog);
+            if (!verified) {
+              log('User verification failed. Aborting analysis.', colors.red);
+              return;
             }
+            
+            // Process the error log
+            const errors = extractErrorsFromLog(errorLog);
+            displayErrors(errors);
+            suggestFixesForErrors(errorLog);
+            fixCommonIssues(errorLog);
           }
-          
-          return { success: false };
+        } else {
+          // Fallback to CLI for logs
+          try {
+            log('Attempting to fetch build logs...', colors.yellow);
+            errorLog = execSync(`vercel logs ${deploymentId}`).toString();
+            
+            // Verify we're using real data if in verify mode
+            const verified = await verifyDataSource(`CLI logs for deployment ${deploymentId}`, errorLog);
+            if (!verified) {
+              log('User verification failed. Aborting analysis.', colors.red);
+              return;
+            }
+            
+            // Process the error log
+            const errors = extractErrorsFromLog(errorLog);
+            displayErrors(errors);
+            suggestFixesForErrors(errorLog);
+            fixCommonIssues(errorLog);
+          } catch (error) {
+            log(`Error fetching logs: ${error.message}`, colors.red);
+            log('Please check the Vercel dashboard for detailed error information.', colors.yellow);
+            log('Consider providing a Vercel API token for better log access.', colors.yellow);
+          }
         }
+        
+        // Save error log to file
+        if (errorLog) {
+          fs.writeFileSync(ERROR_LOG_FILE, errorLog);
+          log(`Error log saved to ${ERROR_LOG_FILE}`, colors.yellow);
+        }
+        
+        return;
+      } else if (status === 'READY' || status === 'Ready') {
+        log(`Deployment successful with status: ${status}`, colors.green);
+        return;
       }
       
       retries++;
-      log(`Deployment status: ${deploymentState || 'Building'} (check ${retries}/${MAX_RETRIES})`, colors.blue);
       await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
     } catch (error) {
       log(`Error checking deployment status: ${error.message}`, colors.red);
@@ -377,8 +405,7 @@ async function monitorDeployment(deploymentId) {
     }
   }
   
-  log(`Timed out waiting for deployment to complete.`, colors.yellow);
-  return { success: false, timedOut: true };
+  log(`Exceeded maximum retries (${MAX_RETRIES}) while checking deployment status.`, colors.red);
 }
 
 /**
@@ -405,12 +432,125 @@ async function pollForDeployments() {
   }
 }
 
+// Function to fetch data from Vercel API
+function fetchFromVercelApi(endpoint, token = vercelToken, teamId = vercelTeamId) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.vercel.com',
+      path: teamId ? `${endpoint}?teamId=${teamId}` : endpoint,
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const parsedData = JSON.parse(data);
+          resolve(parsedData);
+        } catch (e) {
+          reject(new Error(`Failed to parse Vercel API response: ${e.message}`));
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      reject(error);
+    });
+
+    req.end();
+  });
+}
+
+// Function to get deployment build logs directly from Vercel API
+async function getDeploymentBuildLogs(deploymentId, token = vercelToken, teamId = vercelTeamId) {
+  try {
+    log(`Fetching build logs for deployment ${deploymentId} directly from Vercel API...`, colors.cyan);
+    const endpoint = `/v6/deployments/${deploymentId}/events`;
+    const events = await fetchFromVercelApi(endpoint, token, teamId);
+    
+    if (!events || !events.events || !Array.isArray(events.events)) {
+      throw new Error('Invalid response format from Vercel API');
+    }
+    
+    // Filter for build events and errors
+    const buildEvents = events.events.filter(event => 
+      event.type === 'command' || 
+      event.type === 'stderr' || 
+      event.type === 'stdout' ||
+      event.type === 'error'
+    );
+    
+    // Extract log messages
+    const logMessages = buildEvents.map(event => {
+      const timestamp = new Date(event.created).toISOString();
+      return `[${timestamp}] ${event.payload?.text || event.message || JSON.stringify(event.payload)}`;
+    }).join('\n');
+    
+    // Save logs to file for analysis
+    const logFilePath = path.join(__dirname, `vercel-build-logs-${deploymentId}.log`);
+    fs.writeFileSync(logFilePath, logMessages);
+    
+    log(`Build logs saved to ${logFilePath}`, colors.green);
+    return logFilePath;
+  } catch (error) {
+    log(`Error fetching build logs: ${error.message}`, colors.red);
+    return null;
+  }
+}
+
+// Function to verify we're using real data
+function verifyDataSource(source, data) {
+  if (verifyMode) {
+    log(`\n${colors.bold}${colors.yellow}VERIFICATION MODE${colors.reset}`, colors.yellow);
+    log(`Data source: ${source}`, colors.yellow);
+    log(`Timestamp: ${new Date().toISOString()}`, colors.yellow);
+    log(`Data sample: ${data.substring(0, 200)}...`, colors.yellow);
+    log(`${colors.bold}${colors.yellow}Please verify this matches what you see in the Vercel dashboard${colors.reset}\n`, colors.yellow);
+    
+    // In verification mode, pause for user confirmation
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    return new Promise((resolve) => {
+      rl.question('Does this match what you see in the Vercel dashboard? (y/n) ', (answer) => {
+        rl.close();
+        if (answer.toLowerCase() === 'y') {
+          log('Verification confirmed. Proceeding with analysis.', colors.green);
+          resolve(true);
+        } else {
+          log('Verification failed. Please check the data source.', colors.red);
+          resolve(false);
+        }
+      });
+    });
+  }
+  
+  return Promise.resolve(true); // Skip verification in normal mode
+}
+
 // Main execution
 if (localLogFile) {
   processLocalLogFile(localLogFile);
 } else {
-  // Start normal polling
-  pollForDeployments().catch(error => {
-    log(`Error in deployment monitor: ${error.message}`, colors.red);
-  });
+  // Check if we have the necessary Vercel token for API access
+  if (!vercelToken && !verifyMode) {
+    log(`${colors.yellow}${colors.bold}NOTE: For direct access to Vercel build logs, provide a Vercel API token:${colors.reset}`, colors.yellow);
+    log(`  node monitor-deployment.js --token=YOUR_VERCEL_TOKEN`, colors.yellow);
+    log(`  Or set the VERCEL_TOKEN environment variable`, colors.yellow);
+    log(`${colors.yellow}${colors.bold}To verify logs match what you see in the Vercel dashboard:${colors.reset}`, colors.yellow);
+    log(`  node monitor-deployment.js --verify`, colors.yellow);
+    log(`${colors.yellow}Running in CLI-only mode (limited log access)...${colors.reset}\n`, colors.yellow);
+  }
+
+  log(`Starting deployment monitor...`, colors.green + colors.bold);
+  pollForDeployments();
 }
