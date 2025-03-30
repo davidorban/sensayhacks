@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Code, Server, Zap } from 'lucide-react';
 
 const MCPConceptPage = () => {
   const [isLoading] = useState<boolean>(false);
@@ -13,179 +14,211 @@ const MCPConceptPage = () => {
         Understanding the Model Context Protocol and its applications for Sensay.
       </p>
 
-      <Card className="bg-white shadow-lg flex-1 overflow-auto">
-        <CardContent className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-40">
-              <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
-              <span className="ml-2 text-gray-600">Loading concept description...</span>
-            </div>
-          ) : (
-            <div className="prose prose-slate max-w-none">
-              <h2 className="text-2xl font-bold text-indigo-800 mt-0 mb-4">MCP for Sensay: Implementation Concept</h2>
-              <p className="my-3">Looking at the Sensay API specification and considering Anthropic's MCP approach, here's how we could implement an MCP interface for Sensay:</p>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      ) : (
+        <Card className="bg-white shadow-lg">
+          <CardHeader>
+            <CardTitle>Model Context Protocol</CardTitle>
+            <CardDescription>
+              A standardized approach for AI models to request and receive context
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="prose max-w-none">
+            <Tabs defaultValue="overview">
+              <TabsList className="mb-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="architecture">Architecture</TabsTrigger>
+                <TabsTrigger value="implementation">Implementation</TabsTrigger>
+                <TabsTrigger value="examples">Examples</TabsTrigger>
+              </TabsList>
               
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">1. MCP Client/Server Architecture</h3>
-              <p className="my-2">The MCP implementation would consist of:</p>
-              <ul className="list-disc pl-6 my-2 space-y-1">
-                <li><strong>MCP Server</strong>: A middleware layer that sits between client applications and the Sensay API</li>
-                <li><strong>MCP Client</strong>: Libraries for different languages that developers can use to interact with Sensay through the MCP protocol</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">2. Core Components</h3>
-              <p className="my-2"><strong>MCP Protocol Definition</strong>:</p>
-              <ul className="list-disc pl-6 my-2 space-y-1">
-                <li>Define a structured JSON schema for MCP messages to/from Sensay</li>
-                <li>Messages would include: action type, parameters, authentication tokens, and metadata</li>
-              </ul>
-              <p className="my-2"><strong>Tool Registry</strong>:</p>
-              <ul className="list-disc pl-6 my-2 space-y-1">
-                <li>Register Sensay API endpoints as "tools" that can be invoked via MCP</li>
-                <li>Map Sensay endpoints to tool definitions with parameters and expected responses</li>
-              </ul>
-              <p className="my-2"><strong>Execution Engine</strong>:</p>
-              <ul className="list-disc pl-6 my-2 space-y-1">
-                <li>Handles routing MCP commands to appropriate Sensay API endpoints</li>
-                <li>Manages authentication token handling and session persistence</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">3. Message Flow</h3>
-              <pre className="bg-gray-100 p-3 rounded-md text-sm overflow-x-auto my-3">
-                <code>{`Client App → MCP Client → MCP Server → Sensay API
-                                     ↓
-Client App ← MCP Client ← MCP Server ← Sensay API`}</code>
-              </pre>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">4. Tool Definition Example</h3>
-              <p className="my-2">Here's how a Sensay API endpoint could be defined as an MCP tool:</p>
-              <pre className="bg-gray-100 p-3 rounded-md text-sm overflow-x-auto my-3">
-                <code className="language-json">{`{
-  "tool_name": "sensay.natural_language_query",
-  "description": "Query the Sensay knowledge base using natural language",
+              <TabsContent value="overview" className="space-y-4">
+                <h3 className="text-xl font-semibold text-indigo-700 mt-0">Core Concept</h3>
+                <p>
+                  The Model Context Protocol (MCP) is a standardized approach for AI models to request and receive context during inference. It enables models to dynamically request information they need, rather than requiring all context to be provided upfront.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+                  <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                    <div className="flex items-center mb-2">
+                      <Zap className="h-5 w-5 text-indigo-600 mr-2" />
+                      <h4 className="font-semibold text-indigo-800 m-0">Dynamic Context</h4>
+                    </div>
+                    <p className="text-sm text-gray-700 m-0">Models request only the information they need, when they need it, reducing token usage and improving efficiency.</p>
+                  </div>
+                  
+                  <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                    <div className="flex items-center mb-2">
+                      <Server className="h-5 w-5 text-indigo-600 mr-2" />
+                      <h4 className="font-semibold text-indigo-800 m-0">Standardized Protocol</h4>
+                    </div>
+                    <p className="text-sm text-gray-700 m-0">A consistent interface for models to request context from external systems, regardless of the underlying implementation.</p>
+                  </div>
+                  
+                  <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                    <div className="flex items-center mb-2">
+                      <Code className="h-5 w-5 text-indigo-600 mr-2" />
+                      <h4 className="font-semibold text-indigo-800 m-0">Tool Integration</h4>
+                    </div>
+                    <p className="text-sm text-gray-700 m-0">Enables seamless integration with external tools and data sources, expanding model capabilities.</p>
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-semibold text-indigo-700">Key Benefits</h3>
+                <ul>
+                  <li>Reduced token usage by requesting only necessary context</li>
+                  <li>Improved model performance through access to relevant information</li>
+                  <li>Enhanced security by limiting upfront context exposure</li>
+                  <li>Standardized approach across different AI systems</li>
+                  <li>Simplified integration with external tools and data sources</li>
+                </ul>
+              </TabsContent>
+              
+              <TabsContent value="architecture" className="space-y-4">
+                <h3 className="text-xl font-semibold text-indigo-700 mt-0">MCP Client/Server Architecture</h3>
+                <p>
+                  The MCP implementation consists of two main components: the MCP client (model) and the MCP server (context provider).
+                </p>
+                
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 my-4">
+                  <h4 className="font-semibold text-indigo-800 mt-0 mb-2">MCP Client (Model)</h4>
+                  <ul className="list-disc pl-5 mb-0">
+                    <li>Generates requests for context when needed</li>
+                    <li>Formats requests according to the MCP specification</li>
+                    <li>Processes responses and incorporates context into reasoning</li>
+                    <li>Continues generation with the newly acquired context</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 my-4">
+                  <h4 className="font-semibold text-indigo-800 mt-0 mb-2">MCP Server (Context Provider)</h4>
+                  <ul className="list-disc pl-5 mb-0">
+                    <li>Receives and parses MCP requests</li>
+                    <li>Validates request parameters and permissions</li>
+                    <li>Retrieves requested information from appropriate sources</li>
+                    <li>Formats and returns responses according to the MCP specification</li>
+                    <li>Handles errors and provides appropriate feedback</li>
+                  </ul>
+                </div>
+                
+                <h4 className="font-semibold text-indigo-700 mt-4">Request/Response Flow</h4>
+                <ol className="list-decimal pl-5">
+                  <li>Model generates text until it needs additional context</li>
+                  <li>Model outputs a structured MCP request</li>
+                  <li>Server receives and processes the request</li>
+                  <li>Server returns formatted response with requested context</li>
+                  <li>Model incorporates context and continues generation</li>
+                </ol>
+              </TabsContent>
+              
+              <TabsContent value="implementation" className="space-y-4">
+                <h3 className="text-xl font-semibold text-indigo-700 mt-0">Implementing MCP for Sensay</h3>
+                <p>
+                  Integrating MCP with Sensay's architecture involves several components working together to provide dynamic context to models.
+                </p>
+                
+                <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 my-4">
+                  <h4 className="font-semibold text-indigo-800 mt-0 mb-2">MCP Request Format</h4>
+                  <pre className="bg-gray-800 text-gray-100 p-3 rounded text-sm overflow-x-auto">
+{`{
+  "type": "mcp_request",
+  "service": "sensay.knowledge_base",
+  "method": "query",
   "parameters": {
-    "query": {
-      "type": "string",
-      "description": "The natural language query to process"
-    },
-    "max_results": {
-      "type": "integer",
-      "description": "Maximum number of results to return",
-      "default": 5
-    },
-    "include_sources": {
-      "type": "boolean",
-      "description": "Whether to include source information in results",
-      "default": true
-    }
-  },
-  "returns": {
-    "results": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "summary": {
-            "type": "string"
-          },
-          "source": {
-            "type": "string"
-          }
-        }
-      },
-      "description": "List of matching results"
-    },
-    "metadata": {
-      "type": "object",
-      "properties": {
-        "query_processed": {
-          "type": "string"
-        },
-        "total_results_available": {
-          "type": "integer"
-        },
-        "processing_time_ms": {
-          "type": "integer"
-        }
-      }
-    }
-  },
-  "endpoint": "/v1/natural_language/query"
-}`}</code>
-              </pre>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">5. Authentication Integration</h3>
-              <ul className="list-disc pl-6 my-2 space-y-1">
-                <li>MCP sessions would maintain Sensay authentication (JWT or Organization Service Token)</li>
-                <li>Security layer would handle token refresh and validation</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">6. Specialized MCP Commands for Sensay</h3>
-              <p className="my-2">Beyond simple API mapping, we could add Sensay-specific MCP commands:</p>
-              <ol className="list-decimal pl-6 my-2 space-y-1">
-                <li><strong>Replica Discovery</strong>: <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">find_replica</code> - Search for replicas by tags, name, or other criteria</li>
-                <li><strong>Multi-Replica Chat</strong>: <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">start_group_chat</code> - Initiate a conversation with multiple replicas</li>
-                <li><strong>Memory Management</strong>: <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">manage_memory</code> - Interact with a replica's knowledge/memory</li>
-                <li><strong>Content Generation Pipeline</strong>: Chain multiple Sensay API calls in a single MCP command</li>
-              </ol>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">7. Sample MCP Request</h3>
-              <pre className="bg-gray-100 p-3 rounded-md text-sm overflow-x-auto my-3">
-                <code className="language-json">{`{
-  "command": "execute_tool",
-  "tool": "sensay.natural_language_query",
-  "parameters": {
-    "query": "Who are the managers with the most popular Replicas in our organization?"
-  },
-  "auth": {
-    "type": "bearer",
-    "token": "jwt_token_here"
+    "query": "information about user X",
+    "max_results": 5
   }
-}`}</code>
-              </pre>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">8. Chain of Tools Example</h3>
-              <p className="my-2">One powerful MCP feature would be chaining Sensay operations:</p>
-              <pre className="bg-gray-100 p-3 rounded-md text-sm overflow-x-auto my-3">
-                <code className="language-json">{`{
-  "command": "execute_chain",
-  "chain": [
-    {
-      "tool": "sensay.natural_language_query",
-      "parameters": { "query": "Who are the managers with the most popular Replicas in our organization?" },
-      "output_map": { "results[0].title": "result_title" }
-    },
-    {
-      "tool": "summarize_response",
-      "parameters": { "text": "\${result_title}" }
-    }
-  ]
-}`}</code>
-              </pre>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">9. Implementation Phases</h3>
-              <ol className="list-decimal pl-6 my-2 space-y-1">
-                <li><strong>Core API Mapping</strong>: Basic translation of REST endpoints to MCP tools</li>
-                <li><strong>Extended Capabilities</strong>: Add Sensay-specific MCP commands and chaining</li>
-                <li><strong>SDK Development</strong>: Create language-specific clients (JavaScript, Python, etc.)</li>
-                <li><strong>Plugin System</strong>: Allow third-party extensions to the MCP toolset</li>
-              </ol>
-
-              <h3 className="text-xl font-semibold text-indigo-700 mt-6 mb-3">10. Benefits for Developers</h3>
-              <ul className="list-disc pl-6 my-2 space-y-1">
-                <li><strong>Simplified Integration</strong>: One consistent interface for all Sensay capabilities</li>
-                <li><strong>Composability</strong>: Chain operations without multiple API calls</li>
-                <li><strong>Contextual Awareness</strong>: MCP maintains state between commands</li>
-                <li><strong>Cross-platform Consistency</strong>: Same MCP protocol works in any environment</li>
-              </ul>
+}`}
+                  </pre>
+                </div>
+                
+                <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 my-4">
+                  <h4 className="font-semibold text-indigo-800 mt-0 mb-2">MCP Response Format</h4>
+                  <pre className="bg-gray-800 text-gray-100 p-3 rounded text-sm overflow-x-auto">
+{`{
+  "type": "mcp_response",
+  "status": "success",
+  "data": {
+    "results": [
+      { "content": "User X information...", "source": "profile" },
+      { "content": "Additional details...", "source": "interactions" }
+    ]
+  }
+}`}
+                  </pre>
+                </div>
+                
+                <h4 className="font-semibold text-indigo-700 mt-4">Integration Points</h4>
+                <ul className="list-disc pl-5">
+                  <li><strong>API Gateway:</strong> Routes MCP requests to appropriate services</li>
+                  <li><strong>Authentication:</strong> Validates permissions for requested context</li>
+                  <li><strong>Service Registry:</strong> Maintains list of available MCP-compatible services</li>
+                  <li><strong>Context Providers:</strong> Individual services that respond to MCP requests</li>
+                </ul>
+              </TabsContent>
               
-              <p className="my-3">This approach would make Sensay's powerful replica capabilities more accessible through the MCP paradigm while maintaining the robustness of the existing API infrastructure.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              <TabsContent value="examples" className="space-y-4">
+                <h3 className="text-xl font-semibold text-indigo-700 mt-0">Example Use Cases</h3>
+                
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 my-4">
+                  <h4 className="font-semibold text-indigo-800 mt-0 mb-2">Knowledge Base Queries</h4>
+                  <p className="mb-2">Model can request specific information from Sensay's knowledge base:</p>
+                  <pre className="bg-gray-800 text-gray-100 p-3 rounded text-sm overflow-x-auto">
+{`{
+  "type": "mcp_request",
+  "service": "sensay.knowledge_base",
+  "method": "query",
+  "parameters": {
+    "query": "latest information about project X",
+    "max_results": 3
+  }
+}`}
+                  </pre>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 my-4">
+                  <h4 className="font-semibold text-indigo-800 mt-0 mb-2">User Profile Access</h4>
+                  <p className="mb-2">Model can request user preferences or history:</p>
+                  <pre className="bg-gray-800 text-gray-100 p-3 rounded text-sm overflow-x-auto">
+{`{
+  "type": "mcp_request",
+  "service": "sensay.user_profiles",
+  "method": "get_preferences",
+  "parameters": {
+    "user_id": "user_123",
+    "preference_type": "communication_style"
+  }
+}`}
+                  </pre>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 my-4">
+                  <h4 className="font-semibold text-indigo-800 mt-0 mb-2">External Tool Integration</h4>
+                  <p className="mb-2">Model can request execution of external tools:</p>
+                  <pre className="bg-gray-800 text-gray-100 p-3 rounded text-sm overflow-x-auto">
+{`{
+  "type": "mcp_request",
+  "service": "sensay.tools",
+  "method": "execute",
+  "parameters": {
+    "tool_name": "calendar",
+    "action": "check_availability",
+    "date_range": {
+      "start": "2025-04-01T09:00:00Z",
+      "end": "2025-04-01T17:00:00Z"
+    }
+  }
+}`}
+                  </pre>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
