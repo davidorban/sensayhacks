@@ -2,13 +2,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Link, Users, Share2, Brain, Shield, Lock, Unlock, Clock, Database, Settings, MessageSquare, Info } from 'lucide-react';
+import { Link, Users, MessageSquare, Lock, Clock, Database, Settings, Info } from 'lucide-react';
 
 interface SharedMemoryItem {
   id: string;
@@ -113,7 +112,7 @@ const BondingReplicasPage = () => {
       }));
       setReplicas(updatedReplicas);
     }
-  }, [isBonded]);
+  }, [isBonded, replicas]);
 
   const handleToggleBonding = () => {
     const newState = !isBonded;
@@ -188,7 +187,7 @@ const BondingReplicasPage = () => {
     }, 1500);
   };
 
-  const handleUpdateBondSettings = (setting: string, value: any) => {
+  const handleUpdateBondSettings = (setting: string, value: string | number | string[]) => {
     setBondSettings(prev => ({
       ...prev,
       [setting]: value
