@@ -61,139 +61,6 @@ const MCPPage = () => {
     }
   };
 
-  const DescriptionContent = () => (
-    <div className="prose prose-invert max-w-none"> 
-      <h2>MCP for Sensay: Implementation Concept</h2>
-      <p>Looking at the Sensay API specification and considering Anthropic&apos;s MCP approach, here&apos;s how we could implement an MCP interface for Sensay:</p>
-      
-      <h3>1. MCP Client/Server Architecture</h3>
-      <p>The MCP implementation would consist of:</p>
-      <ul>
-        <li><strong>MCP Server</strong>: A middleware layer that sits between client applications and the Sensay API</li>
-        <li><strong>MCP Client</strong>: Libraries for different languages that developers can use to interact with Sensay through the MCP protocol</li>
-      </ul>
-
-      <h3>2. Core Components</h3>
-      <p><strong>MCP Protocol Definition</strong>:</p>
-      <ul>
-        <li>Define a structured JSON schema for MCP messages to/from Sensay</li>
-        <li>Messages would include: action type, parameters, authentication tokens, and metadata</li>
-      </ul>
-      <p><strong>Tool Registry</strong>:</p>
-      <ul>
-        <li>Register Sensay API endpoints as &quot;tools&quot; that can be invoked via MCP</li>
-        <li>Map Sensay endpoints to tool definitions with parameters and expected responses</li>
-      </ul>
-      <p><strong>Execution Engine</strong>:</p>
-      <ul>
-        <li>Handles routing MCP commands to appropriate Sensay API endpoints</li>
-        <li>Manages authentication token handling and session persistence</li>
-      </ul>
-
-      <h3>3. Message Flow</h3>
-      <pre><code>{`Client App → MCP Client → MCP Server → Sensay API
-                                     ↓
-Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
-
-      <h3>4. Tool Definition Example</h3>
-      <p>Here&apos;s how a Sensay API endpoint could be defined as an MCP tool:</p>
-      <pre><code className="language-json">{`{
-  "tool_name": "replica_chat_completion",
-  "description": "Get a completion response from a replica",
-  "parameters": {
-    "replicaUUID": {
-      "type": "string",
-      "format": "uuid",
-      "description": "The UUID of the replica to chat with"
-    },
-    "content": {
-      "type": "string",
-      "description": "Message content to send to the replica"
-    },
-    "source": {
-      "type": "string",
-      "enum": ["discord", "telegram", "embed", "web", "telegram_autopilot"],
-      "default": "web"
-    },
-    "skip_chat_history": {
-      "type": "boolean",
-      "default": false
-    }
-  },
-  "returns": {
-    "content": {
-      "type": "string",
-      "description": "The replica's response"
-    }
-  },
-  "endpoint": "/v1/replicas/{replicaUUID}/chat/completions"
-}`}</code></pre>
-
-      <h3>5. Authentication Integration</h3>
-      <ul>
-        <li>MCP sessions would maintain Sensay authentication (JWT or Organization Service Token)</li>
-        <li>Security layer would handle token refresh and validation</li>
-      </ul>
-
-      <h3>6. Specialized MCP Commands for Sensay</h3>
-      <p>Beyond simple API mapping, we could add Sensay-specific MCP commands:</p>
-      <ol>
-        <li><strong>Replica Discovery</strong>: <code>find_replica</code> - Search for replicas by tags, name, or other criteria</li>
-        <li><strong>Multi-Replica Chat</strong>: <code>start_group_chat</code> - Initiate a conversation with multiple replicas</li>
-        <li><strong>Memory Management</strong>: <code>manage_memory</code> - Interact with a replica&apos;s knowledge/memory</li>
-        <li><strong>Content Generation Pipeline</strong>: Chain multiple Sensay API calls in a single MCP command</li>
-      </ol>
-
-      <h3>7. Sample MCP Request</h3>
-      <pre><code className="language-json">{`{
-  "command": "execute_tool",
-  "tool": "replica_chat_completion",
-  "parameters": {
-    "replicaUUID": "03db5651-cb61-4bdf-9ef0-89561f7c9c53",
-    "content": "How can you help me with dementia care?",
-    "source": "web"
-  },
-  "auth": {
-    "type": "bearer",
-    "token": "jwt_token_here"
-  }
-}`}</code></pre>
-
-      <h3>8. Chain of Tools Example</h3>
-      <p>One powerful MCP feature would be chaining Sensay operations:</p>
-      <pre><code className="language-json">{`{
-  "command": "execute_chain",
-  "chain": [
-    {
-      "tool": "find_replica",
-      "parameters": { "tags": ["Healthcare", "Dementia"] },
-      "output_map": { "items[0].uuid": "replicaUUID" }
-    },
-    {
-      "tool": "replica_chat_completion",
-      "parameters": {
-        "replicaUUID": "\${replicaUUID}",
-        "content": "What's your experience with memory care?"
-      },
-      "output_map": { "content": "response" }
-    },
-    {
-      "tool": "summarize_response",
-      "parameters": { "text": "\${response}" }
-    }
-  ]
-}`}</code></pre>
-
-      <h3>9. Implementation Phases</h3>
-      <ol>
-        <li><strong>Core API Mapping</strong>: Basic translation of REST endpoints to MCP tools</li>
-        <li><strong>Extended Capabilities</strong>: Add Sensay-specific MCP commands and chaining</li>
-        <li><strong>SDK Development</strong>: Create language-specific clients (JavaScript, Python, etc.)</li>
-        <li><strong>Plugin System</strong>: Allow third-party extensions to the MCP toolset</li>
-      </ol>
-    </div>
-  );
-
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6">
       <h1 className="text-2xl font-bold mb-2 text-gray-100">Model Context Protocol (MCP) Prototype</h1>
@@ -201,6 +68,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
         A prototype interface to interact with tools via the Model Context Protocol.
         See <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">modelcontextprotocol.io</a> and the
         <a href="https://github.com/modelcontextprotocol/typescript-sdk" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">TypeScript SDK</a> for details.
+        For a detailed explanation of the MCP concept and its implementation for Sensay, visit the <a href="/prototypes/MCP-Concept" className="text-blue-600 hover:underline">MCP Concept</a> page.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -277,15 +145,6 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
           </CardContent>
         </Card>
       </div>
-
-      <Card className="mt-6 bg-gray-800 text-white shadow-lg">
-        <CardHeader>
-          <CardTitle>MCP Concept</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DescriptionContent />
-        </CardContent>
-      </Card>
 
       <p className="mt-6 text-sm text-gray-400 text-center">
         (Note: Interactions are simulated locally.)
