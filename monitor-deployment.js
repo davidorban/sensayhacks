@@ -329,14 +329,27 @@ async function monitorDeployment(deploymentId) {
         // Fallback to CLI
         statusOutput = execSync(`vercel inspect ${deploymentId}`).toString();
         
+        // Debug logging to see the actual output
+        log('CLI Output:', colors.yellow);
+        log(statusOutput, colors.yellow);
+        
         // More robust status detection - look for the status line and extract the word after any bullet character
-        let statusMatch = null;
-        const statusLine = statusOutput.split('\n').find(line => line.trim().startsWith('status'));
-        if (statusLine) {
-          // Extract the status word, ignoring any bullet point or special character
-          const statusWordMatch = statusLine.match(/status.*?(\w+)$/);
-          if (statusWordMatch) {
-            status = statusWordMatch[1];
+        const statusLines = statusOutput.split('\n').filter(line => line.toLowerCase().includes('status'));
+        log(`Found ${statusLines.length} status lines:`, colors.yellow);
+        
+        for (const statusLine of statusLines) {
+          log(`Status line: ${statusLine}`, colors.yellow);
+          
+          // Check for the word "Ready" in the status line
+          if (statusLine.includes('Ready')) {
+            status = 'Ready';
+            break;
+          }
+          
+          // Check for the word "Error" in the status line
+          if (statusLine.includes('Error')) {
+            status = 'Error';
+            break;
           }
         }
         
