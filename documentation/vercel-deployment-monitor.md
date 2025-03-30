@@ -91,3 +91,44 @@ For the best experience, integrate the deployment monitor into your development 
 2. Refer to the [Linting Guide](./linting-guide.md) to prevent common errors
 3. Use the monitor's suggestions to quickly fix any build failures
 4. Keep the linting guide and monitor output handy for reference
+
+## Pre-Deployment Checks
+
+Before pushing code that triggers a deployment, run these local checks to catch issues early:
+
+```bash
+# Check for linting errors
+npx next lint
+
+# Check for TypeScript errors
+npx tsc --noEmit
+```
+
+These commands will help identify and fix problems before they cause build failures in Vercel, saving time and reducing failed deployments.
+
+### Benefits of Pre-Deployment Checks
+
+1. **Faster Feedback**: Get immediate feedback on errors without waiting for the build process
+2. **Reduced Failed Deployments**: Catch issues before they reach the deployment pipeline
+3. **Consistent Code Quality**: Ensure all code meets the project's quality standards
+4. **Team Efficiency**: Standardize the pre-deployment process across the team
+
+### Integrating with Git Hooks
+
+Consider adding these checks to your pre-push Git hooks to automate the process:
+
+```bash
+#!/bin/sh
+# Pre-push hook to run linting and type checking
+
+echo "Running pre-deployment checks..."
+npx next lint && npx tsc --noEmit
+
+if [ $? -ne 0 ]; then
+  echo "❌ Pre-deployment checks failed. Please fix the issues before pushing."
+  exit 1
+fi
+
+echo "✅ Pre-deployment checks passed!"
+exit 0
+```

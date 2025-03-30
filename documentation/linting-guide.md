@@ -184,6 +184,29 @@ Before committing code, run through this quick checklist:
    npm run lint
    ```
 
+## Pre-Deployment Checks
+
+Before pushing code that will trigger a deployment, always run these commands to catch issues early:
+
+```bash
+# Check for linting errors
+npx next lint
+
+# Check for TypeScript errors
+npx tsc --noEmit
+```
+
+These commands will help identify and fix problems locally before they cause build failures in Vercel, saving time and reducing failed deployments.
+
+### Integrating with Development Workflow
+
+For a smooth development process:
+
+1. Run these checks before every push to the main branch
+2. Address all errors and warnings before deploying
+3. Use the [Vercel Deployment Monitor](./vercel-deployment-monitor.md) to track deployment status
+4. Review any build errors captured by the monitor
+
 ## Automatic Fixes
 
 Many linting errors can be automatically fixed using:
