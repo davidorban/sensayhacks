@@ -89,7 +89,7 @@ MCP is supported by a growing ecosystem:
 `;
         setConceptContent(content);
         setIsLoading(false);
-      } catch (err) {
+      } catch (_) {
         setError('Failed to load concept description');
         setIsLoading(false);
       }
