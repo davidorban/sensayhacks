@@ -109,10 +109,9 @@ export async function POST(request: Request) {
       ).join('\n')
     : "You currently have no tasks in the database.";
 
-  // Construct task context message for API
-  // Note: We're not using the full messages array in the current API format
-  // but keeping the task context for future reference
-  const taskContextMessage: RequestMessage = { role: 'system', content: taskContext };
+  // Note: We're not using the task context in the current API format
+  // but we're keeping the taskContext string for future reference
+  // console.log('Task context:', taskContext);
 
   // --- Call Sensay API --- //
   // Prepare API URL
