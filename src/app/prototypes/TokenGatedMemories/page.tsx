@@ -97,6 +97,7 @@ const TokenGatedMemoriesPage = () => {
   const [showEvolutionModal, setShowEvolutionModal] = useState(false);
   const [selectedMemory, setSelectedMemory] = useState<MemoryItem | null>(null);
   const [availableEvolutionStages, setAvailableEvolutionStages] = useState<EvolutionStage[]>([]);
+  const [memories, setMemories] = useState<MemoryItem[]>([]);
 
   // Define access tiers
   const accessTiers: AccessTier[] = [
@@ -147,7 +148,7 @@ const TokenGatedMemoriesPage = () => {
   ];
 
   // Sample memories data
-  const memories: MemoryItem[] = [
+  const sampleMemories: MemoryItem[] = [
     {
       id: 'mem-1',
       title: 'Introduction to AI Ethics',
@@ -213,68 +214,7 @@ const TokenGatedMemoriesPage = () => {
   // Initialize data
   useEffect(() => {
     // Initialize memories
-    setMemories([
-      {
-        id: 'mem-1',
-        title: 'Introduction to AI Ethics',
-        content: 'AI ethics is the branch of ethics that focuses on the moral issues surrounding artificial intelligence systems, including their design, development, and deployment. Key principles include fairness, transparency, privacy, and accountability.',
-        tier: 'public',
-        tokenCost: 0,
-        category: 'AI Fundamentals',
-        timestamp: '2025-03-15',
-        decayRate: 0.2,
-        creator: 'Sensay Team',
-        popularity: 85,
-        evolutionStage: 1,
-        evolutionPath: 'analytical',
-        capabilities: ['basic_understanding']
-      },
-      {
-        id: 'mem-2',
-        title: 'Advanced Neural Network Architectures',
-        content: 'Recent advancements in neural network architectures have led to significant improvements in model performance across various tasks. This memory covers transformer-based models, mixture of experts, and sparse architectures.',
-        tier: 'premium',
-        tokenCost: 25,
-        category: 'Technical',
-        timestamp: '2025-03-20',
-        decayRate: 0.1,
-        creator: 'AI Research Group',
-        popularity: 92,
-        evolutionStage: 2,
-        evolutionPath: 'technical',
-        capabilities: ['architecture_analysis', 'performance_optimization']
-      },
-      {
-        id: 'mem-3',
-        title: 'Market Analysis: AI Industry Trends 2025',
-        content: 'Comprehensive analysis of AI industry trends for 2025, including market size, growth projections, key players, and emerging technologies. Valuable insights for investors and industry professionals.',
-        tier: 'expert',
-        tokenCost: 75,
-        category: 'Market Intelligence',
-        timestamp: '2025-03-25',
-        decayRate: 0.5,
-        creator: 'Market Insights Team',
-        popularity: 88,
-        evolutionStage: 3,
-        evolutionPath: 'analytical',
-        capabilities: ['trend_identification', 'market_forecasting', 'competitive_analysis']
-      },
-      {
-        id: 'mem-4',
-        title: 'Quantum Computing Applications in AI',
-        content: 'Exploration of how quantum computing technologies are being applied to artificial intelligence problems, with a focus on quantum machine learning algorithms and their potential to revolutionize the field.',
-        tier: 'exclusive',
-        tokenCost: 150,
-        category: 'Emerging Tech',
-        timestamp: '2025-03-28',
-        decayRate: 0.3,
-        creator: 'Quantum AI Lab',
-        popularity: 95,
-        evolutionStage: 4,
-        evolutionPath: 'technical',
-        capabilities: ['quantum_algorithms', 'advanced_computation', 'theoretical_modeling']
-      }
-    ]);
+    setMemories(sampleMemories);
 
     // Initialize marketplace memories
     setMarketplaceMemories([
