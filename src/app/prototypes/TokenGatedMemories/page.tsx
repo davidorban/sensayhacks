@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,6 @@ import {
   Lock, 
   Unlock, 
   Coins, 
-  Shield, 
   Zap, 
   Key, 
   Database, 
@@ -45,12 +44,20 @@ interface AccessTier {
   };
 }
 
+interface Transaction {
+  id: string;
+  type: string;
+  amount: number;
+  timestamp: string;
+  status: string;
+}
+
 const TokenGatedMemoriesPage = () => {
   const [tokenBalance, setTokenBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('memories');
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
-  const [transactionHistory, setTransactionHistory] = useState<any[]>([]);
+  const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(50);
 
@@ -455,29 +462,28 @@ const TokenGatedMemoriesPage = () => {
                   </p>
                   
                   <div className="space-y-6">
-                    {accessTiers.map((tier, index) => {
+                    {accessTiers.map((tier) => {
                       const isAccessible = tokenBalance >= tier.tokenRequirement;
-                      const progress = tier.tokenRequirement > 0 
-                        ? Math.min(100, (tokenBalance / tier.tokenRequirement) * 100) 
-                        : 100;
+                      const progress = Math.min(100, (tokenBalance / tier.tokenRequirement) * 100) || 0;
                       
                       return (
-                        <div key={tier.name} className="border rounded-lg overflow-hidden">
-                          <div className={`p-4 ${isAccessible ? 'bg-green-50 border-b border-green-100' : 'bg-gray-50 border-b border-gray-100'}`}>
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center">
-                                <div className={`p-2 rounded-full mr-3 ${isAccessible ? 'bg-green-100' : 'bg-gray-200'}`}>
-                                  {isAccessible ? <Unlock className="h-5 w-5 text-green-600" /> : <Lock className="h-5 w-5 text-gray-500" />}
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold text-gray-800 capitalize">{tier.name} Tier</h4>
-                                  <p className="text-sm text-gray-600">{tier.description}</p>
-                                </div>
+                        <div 
+                          key={tier.name}
+                          className={`p-4 rounded-lg border ${isAccessible ? tier.color : 'bg-gray-50 border-gray-200'}`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className={`p-2 rounded-full mr-3 ${isAccessible ? 'bg-green-100' : 'bg-gray-200'}`}>
+                                {isAccessible ? <Unlock className="h-5 w-5 text-green-600" /> : <Lock className="h-5 w-5 text-gray-500" />}
                               </div>
-                              <Badge className={isAccessible ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
-                                {isAccessible ? 'Unlocked' : 'Locked'}
-                              </Badge>
+                              <div>
+                                <h4 className="font-semibold text-gray-800 capitalize">{tier.name} Tier</h4>
+                                <p className="text-sm text-gray-600">{tier.description}</p>
+                              </div>
                             </div>
+                            <Badge className={isAccessible ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
+                              {isAccessible ? 'Unlocked' : 'Locked'}
+                            </Badge>
                           </div>
                           
                           <div className="p-4">
@@ -592,7 +598,7 @@ const TokenGatedMemoriesPage = () => {
                       <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                         <h5 className="text-xs font-medium text-gray-700 mb-2">Token Usage by Tier</h5>
                         <div className="space-y-2">
-                          {accessTiers.filter(tier => tier.name !== 'public').map(tier => {
+                          {accessTiers.filter(tier => tier.name !== 'public').map((tier) => {
                             const tierTransactions = transactionHistory
                               .filter(tx => {
                                 if (tx.type !== 'unlock') return false;
