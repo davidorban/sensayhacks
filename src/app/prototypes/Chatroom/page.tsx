@@ -156,7 +156,7 @@ const ChatroomPage = () => {
           const collaborativeResponse: ChatMessage = {
             id: currentMessages.length + selectedReplicas.length + 1,
             sender: 'Collaborative Response',
-            text: `Based on our shared analysis (${involvedReplicas}), we've synthesized the following insights about "${newMessage}": This query relates to ${getQueryTopic(newMessage)}. Our bonded state allows us to provide a unified perspective while leveraging our individual specialties.`,
+            text: `Based on our shared analysis (${involvedReplicas}), we've synthesized the following insights about "${newMessage}": This query relates to ${getQueryTopic()}. Our bonded state allows us to provide a unified perspective while leveraging our individual specialties.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit" }),
           };
           
@@ -164,7 +164,7 @@ const ChatroomPage = () => {
           
           // Update shared memory with the collaborative insight
           if (bondingEnabled) {
-            setSharedMemory(prev => [...prev, `Collaborative insight: ${getQueryTopic(newMessage)}`]);
+            setSharedMemory(prev => [...prev, `Collaborative insight: ${getQueryTopic()}`]);
           }
         }, collaborationDelay);
       }
@@ -174,8 +174,8 @@ const ChatroomPage = () => {
     setNewMessage('');
   };
 
-  // Helper function to determine the topic of a query (simplified mock)
-  const getQueryTopic = (_query: string): string => {
+  // Helper function to generate a random topic (simplified mock)
+  const getQueryTopic = (): string => {
     const topics = [
       "AI collaboration mechanisms",
       "shared memory systems",
