@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const MCPPage = () => {
   const [toolName, setToolName] = useState<string>('sensay.natural_language_query'); 
-  const [inputData, setInputData] = useState<string>('{\n  "query": "Find information about climate change adaptation strategies",\n  "max_results": 5,\n  "include_sources": true\n}'); 
+  const [inputData, setInputData] = useState<string>('{\n  "query": "Who are the managers with the most popular Replicas in our organization?",\n  "max_results": 5,\n  "include_sources": true\n}'); 
   // Keeping apiKey state for future implementation
   const [, ] = useState<string>(''); 
   const [responseString, setResponseString] = useState<string | null>(null); 
@@ -33,29 +33,39 @@ const MCPPage = () => {
       // Simulate a response for demonstration purposes
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Example response for natural language query
+      // Example response for natural language query about Replica managers
       const mockResponse = {
         "results": [
           {
-            "title": "Urban Resilience Strategies",
-            "summary": "Cities are implementing green infrastructure, cooling centers, and water management systems to adapt to increasing climate risks.",
-            "source": "Climate Adaptation Journal, 2024"
+            "title": "Sarah Johnson - Product Team",
+            "summary": "Manages 8 Replicas with a combined total of 12,450 monthly active users. Most popular Replica: 'ProductGuru' with 4,200 MAU.",
+            "source": "Sensay Analytics Dashboard, March 2025"
           },
           {
-            "title": "Agricultural Adaptation Methods",
-            "summary": "Farmers are adopting drought-resistant crops, precision irrigation, and diversified planting to maintain food security.",
-            "source": "Global Food Security Report, 2023"
+            "title": "Michael Chen - Customer Success",
+            "summary": "Manages 5 Replicas with a combined total of 9,875 monthly active users. Most popular Replica: 'SupportHelper' with 3,750 MAU.",
+            "source": "Replica Performance Report, Q1 2025"
           },
           {
-            "title": "Coastal Protection Measures",
-            "summary": "Communities are investing in natural barriers, elevated infrastructure, and managed retreat strategies to address sea level rise.",
-            "source": "Coastal Resilience Initiative, 2024"
+            "title": "Aisha Patel - Marketing",
+            "summary": "Manages 6 Replicas with a combined total of 8,320 monthly active users. Most popular Replica: 'CampaignAssistant' with 2,900 MAU.",
+            "source": "Department KPI Metrics, March 2025"
+          },
+          {
+            "title": "David Rodriguez - Engineering",
+            "summary": "Manages 4 Replicas with a combined total of 7,150 monthly active users. Most popular Replica: 'CodeReviewer' with 2,600 MAU.",
+            "source": "Engineering Team Dashboard, Q1 2025"
+          },
+          {
+            "title": "Emma Wilson - HR",
+            "summary": "Manages 3 Replicas with a combined total of 5,280 monthly active users. Most popular Replica: 'OnboardingGuide' with 2,450 MAU.",
+            "source": "HR Analytics Report, March 2025"
           }
         ],
         "metadata": {
-          "query_processed": "climate change adaptation strategies",
-          "total_results_available": 127,
-          "processing_time_ms": 342
+          "query_processed": "managers with most popular replicas organization ranking",
+          "total_results_available": 18,
+          "processing_time_ms": 287
         }
       };
       
@@ -102,7 +112,7 @@ const MCPPage = () => {
                   rows={10}
                   value={inputData}
                   onChange={(e) => setInputData(e.target.value)}
-                  placeholder='{ "query": "Find information about climate change", "max_results": 5 }'
+                  placeholder='{ "query": "Who are the managers with the most popular Replicas?", "max_results": 5 }'
                   className="w-full font-mono text-sm"
                 />
               </div>

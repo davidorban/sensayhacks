@@ -137,7 +137,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code>
   "command": "execute_tool",
   "tool": "sensay.natural_language_query",
   "parameters": {
-    "query": "What are the benefits of meditation for mental health?"
+    "query": "Who are the managers with the most popular Replicas in our organization?"
   },
   "auth": {
     "type": "bearer",
@@ -154,7 +154,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code>
   "chain": [
     {
       "tool": "sensay.natural_language_query",
-      "parameters": { "query": "What are the benefits of meditation for mental health?" },
+      "parameters": { "query": "Who are the managers with the most popular Replicas in our organization?" },
       "output_map": { "results[0].title": "result_title" }
     },
     {
