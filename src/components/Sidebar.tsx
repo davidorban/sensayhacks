@@ -7,7 +7,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const Sidebar = ({ children }: { children?: React.ReactNode }) => {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
-    'MCP': true, // Default expanded
+    // All menus closed by default
   });
 
   const prototypes = [
