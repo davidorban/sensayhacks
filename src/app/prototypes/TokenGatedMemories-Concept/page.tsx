@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Lock, Key, Coins, Shield, Zap, Users } from 'lucide-react';
+import { Loader2, Lock, Key, Coins, Shield, Zap } from 'lucide-react';
 
 const TokenGatedMemoriesConceptPage = () => {
   const [isLoading] = useState<boolean>(false);
