@@ -103,15 +103,16 @@ export async function POST(request: Request) {
   }
 
   // --- Prepare Messages for Sensay (Inject Task Context) --- //
+  // Note: We're not using task context in the current API format
+  // but keeping this code commented for future reference
+  /*
   const taskContext = tasksFromSupabase.length > 0
     ? "Here is your current task list retrieved from the database:\n" + tasksFromSupabase.map((task, index) =>
         `${index + 1}. ${task.text} [${task.completed ? 'Completed' : 'Pending'}]`
       ).join('\n')
     : "You currently have no tasks in the database.";
-
-  // Note: We're not using the task context in the current API format
-  // but we're keeping the taskContext string for future reference
-  // console.log('Task context:', taskContext);
+  console.log('Task context:', taskContext);
+  */
 
   // --- Call Sensay API --- //
   // Prepare API URL
