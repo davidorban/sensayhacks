@@ -333,29 +333,36 @@ async function monitorDeployment(deploymentId) {
         log('CLI Output:', colors.yellow);
         log(statusOutput, colors.yellow);
         
-        // Direct check for Ready or Error status in the output
-        if (statusOutput.includes('status      ● Ready')) {
+        // Direct check for Ready or Error status in the output - using case-insensitive match
+        const readyMatch = statusOutput.match(/status\s+[●•◦○⦿⚫︎⚪︎]\s+ready/i);
+        const errorMatch = statusOutput.match(/status\s+[●•◦○⦿⚫︎⚪︎]\s+error/i);
+        
+        if (readyMatch) {
           status = 'Ready';
           log('Found Ready status in the output!', colors.green);
-        } else if (statusOutput.includes('status      ● Error')) {
+        } else if (errorMatch) {
           status = 'Error';
           log('Found Error status in the output!', colors.red);
         } else {
           // Try to find any status line
-          const statusLines = statusOutput.split('\n').filter(line => line.trim().toLowerCase().includes('status'));
+          const statusLines = statusOutput.split('\n').filter(line => 
+            line.trim().toLowerCase().includes('status') && 
+            (line.toLowerCase().includes('ready') || line.toLowerCase().includes('error'))
+          );
+          
           log(`Found ${statusLines.length} status lines:`, colors.yellow);
           
           for (const statusLine of statusLines) {
             log(`Status line: ${statusLine}`, colors.yellow);
             
             // Check for the word "Ready" in the status line
-            if (statusLine.includes('Ready')) {
+            if (statusLine.toLowerCase().includes('ready')) {
               status = 'Ready';
               break;
             }
             
             // Check for the word "Error" in the status line
-            if (statusLine.includes('Error')) {
+            if (statusLine.toLowerCase().includes('error')) {
               status = 'Error';
               break;
             }
