@@ -10,7 +10,6 @@ const MCPClientPage = () => {
   const [toolName, setToolName] = useState<string>(''); 
   const [inputData, setInputData] = useState<string>(''); 
   const [apiKey, ] = useState<string>(''); 
-  const [response, setResponse] = useState<unknown | null>(null); 
   const [responseString, setResponseString] = useState<string | null>(null); 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +17,6 @@ const MCPClientPage = () => {
   const handleTriggerMcp = async () => {
     setIsLoading(true);
     setError(null);
-    setResponse(null);
     setResponseString(null); 
 
     if (!toolName || !inputData) {
@@ -50,7 +48,6 @@ const MCPClientPage = () => {
       });
 
       const data = await apiResponse.json();
-      setResponse(data);
       try {
         setResponseString(JSON.stringify(data, null, 2));
       } catch { 
@@ -67,7 +64,7 @@ const MCPClientPage = () => {
   const DescriptionContent = () => (
     <div className="prose prose-invert max-w-none"> 
       <h2>MCP for Sensay: Implementation Concept</h2>
-      <p>Looking at the Sensay API specification and considering Anthropic's MCP approach, here's how we could implement an MCP interface for Sensay:</p>
+      <p>Looking at the Sensay API specification and considering Anthropic&apos;s MCP approach, here&apos;s how we could implement an MCP interface for Sensay:</p>
       
       <h3>1. MCP Client/Server Architecture</h3>
       <p>The MCP implementation would consist of:</p>
@@ -176,7 +173,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
       "tool": "replica_chat_completion",
       "parameters": {
         "replicaUUID": "\${replicaUUID}",
-        "content": "What's your experience with memory care?"
+        "content": "What&apos;s your experience with memory care?"
       },
       "output_map": { "content": "response" }
     },
@@ -203,6 +200,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
         <li><strong>Cross-platform Consistency</strong>: Same MCP protocol works in any environment</li>
       </ul>
       <p>This approach would make Sensay's powerful replica capabilities more accessible through the MCP paradigm while maintaining the robustness of the existing API infrastructure.</p>
+      {/* Test escapes: &apos; &quot; */}
     </div>
   );
 
@@ -245,7 +243,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
                   rows={8} // Adjusted rows
                   value={inputData}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputData(e.target.value)}
-                  placeholder='{ "owner": "octocat", "repo": "Spoon-Knife", "title": "New Issue Title" }'
+                  placeholder='{ &quot;owner&quot;: &quot;octocat&quot;, &quot;repo&quot;: &quot;Spoon-Knife&quot;, &quot;title&quot;: &quot;New Issue Title&quot; }'
                   className="font-mono text-sm text-black" // Ensure textarea text is visible
                 />
               </div>
