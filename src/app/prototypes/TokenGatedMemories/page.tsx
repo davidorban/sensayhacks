@@ -463,6 +463,19 @@ const TokenGatedMemoriesPage = () => {
               Stake Tokens
             </Button>
             
+            <div className="flex items-center">
+              <div className="flex items-center mr-4">
+                <input
+                  type="checkbox"
+                  id="showDecay"
+                  checked={showMemoryDecay}
+                  onChange={() => setShowMemoryDecay(!showMemoryDecay)}
+                  className="mr-2"
+                />
+                <label htmlFor="showDecay" className="text-sm text-gray-600">Show Memory Decay</label>
+              </div>
+            </div>
+            
             <Tooltip 
               content={`Your current token balance gives you access to all ${getHighestAccessibleTier()} tier memories and below.`}
               placement="bottom"
