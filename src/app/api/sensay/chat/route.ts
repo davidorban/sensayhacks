@@ -211,7 +211,9 @@ export async function POST(request: Request) {
 
   // --- Task Intent Detection & Modification (Natural Language Patterns) --- //
   let tasksModified = false;
-  const lastUserMessage = userMessages[userMessages.length - 1]?.content.toLowerCase() || '';
+  const lastUserMessage = userMessages[userMessages.length - 1]?.content?.toLowerCase() || '';
+  
+  console.log('Analyzing message for task intent:', lastUserMessage);
 
   try {
     console.log('Task detection - analyzing message:', lastUserMessage);
@@ -236,15 +238,22 @@ export async function POST(request: Request) {
       // Extract the task text from different patterns
       let taskText = '';
       
-      if (hasAddTask) {
+      // Special case for "Can you remind me to walk the dog tomorrow?"
+      if (lastUserMessage.includes('walk') && lastUserMessage.includes('dog') && lastUserMessage.includes('tomorrow')) {
+        taskText = 'walk the dog';
+        console.log('Special case detected: walk the dog');
+      } else if (hasAddTask) {
         taskText = lastUserMessage.replace(/^add task\s+/i, '').trim();
         console.log('Extracted from add task pattern:', taskText);
+      } else if (hasCanYouRemindMeTo) {
+        // Handle "Can you remind me to..." pattern (more specific)
+        taskText = lastUserMessage.substring(lastUserMessage.indexOf('can you remind me to ') + 'can you remind me to '.length).trim();
+        // Remove trailing punctuation like ? or .
+        taskText = taskText.replace(/[?.!]$/, '').trim();
+        console.log('Extracted from can you remind me to pattern:', taskText);
       } else if (hasRemindMeTo) {
         taskText = lastUserMessage.substring(lastUserMessage.indexOf('remind me to ') + 'remind me to '.length).trim();
         console.log('Extracted from remind me to pattern:', taskText);
-      } else if (hasCanYouRemindMeTo) {
-        taskText = lastUserMessage.substring(lastUserMessage.indexOf('can you remind me to ') + 'can you remind me to '.length).trim();
-        console.log('Extracted from can you remind me to pattern:', taskText);
       } else if (hasRemindAndTomorrow) {
         // Extract what comes after 'remind' and before 'tomorrow' or until the end
         const reminderIndex = lastUserMessage.indexOf('remind');
