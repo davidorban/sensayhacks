@@ -21,12 +21,7 @@ import {
   Award,
   Star
 } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface MemoryItem {
   id: string;
@@ -279,18 +274,7 @@ const TokenGatedMemoriesPage = () => {
               <h2 className="font-semibold text-gray-800">$SNSY Token Balance</h2>
               <div className="flex items-center">
                 <p className="text-2xl font-bold text-indigo-700">{tokenBalance} <span className="text-sm text-gray-500">tokens</span></p>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 ml-1">
-                        <HelpCircle className="h-4 w-4 text-gray-400" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="text-xs max-w-xs">$SNSY tokens control access to premium AI memories. Higher token holdings unlock more valuable information tiers.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip content="$SNSY tokens control access to premium AI memories. Higher token holdings unlock more valuable information tiers." placement="top" />
               </div>
             </div>
           </div>
@@ -306,19 +290,15 @@ const TokenGatedMemoriesPage = () => {
               Purchase Tokens
             </Button>
             
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full border border-gray-200 flex items-center cursor-help">
-                    Highest Access: <span className="font-semibold ml-1 capitalize">{getHighestAccessibleTier()}</span>
-                    <Star className="h-3 w-3 ml-1 text-amber-500" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p className="text-xs">Your current token balance gives you access to all {getHighestAccessibleTier()} tier memories and below.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip 
+              content={`Your current token balance gives you access to all ${getHighestAccessibleTier()} tier memories and below.`}
+              placement="bottom"
+            >
+              <div className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full border border-gray-200 flex items-center cursor-help">
+                Highest Access: <span className="font-semibold ml-1 capitalize">{getHighestAccessibleTier()}</span>
+                <Star className="h-3 w-3 ml-1 text-amber-500" />
+              </div>
+            </Tooltip>
           </div>
         </div>
         
@@ -396,18 +376,10 @@ const TokenGatedMemoriesPage = () => {
                                 <span className="text-xs text-gray-500">
                                   {memory.tier === 'public' ? 'Free Access' : `${memory.tokenCost} $SNSY tokens`}
                                 </span>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-7 px-2">
-                                        <Info className="h-4 w-4 text-gray-400" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="text-xs">This memory is part of the {memory.tier} tier</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                                <Tooltip 
+                                  content={`This memory is part of the ${memory.tier} tier`}
+                                  placement="right"
+                                />
                               </div>
                             </div>
                           ) : (
@@ -477,7 +449,7 @@ const TokenGatedMemoriesPage = () => {
             <TabsContent value="tiers" className="flex-1 p-0 mt-0">
               <div className="p-6 space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Access Tiers Overview</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">Access Tiers Overview</h3>
                   <p className="text-gray-600 mb-6">
                     $SNSY tokens provide tiered access to exclusive AI memories and knowledge. Higher token holdings unlock more valuable information.
                   </p>
@@ -523,24 +495,19 @@ const TokenGatedMemoriesPage = () => {
                             </div>
                             
                             <div className="mt-4">
-                              <TooltipProvider>
-                                <TooltipTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    className="w-full"
-                                  >
-                                    <HelpCircle className="h-4 w-4 mr-2" />
-                                    Learn More
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                  <div className="p-4 text-sm text-gray-600">
-                                    <h5 className="font-semibold text-gray-800">{tier.details.title}</h5>
-                                    <p>{tier.details.content}</p>
-                                  </div>
-                                </TooltipContent>
-                              </TooltipProvider>
+                              <Tooltip 
+                                content={tier.details.content}
+                                placement="top"
+                              >
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="w-full"
+                                >
+                                  <HelpCircle className="h-4 w-4 mr-2" />
+                                  {tier.details.title}
+                                </Button>
+                              </Tooltip>
                             </div>
                             
                             {!isAccessible && (
@@ -794,7 +761,7 @@ const TokenGatedMemoriesPage = () => {
                           <div className="mt-2">
                             <Button 
                               variant="outline" 
-                              size="sm" 
+                              size="sm"
                               className="w-full"
                               onClick={(e) => {
                                 e.stopPropagation();
