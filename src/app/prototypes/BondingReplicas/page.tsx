@@ -112,7 +112,8 @@ const BondingReplicasPage = () => {
       }));
       setReplicas(updatedReplicas);
     }
-  }, [isBonded, replicas]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBonded]);
 
   const handleToggleBonding = () => {
     const newState = !isBonded;
