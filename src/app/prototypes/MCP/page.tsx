@@ -10,7 +10,7 @@ const MCPPage = () => {
   const [toolName, setToolName] = useState<string>('sensay.natural_language_query'); 
   const [inputData, setInputData] = useState<string>('{\n  "query": "Who are the managers with the most popular Replicas in our organization?",\n  "max_results": 5,\n  "include_sources": true\n}'); 
   // Keeping apiKey state for future implementation
-  const [, ] = useState<string>(''); 
+  const [apiKey, setApiKey] = useState<string>(''); 
   const [responseString, setResponseString] = useState<string | null>(null); 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
