@@ -72,8 +72,8 @@ The monitor uses the following approach:
 
 1. **Polling**: Checks for new deployments every 10 seconds using `vercel list --yes`
 2. **Deployment Tracking**: When a new deployment is detected, monitors its status
-3. **Status Checks**: Polls the deployment status every 5 seconds using `vercel inspect --yes`
-4. **Error Handling**: If a deployment fails, retrieves and analyzes the logs with `vercel logs --yes`
+3. **Status Checks**: Polls the deployment status every 5 seconds using `vercel inspect`
+4. **Error Handling**: If a deployment fails, retrieves and analyzes the logs with `vercel logs`
 
 ## Troubleshooting
 
