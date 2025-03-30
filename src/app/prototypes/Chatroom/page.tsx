@@ -101,8 +101,6 @@ const ChatroomPage = () => {
 
     // Generate more interactive and contextual responses based on bonding status
     setTimeout(() => {
-      const replicaResponses: ChatMessage[] = [];
-      
       // First pass: selected replicas generate their responses
       selectedReplicas.forEach((replicaId, index) => {
         const replica = availableReplicas.find(r => r.id === replicaId);
@@ -177,7 +175,7 @@ const ChatroomPage = () => {
   };
 
   // Helper function to determine the topic of a query (simplified mock)
-  const getQueryTopic = (query: string): string => {
+  const getQueryTopic = (_query: string): string => {
     const topics = [
       "AI collaboration mechanisms",
       "shared memory systems",
