@@ -51,6 +51,7 @@ interface Transaction {
   timestamp: string;
   status: string;
   memoryId?: string;
+  memoryTitle?: string;
 }
 
 const TokenGatedMemoriesPage = () => {
