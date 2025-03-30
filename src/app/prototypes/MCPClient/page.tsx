@@ -81,7 +81,7 @@ const MCPClientPage = () => {
       </ul>
       <p><strong>Tool Registry</strong>:</p>
       <ul>
-        <li>Register Sensay API endpoints as "tools" that can be invoked via MCP</li>
+        <li>Register Sensay API endpoints as &quot;tools&quot; that can be invoked via MCP</li>
         <li>Map Sensay endpoints to tool definitions with parameters and expected responses</li>
       </ul>
       <p><strong>Execution Engine</strong>:</p>
@@ -96,7 +96,7 @@ const MCPClientPage = () => {
 Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
 
       <h3>4. Tool Definition Example</h3>
-      <p>Here's how a Sensay API endpoint could be defined as an MCP tool:</p>
+      <p>Here&apos;s how a Sensay API endpoint could be defined as an MCP tool:</p>
       <pre><code className="language-json">{`{
   "tool_name": "replica_chat_completion",
   "description": "Get a completion response from a replica",
@@ -123,7 +123,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
   "returns": {
     "content": {
       "type": "string",
-      "description": "The replica's response"
+      "description": "The replica&apos;s response"
     }
   },
   "endpoint": "/v1/replicas/{replicaUUID}/chat/completions"
@@ -140,7 +140,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
       <ol>
         <li><strong>Replica Discovery</strong>: <code>find_replica</code> - Search for replicas by tags, name, or other criteria</li>
         <li><strong>Multi-Replica Chat</strong>: <code>start_group_chat</code> - Initiate a conversation with multiple replicas</li>
-        <li><strong>Memory Management</strong>: <code>manage_memory</code> - Interact with a replica's knowledge/memory</li>
+        <li><strong>Memory Management</strong>: <code>manage_memory</code> - Interact with a replica&apos;s knowledge/memory</li>
         <li><strong>Content Generation Pipeline</strong>: Chain multiple Sensay API calls in a single MCP command</li>
       </ol>
 
@@ -199,7 +199,7 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code></pre>
         <li><strong>Contextual Awareness</strong>: MCP maintains state between commands</li>
         <li><strong>Cross-platform Consistency</strong>: Same MCP protocol works in any environment</li>
       </ul>
-      <p>This approach would make Sensay's powerful replica capabilities more accessible through the MCP paradigm while maintaining the robustness of the existing API infrastructure.</p>
+      <p>This approach would make Sensay&apos;s powerful replica capabilities more accessible through the MCP paradigm while maintaining the robustness of the existing API infrastructure.</p>
       {/* Test escapes: &apos; &quot; */}
     </div>
   );
