@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
-const MCPClientPage = () => {
+const MCPPage = () => {
   const [toolName, setToolName] = useState<string>(''); // Name of the MCP tool to invoke
   const [inputData, setInputData] = useState<string>(''); // Input data for the tool (as JSON string)
   const [apiKey, ] = useState<string>(''); // Placeholder for potential MCP auth/config
@@ -66,7 +66,7 @@ const MCPClientPage = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6"> 
-      <h1 className="text-2xl font-bold mb-2 text-gray-100">Model Context Protocol (MCP) Client Prototype</h1> 
+      <h1 className="text-2xl font-bold mb-2 text-gray-100">Model Context Protocol (MCP) Prototype</h1> 
       <p className="mb-6 text-sm text-gray-300"> 
         A prototype interface to interact with tools via the Model Context Protocol.
         See <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">modelcontextprotocol.io</a> and the
@@ -144,4 +144,4 @@ const MCPClientPage = () => {
   );
 };
 
-export default MCPClientPage;
+export default MCPPage;

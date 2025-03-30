@@ -9,7 +9,7 @@ export default function Home() {
   const prototypes = [
     { name: 'Replica Task Memory', path: '/prototypes/ReplicaTaskMemory' },
     { name: 'Pure Voice', path: '/prototypes/PureVoice' },
-    { name: 'MCP Client/Server', path: '/prototypes/MCPClient' },
+    { name: 'MCP', path: '/prototypes/MCP' },
     { name: 'Token-Gated Memories', path: '/prototypes/TokenGatedMemories' },
     { name: 'Token-Guided Evolution', path: '/prototypes/TokenGuidedEvolution' },
     { name: 'Bonding Replicas', path: '/prototypes/BondingReplicas' },

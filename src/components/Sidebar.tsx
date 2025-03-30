@@ -1,12 +1,22 @@
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 
 const Sidebar = ({ children }: { children?: React.ReactNode }) => {
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
+    'MCP': true, // Default expanded
+  });
+
   const prototypes = [
     { name: 'Bonding Replicas', path: '/prototypes/BondingReplicas' },
     { name: 'Chatroom', path: '/prototypes/Chatroom' },
-    { name: 'MCP Client/Server', path: '/prototypes/MCPClient' },
+    { 
+      name: 'MCP', 
+      children: [
+        { name: 'Prototype', path: '/prototypes/MCP' },
+        { name: 'Concept', path: '/prototypes/MCP-Concept' }
+      ]
+    },
     { name: 'Pure Voice', path: '/prototypes/PureVoice' },
     { name: 'Replica Task Memory', path: '/prototypes/ReplicaTaskMemory' },
     { name: 'Token-Gated Memories', path: '/prototypes/TokenGatedMemories' },
@@ -15,6 +25,13 @@ const Sidebar = ({ children }: { children?: React.ReactNode }) => {
 
   // Sort prototypes alphabetically by name
   prototypes.sort((a, b) => a.name.localeCompare(b.name));
+
+  const toggleExpand = (item: string) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [item]: !prev[item]
+    }));
+  };
 
   return (
     <div className="w-64 h-screen bg-gray-800 text-white p-5 flex flex-col">
@@ -27,10 +44,33 @@ const Sidebar = ({ children }: { children?: React.ReactNode }) => {
             </Link>
           </li>
           {prototypes.map((proto) => (
-            <li key={proto.path} className="mb-3">
-              <Link href={proto.path} className="hover:text-gray-300">
-                {proto.name}
-              </Link>
+            <li key={proto.name} className="mb-3">
+              {proto.children ? (
+                <div>
+                  <div 
+                    className="flex items-center cursor-pointer hover:text-gray-300"
+                    onClick={() => toggleExpand(proto.name)}
+                  >
+                    <span className="mr-2">{expandedItems[proto.name] ? '▼' : '►'}</span>
+                    <span>{proto.name}</span>
+                  </div>
+                  {expandedItems[proto.name] && (
+                    <ul className="ml-6 mt-2">
+                      {proto.children.map((child) => (
+                        <li key={child.path} className="mb-2">
+                          <Link href={child.path} className="hover:text-gray-300 text-gray-400">
+                            {child.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : (
+                <Link href={proto.path} className="hover:text-gray-300">
+                  {proto.name}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
