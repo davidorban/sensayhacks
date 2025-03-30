@@ -609,6 +609,39 @@ const TokenGatedMemoriesPage = () => {
     }, 1000);
   };
 
+  // Handle token purchase
+  const handlePurchaseTokens = () => {
+    if (purchaseAmount <= 0) {
+      alert('Please enter a valid amount of tokens to purchase.');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      // Update token balance
+      setTokenBalance(prev => prev + purchaseAmount);
+      
+      // Add transaction to history
+      const newTransaction: Transaction = {
+        id: `tx-${transactionHistory.length + 1}`,
+        type: 'purchase',
+        amount: purchaseAmount,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        status: 'completed'
+      };
+      
+      setTransactionHistory(prev => [newTransaction, ...prev]);
+      
+      // Close modal and reset purchase amount
+      setShowPurchaseModal(false);
+      setPurchaseAmount(50);
+      
+      setIsLoading(false);
+    }, 1000);
+  };
+
   // Handle memory evolution
   const handleEvolveMemory = (memory: MemoryItem, stage: EvolutionStage) => {
     if (tokenBalance < stage.tokenCost) {
