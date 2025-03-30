@@ -702,14 +702,14 @@ const TokenGatedMemoriesPage = () => {
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                      <History className="h-12 w-12 text-gray-300 mb-2" />
-                      <p>No transactions yet.</p>
-                      <p className="text-sm">Purchase tokens or unlock memories to see your transaction history.</p>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                    <History className="h-12 w-12 text-gray-300 mb-2" />
+                    <p>No transactions yet.</p>
+                    <p className="text-sm">Purchase tokens or unlock memories to see your transaction history.</p>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
