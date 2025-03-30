@@ -878,7 +878,6 @@ const TokenGatedMemoriesPage = () => {
                   
                   <div className="space-y-6">
                     {accessTiers.map((tier) => {
-                      const tierIndex = accessTiers.findIndex(t => t.name === tier.name);
                       const progress = Math.min(100, (tokenBalance / (tier.tokenRequirement || 1)) * 100) || 0;
                       
                       return (
