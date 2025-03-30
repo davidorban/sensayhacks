@@ -1,5 +1,8 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ChatMessage {
   id: number;
@@ -22,7 +25,7 @@ const availableReplicas: Replica[] = [
 const ChatroomPage = () => {
   const [selectedReplicas, setSelectedReplicas] = useState<string[]>([availableReplicas[0].id]); // Default to first replica
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 1, sender: 'Assistant Alpha', text: 'Welcome to the multi-replica chatroom!', timestamp: '11:00 AM' },
+    { id: 1, sender: 'Assistant Alpha', text: 'Welcome to the Group Chat prototype! Select replicas and send a message.', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit" }) },
   ]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -30,7 +33,7 @@ const ChatroomPage = () => {
   const handleReplicaSelection = (replicaId: string) => {
     setSelectedReplicas(prev =>
       prev.includes(replicaId)
-        ? prev.filter(id => id !== replicaId)
+        ? prev.length > 1 ? prev.filter(id => id !== replicaId) : prev // Keep at least one selected
         : [...prev, replicaId]
     );
   };
@@ -75,43 +78,143 @@ const ChatroomPage = () => {
     return colors[index % colors.length]; 
   };
 
-  return (
-    <div className="flex-1 flex flex-col bg-gray-900 p-6"> {/* Outer Dark BG */}
-      {/* Header Area */}
-      <h1 className="text-2xl font-bold mb-2 text-gray-100">Chatroom (Mock)</h1> {/* Light Text */}
-      <p className="mb-6 text-sm text-gray-300"> {/* Light Text */}
-        Concept: A simulated chatroom where multiple Replicas (and potentially the user) can interact.
-      </p>
+  // Scroll to bottom effect
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-      {/* Content Area - White Rounded Box, taking full height */} 
-      <div className="bg-white rounded-lg shadow-lg flex-1 flex flex-col overflow-hidden"> 
-        {/* Replica Selection - Kept background white, moved padding/border here */}
-        <div className="p-4 border-b border-gray-300 shadow-sm bg-white"> 
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Replicas to Chat With:</label> 
-          <div className="flex flex-wrap gap-2">
+  // Description Component
+  const DescriptionContent = () => (
+    <div className="prose prose-invert max-w-none">
+      <h2>Sensay Replica Group Chat: Collaborative Intelligence</h2>
+      <h3>Overview</h3>
+      <p>The Sensay Replica Group Chat introduces a powerful new paradigm for AI interactions where multiple specialized digital replicas collaborate to solve problems, generate insights, and create value through their collective intelligence.</p>
+
+      <h3>Core Concept</h3>
+      <p>Rather than interacting with a single AI replica, users can create, join, or observe conversations among multiple replicas, each with distinct expertise, roles, or personality traits. These group dynamics create richer, more nuanced outcomes than would be possible through one-on-one interactions.</p>
+
+      <h3>Key Use Cases</h3>
+      <h4>Enterprise Problem-Solving</h4>
+      <ul>
+        <li><strong>Task Delegation</strong>: Leaders delegate complex problems to a team of specialized replicas</li>
+        <li><strong>Multi-Disciplinary Analysis</strong>: Replicas with different expertise areas approach problems from complementary angles</li>
+        <li><strong>Asynchronous Collaboration</strong>: Replicas work through problems over time, notifying humans when solutions are ready</li>
+        <li><strong>Documented Decision Process</strong>: The entire conversation thread provides transparency into how conclusions were reached</li>
+        <li><strong>24/7 Collaboration</strong>: Teams of replicas work continuously, even when humans are offline</li>
+      </ul>
+      <h4>Personal Advisory Panels</h4>
+      <ul>
+        <li><strong>Diverse Perspectives</strong>: Get advice on personal challenges from several viewpoints simultaneously</li>
+        <li><strong>Contrasting Opinions</strong>: Benefit from seeing different approaches to the same problem</li>
+        <li><strong>Rich Discussion</strong>: Watch as replicas discuss, debate, and build upon each other&apos;s ideas</li>
+        <li><strong>Balanced Consideration</strong>: Ensure multiple factors are weighed in life decisions</li>
+      </ul>
+
+      <h3>Conversation Dynamics</h3>
+      <h4>Initiation</h4>
+      <ol>
+        <li>User creates a group chat with a specific topic or question</li>
+        <li>User selects which replicas to include (either pre-existing or purpose-created)</li>
+        <li>User provides initial context, questions, or resources</li>
+        <li>User decides whether to participate actively or review later</li>
+      </ol>
+      <h4>Collaboration Modes</h4>
+      <ul>
+        <li><strong>Moderated</strong>: One replica acts as facilitator, directing the conversation flow</li>
+        <li><strong>Democratic</strong>: All replicas contribute equally to the discussion</li>
+        <li><strong>Structured</strong>: Following specific protocols (e.g., Six Thinking Hats, SWOT analysis)</li>
+        <li><strong>Adversarial</strong>: Replicas intentionally take opposing viewpoints to explore tensions</li>
+      </ul>
+      <h4>Termination Mechanisms</h4>
+      <ul>
+        <li><strong>Goal Achievement</strong>: Conversation ends when specific objectives are accomplished</li>
+        <li><strong>Consensus Detection</strong>: Replicas recognize when they&apos;ve reached agreement</li>
+        <li><strong>Self-Assessment</strong>: Replicas collectively decide when further discussion adds little value</li>
+        <li><strong>Time/Depth Limits</strong>: Predefined constraints on conversation length</li>
+        <li><strong>User Intervention</strong>: Human decides when to conclude the discussion</li>
+      </ul>
+
+      <h3>Value Propositions</h3>
+      <h4>For Enterprises</h4>
+      <ul>
+        <li><strong>Richer Problem Exploration</strong>: Ensure problems are examined from multiple angles</li>
+        <li><strong>Knowledge Synthesis</strong>: Combine insights across departmental boundaries</li>
+        <li><strong>Process Improvement</strong>: Identify gaps and opportunities in workflows</li>
+        <li><strong>Institutional Memory</strong>: Preserve complex reasoning chains for future reference</li>
+        <li><strong>24/7 Collaboration</strong>: Teams of replicas work continuously, even when humans are offline</li>
+      </ul>
+      <h4>For Individuals</h4>
+      <ul>
+        <li><strong>Personal Growth</strong>: Gain deeper insights into personal challenges</li>
+        <li><strong>Decision Support</strong>: Make more balanced decisions with diverse input</li>
+        <li><strong>Learning Enhancement</strong>: Observe expert discussions on topics of interest</li>
+        <li><strong>Entertainment</strong>: Enjoy watching interesting conversations unfold</li>
+        <li><strong>Emotional Support</strong>: Receive varied perspectives during difficult life moments</li>
+      </ul>
+
+      <h3>Technical Framework</h3>
+      <h4>Replica Differentiation</h4>
+      <ul>
+        <li><strong>Specialization</strong>: Expertise in different subject areas</li>
+        <li><strong>Personality</strong>: Varied communication styles and approaches</li>
+        <li><strong>Knowledge Base</strong>: Access to different information sources</li>
+        <li><strong>Reasoning Styles</strong>: Analytical, creative, critical, practical, etc.</li>
+      </ul>
+      <h4>Conversation Management</h4>
+      <ul>
+        <li><strong>Thread Organization</strong>: Maintaining coherent discussion structure</li>
+        <li><strong>Balance Mechanisms</strong>: Ensuring all replicas contribute appropriately</li>
+        <li><strong>Progress Tracking</strong>: Monitoring advancement toward goals</li>
+        <li><strong>Semantic Analysis</strong>: Detecting repetition, novelty, and convergence</li>
+      </ul>
+      <h4>Human Integration</h4>
+      <ul>
+        <li><strong>Notification Systems</strong>: Alerting users when significant developments occur</li>
+        <li><strong>Intervention Options</strong>: Allowing humans to steer, redirect, or refocus discussions</li>
+        <li><strong>Summarization</strong>: Condensing long discussions into digestible insights</li>
+        <li><strong>Follow-up</strong>: Enabling humans to ask clarifying questions about the discussion</li>
+      </ul>
+    </div>
+  );
+
+  return (
+    <div className="flex-1 flex flex-col bg-gray-900 p-6 text-gray-100">
+      <h1 className="text-3xl font-bold mb-4 text-center">Replica Group Chat Prototype</h1>
+
+      {/* Description Section */}
+      <Card className="mb-6 bg-card border">
+        <CardHeader>
+          <CardTitle className="text-xl text-card-foreground">Concept: Sensay Replica Group Chat</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DescriptionContent />
+        </CardContent>
+      </Card>
+
+      {/* Interactive Chat Section - Use Card for consistent styling */} 
+      <Card className="flex-1 flex flex-col overflow-hidden bg-white text-gray-900"> 
+        <CardHeader className="border-b border-gray-300"> 
+          <CardTitle className="text-lg">Chat Participants</CardTitle> 
+          <div className="flex flex-wrap gap-2 pt-2">
             {availableReplicas.map(replica => (
-              <button
+              <Button
                 key={replica.id}
+                variant={selectedReplicas.includes(replica.id) ? "default" : "outline"}
+                size="sm"
                 onClick={() => handleReplicaSelection(replica.id)}
-                className={`px-3 py-1 rounded-full text-sm font-medium border
-                  ${selectedReplicas.includes(replica.id)
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                  }`}
               >
                 {replica.name}
-              </button>
+              </Button>
             ))}
           </div>
-        </div>
+        </CardHeader>
 
-        {/* Chat Display Area - Removed individual padding/border/bg */}
-        <div className="flex-grow overflow-y-auto p-4"> {/* Add padding here */} 
+        <CardContent className="flex-grow overflow-y-auto p-4"> {/* Use CardContent */} 
           <div className="space-y-4">
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.sender === 'User' ? 'justify-end' : 'justify-start'}`}>
                 {/* Bubble styling remains */}
-                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow ${msg.sender === 'User' ? 'bg-indigo-500 text-white' : getBgColor(msg.sender)}`}>
+                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow ${msg.sender === 'User' ? 'bg-primary text-primary-foreground' : getBgColor(msg.sender)}`}>
                   <p className="text-sm font-semibold mb-0.5 ${msg.sender !== 'User' ? 'text-gray-700' : ''}">{msg.sender}</p> {/* Ensure sender name is visible */}
                   <p className={`text-sm ${msg.sender !== 'User' ? 'text-gray-900' : ''}`}>{msg.text}</p>
                   <span className={`text-xs opacity-70 block mt-1 text-right ${msg.sender !== 'User' ? 'text-gray-600' : ''}`}>{msg.timestamp}</span> {/* Ensure timestamp is visible */}
@@ -120,33 +223,32 @@ const ChatroomPage = () => {
             ))}
             <div ref={messagesEndRef} />
           </div>
-        </div>
+        </CardContent>
 
-        {/* Input Area - Kept light bg, removed outer border */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50"> 
-          <div className="flex items-center space-x-3">
-            <input
+        {/* Input Area - Use CardFooter for consistency */} 
+        <div className="p-4 border-t border-gray-200 bg-background"> {/* Consistent bg */}
+          <div className="flex items-center space-x-2">
+            <Input
               type="text"
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder={selectedReplicas.length > 0 ? "Type your message..." : "Select at least one replica to chat"}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()} // Send on Enter, not Shift+Enter
+              placeholder={selectedReplicas.length > 0 ? "Type your message..." : "Select at least one replica"}
               disabled={selectedReplicas.length === 0}
-              className="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+              className="flex-grow"
             />
-            <button
+            <Button
               onClick={handleSendMessage}
               disabled={newMessage.trim() === '' || selectedReplicas.length === 0}
-              className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Send
-            </button>
+            </Button>
           </div>
           <p className="mt-2 text-xs text-gray-500">
             (Note: Interactions are simulated. Select replicas above.)
           </p>
         </div>
-      </div> 
+      </Card>
     </div>
   );
 };
