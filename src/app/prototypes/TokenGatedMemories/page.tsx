@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -309,63 +309,9 @@ const TokenGatedMemoriesPage = () => {
       setShowStakingModal(false);
       
       // Calculate rewards
-      calculateStakingRewards();
+      const rewards = Math.floor(stakedTokens * 0.05);
+      setStakingRewards(rewards);
     }, 2000);
-  };
-
-  // Calculate staking rewards
-  const calculateStakingRewards = () => {
-    // Simple reward calculation: 5% of staked tokens
-    const rewards = Math.floor(stakedTokens * 0.05);
-    setStakingRewards(rewards);
-  };
-
-  // Claim staking rewards
-  const claimStakingRewards = () => {
-    if (stakingRewards <= 0) return;
-    
-    setTokenBalance(prev => prev + stakingRewards);
-    setStakingRewards(0);
-    
-    // Add transaction record
-    setTransactionHistory(prev => [
-      {
-        id: `tx-${Date.now()}`,
-        type: 'reward',
-        amount: stakingRewards,
-        timestamp: new Date().toLocaleString(),
-        status: 'completed'
-      },
-      ...prev
-    ]);
-  };
-
-  // Purchase a marketplace memory
-  const purchaseMarketplaceMemory = (memory: MemoryItem) => {
-    if (tokenBalance < memory.tokenCost) {
-      alert('Insufficient token balance to purchase this memory.');
-      return;
-    }
-
-    setTokenBalance(prev => prev - memory.tokenCost);
-    
-    // Add transaction record
-    setTransactionHistory(prev => [
-      {
-        id: `tx-${Date.now()}`,
-        type: 'purchase',
-        amount: memory.tokenCost,
-        timestamp: new Date().toLocaleString(),
-        status: 'completed',
-        memoryId: memory.id,
-        memoryTitle: memory.title
-      },
-      ...prev
-    ]);
-    
-    // Remove from marketplace and add to user memories
-    setMarketplaceMemories(prev => prev.filter(m => m.id !== memory.id));
-    // In a real app, we would add this to the user's memories
   };
 
   // Handle token purchase
@@ -418,6 +364,34 @@ const TokenGatedMemoriesPage = () => {
       ]);
       setIsLoading(false);
     }, 1500);
+  };
+
+  // Purchase a marketplace memory
+  const purchaseMarketplaceMemory = (memory: MemoryItem) => {
+    if (tokenBalance < memory.tokenCost) {
+      alert('Insufficient token balance to purchase this memory.');
+      return;
+    }
+
+    setTokenBalance(prev => prev - memory.tokenCost);
+    
+    // Add transaction record
+    setTransactionHistory(prev => [
+      {
+        id: `tx-${Date.now()}`,
+        type: 'purchase',
+        amount: memory.tokenCost,
+        timestamp: new Date().toLocaleString(),
+        status: 'completed',
+        memoryId: memory.id,
+        memoryTitle: memory.title
+      },
+      ...prev
+    ]);
+    
+    // Remove from marketplace and add to user memories
+    setMarketplaceMemories(prev => prev.filter(m => m.id !== memory.id));
+    // In a real app, we would add this to the user's memories
   };
 
   // Check if a memory is accessible based on token balance
@@ -642,7 +616,7 @@ const TokenGatedMemoriesPage = () => {
                                   setShowPurchaseModal(true);
                                 }}
                               >
-                                <Coins className="h-4 w-4 mr-1" />
+                                <Coins className="h-4 w-4 mr-2" />
                                 Purchase {memory.tokenCost - tokenBalance} more tokens
                               </Button>
                             )}
@@ -1248,6 +1222,26 @@ const TokenGatedMemoriesPage = () => {
                 className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 {isLoading ? 'Processing...' : 'Stake Tokens'}
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (stakingRewards <= 0) return;
+                  setTokenBalance(prev => prev + stakingRewards);
+                  setStakingRewards(0);
+                  setTransactionHistory(prev => [
+                    {
+                      id: `tx-${Date.now()}`,
+                      type: 'reward',
+                      amount: stakingRewards,
+                      timestamp: new Date().toLocaleString(),
+                      status: 'completed'
+                    },
+                    ...prev
+                  ]);
+                }}
+                disabled={stakingRewards <= 0}
+              >
+                Claim Rewards
               </Button>
             </div>
           </div>
