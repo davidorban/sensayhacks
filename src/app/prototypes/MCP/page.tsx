@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const MCPPage = () => {
   const [toolName, setToolName] = useState<string>('sensay.natural_language_query'); 
   const [inputData, setInputData] = useState<string>('{\n  "query": "Find information about climate change adaptation strategies",\n  "max_results": 5,\n  "include_sources": true\n}'); 
-  const [apiKey, ] = useState<string>(''); 
+  // Keeping apiKey state for future implementation
+  const [, ] = useState<string>(''); 
   const [responseString, setResponseString] = useState<string | null>(null); 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,16 +26,10 @@ const MCPPage = () => {
       return;
     }
 
-    let parsedInputData: object;
     try {
-      parsedInputData = JSON.parse(inputData);
-    } catch {
-      setError('Invalid JSON in Input Data.');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
+      // Parse input data for validation only
+      JSON.parse(inputData);
+      
       // Simulate a response for demonstration purposes
       await new Promise(resolve => setTimeout(resolve, 1500));
       

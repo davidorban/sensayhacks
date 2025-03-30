@@ -1,20 +1,10 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from 'lucide-react';
 
 const MCPConceptPage = () => {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Simulate loading time for the content
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
+  const [isLoading] = useState<boolean>(false);
 
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6">
@@ -29,11 +19,6 @@ const MCPConceptPage = () => {
             <div className="flex items-center justify-center h-40">
               <Loader2 className="animate-spin h-8 w-8 text-indigo-600" />
               <span className="ml-2 text-gray-600">Loading concept description...</span>
-            </div>
-          ) : error ? (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-              <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">{error}</span>
             </div>
           ) : (
             <div className="prose prose-slate max-w-none">
