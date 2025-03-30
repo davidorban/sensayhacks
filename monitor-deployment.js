@@ -333,23 +333,32 @@ async function monitorDeployment(deploymentId) {
         log('CLI Output:', colors.yellow);
         log(statusOutput, colors.yellow);
         
-        // More robust status detection - look for the status line and extract the word after any bullet character
-        const statusLines = statusOutput.split('\n').filter(line => line.toLowerCase().includes('status'));
-        log(`Found ${statusLines.length} status lines:`, colors.yellow);
-        
-        for (const statusLine of statusLines) {
-          log(`Status line: ${statusLine}`, colors.yellow);
+        // Direct check for Ready or Error status in the output
+        if (statusOutput.includes('status      ● Ready')) {
+          status = 'Ready';
+          log('Found Ready status in the output!', colors.green);
+        } else if (statusOutput.includes('status      ● Error')) {
+          status = 'Error';
+          log('Found Error status in the output!', colors.red);
+        } else {
+          // Try to find any status line
+          const statusLines = statusOutput.split('\n').filter(line => line.trim().toLowerCase().includes('status'));
+          log(`Found ${statusLines.length} status lines:`, colors.yellow);
           
-          // Check for the word "Ready" in the status line
-          if (statusLine.includes('Ready')) {
-            status = 'Ready';
-            break;
-          }
-          
-          // Check for the word "Error" in the status line
-          if (statusLine.includes('Error')) {
-            status = 'Error';
-            break;
+          for (const statusLine of statusLines) {
+            log(`Status line: ${statusLine}`, colors.yellow);
+            
+            // Check for the word "Ready" in the status line
+            if (statusLine.includes('Ready')) {
+              status = 'Ready';
+              break;
+            }
+            
+            // Check for the word "Error" in the status line
+            if (statusLine.includes('Error')) {
+              status = 'Error';
+              break;
+            }
           }
         }
         
