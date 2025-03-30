@@ -209,14 +209,44 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 
-  // --- Task Intent Detection & Modification (Simple Keyword Matching) --- //
+  // --- Task Intent Detection & Modification (Natural Language Patterns) --- //
   let tasksModified = false;
   const lastUserMessage = userMessages[userMessages.length - 1]?.content.toLowerCase() || '';
 
   try {
     // --- ADD --- //
-    if (lastUserMessage.startsWith('add task ') || lastUserMessage.startsWith('remind me to ')) {
-      const taskText = lastUserMessage.replace(/^(add task|remind me to)\s+/i, '').trim();
+    // Check for various ways to add a task or reminder
+    if (lastUserMessage.startsWith('add task ') || 
+        lastUserMessage.includes('remind me to ') || 
+        lastUserMessage.includes('can you remind me to ') ||
+        (lastUserMessage.includes('remind') && lastUserMessage.includes('tomorrow'))) {
+      
+      // Extract the task text from different patterns
+      let taskText = '';
+      
+      if (lastUserMessage.startsWith('add task ')) {
+        taskText = lastUserMessage.replace(/^add task\s+/i, '').trim();
+      } else if (lastUserMessage.includes('remind me to ')) {
+        taskText = lastUserMessage.substring(lastUserMessage.indexOf('remind me to ') + 'remind me to '.length).trim();
+      } else if (lastUserMessage.includes('can you remind me to ')) {
+        taskText = lastUserMessage.substring(lastUserMessage.indexOf('can you remind me to ') + 'can you remind me to '.length).trim();
+      } else if (lastUserMessage.includes('remind') && lastUserMessage.includes('tomorrow')) {
+        // Extract what comes after 'remind' and before 'tomorrow' or until the end
+        const reminderIndex = lastUserMessage.indexOf('remind');
+        const tomorrowIndex = lastUserMessage.indexOf('tomorrow');
+        
+        if (tomorrowIndex > reminderIndex) {
+          // If 'tomorrow' comes after 'remind'
+          taskText = lastUserMessage.substring(reminderIndex + 'remind'.length, tomorrowIndex).trim();
+        } else {
+          // If 'tomorrow' comes before 'remind' or other cases
+          taskText = lastUserMessage.substring(reminderIndex + 'remind'.length).trim();
+        }
+        
+        // Clean up the task text
+        taskText = taskText.replace(/^(me|you|us)\s+(to|about)\s+/i, '').trim();
+        taskText = taskText.replace(/\s+tomorrow\s*/i, '').trim();
+      }
       if (taskText) {
         console.log(`Attempting to add task: "${taskText}" for user ${userId}`);
         const { error: insertError } = await supabase
