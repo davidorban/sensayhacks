@@ -268,7 +268,7 @@ export async function POST(request: Request) {
         
         try {
           // Check if the tasks table exists and is accessible
-          const { data: tablesData, error: tablesError } = await supabase
+          const { error: tablesError } = await supabase
             .from('tasks')
             .select('count')
             .limit(1);
