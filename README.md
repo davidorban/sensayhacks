@@ -32,9 +32,39 @@ This project showcases various UI prototypes for potential Sensay features, buil
     ```
 4.  Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Sensay API Integration
+
+This project includes integration with the Sensay API:
+
+- **Environment Variables:**
+  - `SENSAY_ORGANIZATION_SECRET`: API key for authenticating with the Sensay API (stored securely in Vercel)
+  - `SENSAY_REPLICA_ID`: ID of the Sensay replica to communicate with (default: 16d38fcc-5cb0-4f94-9cee-3e8398ef4700)
+
+- **API Routes:**
+  - `/api/sensay-test/route.ts`: Test endpoint for verifying Sensay API connectivity
+  - `/api/sensay/chat/route.ts`: Production endpoint for the Task Memory prototype
+
+- **Test Page:**
+  - `/sensay-test`: A test page for direct interaction with the Sensay API
+  - Allows configuring user ID and replica ID for testing
+
+## Next Steps
+
+1. **Fix Task List Display Issue:**
+   - Tasks are being detected and stored in Supabase but not appearing in the UI
+   - Investigate the connection between the API response and the frontend task list rendering
+   - Verify Supabase RLS policies and permissions
+
+2. **Enhance Task Detection:**
+   - Improve natural language understanding for task extraction
+   - Add support for more task-related commands (e.g., rescheduling, prioritizing)
+
+3. **Implement Task Sync:**
+   - Add functionality to sync tasks with external calendars or task management systems
+
 ## Implemented Prototypes
 
-The application includes the following mock UI prototypes accessible via the sidebar:
+The application includes the following UI prototypes accessible via the sidebar:
 
 1.  **Replica Task Memory:**
     - **Concept:** A chat interface where a user interacts with a replica that can manage a simple task list based on the conversation.
