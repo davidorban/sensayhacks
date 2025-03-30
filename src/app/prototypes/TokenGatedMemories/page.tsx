@@ -572,6 +572,43 @@ const TokenGatedMemoriesPage = () => {
     }, 1000);
   };
 
+  // Handle marketplace memory purchase
+  const purchaseMarketplaceMemory = (memory: MemoryItem) => {
+    if (tokenBalance < memory.tokenCost) {
+      alert('Insufficient token balance to purchase this memory.');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      // Update token balance
+      setTokenBalance(prev => prev - memory.tokenCost);
+      
+      // Add transaction to history
+      const newTransaction: Transaction = {
+        id: `tx-${transactionHistory.length + 1}`,
+        type: 'purchase',
+        amount: memory.tokenCost,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        status: 'completed',
+        memoryId: memory.id,
+        memoryTitle: memory.title
+      };
+      
+      setTransactionHistory(prev => [newTransaction, ...prev]);
+      
+      // Add memory to user's memories
+      setMemories(prev => [...prev, { ...memory, tier: 'public' }]);
+      
+      // Remove from marketplace
+      setMarketplaceMemories(prev => prev.filter(m => m.id !== memory.id));
+      
+      setIsLoading(false);
+    }, 1000);
+  };
+
   // Handle memory evolution
   const handleEvolveMemory = (memory: MemoryItem, stage: EvolutionStage) => {
     if (tokenBalance < stage.tokenCost) {
