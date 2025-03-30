@@ -87,7 +87,6 @@ const TokenGatedMemoriesPage = () => {
   const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(50);
-  const [stakedTokens, setStakedTokens] = useState(0);
   const [stakingRewards, setStakingRewards] = useState(0);
   const [showStakingModal, setShowStakingModal] = useState(false);
   const [stakeAmount, setStakeAmount] = useState(10);
@@ -606,6 +605,42 @@ const TokenGatedMemoriesPage = () => {
     setShowEvolutionModal(true);
   };
 
+  // Handle staking tokens
+  const handleStakeTokens = () => {
+    if (tokenBalance < stakeAmount) {
+      alert('Insufficient token balance to stake this amount.');
+      return;
+    }
+
+    setIsLoading(true);
+    console.log(`(Mock) Staking ${stakeAmount} $SNSY tokens...`);
+
+    // Simulate staking delay
+    setTimeout(() => {
+      setTokenBalance(prev => prev - stakeAmount);
+      // Removed setStakedTokens(prev => prev + stakeAmount);
+      
+      // Add transaction record
+      setTransactionHistory(prev => [
+        {
+          id: `tx-${Date.now()}`,
+          type: 'stake',
+          amount: stakeAmount,
+          timestamp: new Date().toLocaleString(),
+          status: 'completed'
+        },
+        ...prev
+      ]);
+      
+      setIsLoading(false);
+      setShowStakingModal(false);
+      
+      // Calculate rewards
+      const rewards = Math.floor(stakeAmount * 0.05);
+      setStakingRewards(rewards);
+    }, 2000);
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-gray-900 p-6"> 
       <h1 className="text-2xl font-bold mb-2 text-gray-100">Token-Gated Memories</h1> 
@@ -844,26 +879,25 @@ const TokenGatedMemoriesPage = () => {
                   <div className="space-y-6">
                     {accessTiers.map((tier) => {
                       const tierIndex = accessTiers.findIndex(t => t.name === tier.name);
-                      const requiredTokens = accessTiers[tierIndex].tokenRequirement;
                       const progress = Math.min(100, (tokenBalance / (tier.tokenRequirement || 1)) * 100) || 0;
                       
                       return (
                         <div 
                           key={tier.name}
-                          className={`p-4 rounded-lg border ${isAccessible ? tier.color : 'bg-gray-50 border-gray-200'}`}
+                          className={`p-4 rounded-lg border ${tokenBalance >= tier.tokenRequirement ? tier.color : 'bg-gray-50 border-gray-200'}`}
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex items-center">
-                              <div className={`p-2 rounded-full mr-3 ${isAccessible ? 'bg-green-100' : 'bg-gray-200'}`}>
-                                {isAccessible ? <Unlock className="h-5 w-5 text-green-600" /> : tier.icon}
+                              <div className={`p-2 rounded-full mr-3 ${tokenBalance >= tier.tokenRequirement ? 'bg-green-100' : 'bg-gray-200'}`}>
+                                {tokenBalance >= tier.tokenRequirement ? <Unlock className="h-5 w-5 text-green-600" /> : tier.icon}
                               </div>
                               <div>
                                 <h4 className="font-semibold text-gray-800 capitalize">{tier.name} Tier</h4>
                                 <p className="text-sm text-gray-600">{tier.description}</p>
                               </div>
                             </div>
-                            <Badge className={isAccessible ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
-                              {isAccessible ? 'Unlocked' : 'Locked'}
+                            <Badge className={tokenBalance >= tier.tokenRequirement ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
+                              {tokenBalance >= tier.tokenRequirement ? 'Unlocked' : 'Locked'}
                             </Badge>
                           </div>
                           
@@ -896,23 +930,6 @@ const TokenGatedMemoriesPage = () => {
                                 </Button>
                               </Tooltip>
                             </div>
-                            
-                            {!isAccessible && (
-                              <div className="mt-4">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    setPurchaseAmount(tier.tokenRequirement - tokenBalance);
-                                    setShowPurchaseModal(true);
-                                  }}
-                                  className="w-full"
-                                >
-                                  <Coins className="h-4 w-4 mr-2" />
-                                  Purchase {tier.tokenRequirement - tokenBalance} more tokens to unlock
-                                </Button>
-                              </div>
-                            )}
                           </div>
                         </div>
                       );
@@ -1296,7 +1313,6 @@ const TokenGatedMemoriesPage = () => {
                   <div className="space-y-4 mt-4">
                     {memories.filter(m => m.evolutionPath).map((memory) => {
                       const path = evolutionPaths.find(p => p.id === memory.evolutionPath);
-                      const currentStage = path?.stages.find(s => s.id === memory.evolutionStage);
                       const nextStage = path?.stages.find(s => s.id === (memory.evolutionStage || 0) + 1);
                       const canEvolve = canEvolveMemory(memory);
                       
@@ -1410,7 +1426,6 @@ const TokenGatedMemoriesPage = () => {
                 <div className="space-y-3">
                   {accessTiers.filter(tier => tier.tokenRequirement > 0).map((tier) => {
                     const tokensNeeded = Math.max(0, tier.tokenRequirement - tokenBalance);
-                    const isUnlocked = tokenBalance >= tier.tokenRequirement;
                     
                     return (
                       <div 
@@ -1418,7 +1433,7 @@ const TokenGatedMemoriesPage = () => {
                         className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                           purchaseAmount === tokensNeeded && tokensNeeded > 0
                             ? 'bg-indigo-50 border-indigo-200' 
-                            : isUnlocked 
+                            : tokenBalance >= tier.tokenRequirement 
                               ? 'bg-green-50 border-green-200'
                               : 'bg-white border-gray-200 hover:bg-gray-50'
                         }`}
@@ -1426,8 +1441,8 @@ const TokenGatedMemoriesPage = () => {
                       >
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
-                            <div className={`p-2 rounded-full mr-2 ${isUnlocked ? 'bg-green-100' : tier.color}`}>
-                              {isUnlocked ? <Unlock className="h-4 w-4 text-green-600" /> : tier.icon}
+                            <div className={`p-2 rounded-full mr-2 ${tokenBalance >= tier.tokenRequirement ? 'bg-green-100' : tier.color}`}>
+                              {tokenBalance >= tier.tokenRequirement ? <Unlock className="h-4 w-4 text-green-600" /> : tier.icon}
                             </div>
                             <div>
                               <h5 className="font-medium text-gray-800 capitalize">{tier.name} Tier</h5>
@@ -1435,11 +1450,11 @@ const TokenGatedMemoriesPage = () => {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className={`font-semibold ${isUnlocked ? 'text-green-600' : 'text-indigo-600'}`}>
-                              {isUnlocked ? 'Unlocked' : `${tokensNeeded} $SNSY`}
+                            <p className={`font-semibold ${tokenBalance >= tier.tokenRequirement ? 'text-green-600' : 'text-indigo-600'}`}>
+                              {tokenBalance >= tier.tokenRequirement ? 'Unlocked' : `${tokensNeeded} $SNSY`}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {isUnlocked 
+                              {tokenBalance >= tier.tokenRequirement 
                                 ? `${tokenBalance - tier.tokenRequirement} tokens above threshold` 
                                 : `Unlock ${tier.name} tier`}
                             </p>
@@ -1520,7 +1535,7 @@ const TokenGatedMemoriesPage = () => {
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-gray-700">Currently Staked:</span>
-                  <span className="font-semibold">{stakedTokens} $SNSY</span>
+                  <span className="font-semibold">0 $SNSY</span>
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-gray-700">Reward Rate:</span>
