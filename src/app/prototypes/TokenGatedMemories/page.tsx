@@ -463,6 +463,7 @@ const TokenGatedMemoriesPage = () => {
 
     // Set initial token balance
     setTokenBalance(200);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);  
 
   // Check if a memory can be evolved
