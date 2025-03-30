@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 // Define structure for the request body sent to our backend API
@@ -32,7 +32,8 @@ interface ApiResponse {
 
 const SensayApiTestPage = () => {
     // Input States
-    const [userId] = useState<string>('16d38fcc-5cb0-4f94-9cee-3e8398ef4700'); // Correct User ID
+    const [userId, setUserId] = useState<string>('test-user');
+    const [replicaId, setReplicaId] = useState<string>('');
     const [chatContent, setChatContent] = useState<string>('');
 
     // Response/Data States
@@ -59,7 +60,8 @@ const SensayApiTestPage = () => {
                             content: chatContent
                         }
                     ],
-                    userId: userId
+                    userId: userId,
+                    replicaId: replicaId || undefined // Only send if not empty
                 }),
             });
 
@@ -84,6 +86,26 @@ const SensayApiTestPage = () => {
 
             <div className="space-y-4 mb-6 p-4 border rounded bg-gray-50">
                 <h2 className="text-lg font-semibold">Send a Message to Sensay API</h2>
+                <div>
+                    <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-1">User ID:</label>
+                    <input
+                        id="userId"
+                        value={userId}
+                        onChange={(e) => setUserId(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                        placeholder="Enter user ID (defaults to test-user)"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="replicaId" className="block text-sm font-medium text-gray-700 mb-1">Replica ID (Optional):</label>
+                    <input
+                        id="replicaId"
+                        value={replicaId}
+                        onChange={(e) => setReplicaId(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                        placeholder="Leave empty to use the default from environment variables"
+                    />
+                </div>
                 <div>
                     <label htmlFor="chatContent" className="block text-sm font-medium text-gray-700 mb-1">Message Content:</label>
                     <textarea

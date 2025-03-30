@@ -11,6 +11,7 @@ interface RequestBody {
   messages: RequestMessage[];
   model?: string;
   userId?: string;
+  replicaId?: string;
 }
 
 // Environment variables - Make sure to set clean base API URL
@@ -23,6 +24,9 @@ if (SENSAY_API_URL_BASE.endsWith('/')) {
 
 // Authentication secrets
 const SENSAY_ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || '';
+
+// Get replica ID from environment variable with a fallback value
+const SENSAY_REPLICA_ID = process.env.SENSAY_REPLICA_ID || '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
 
 // Set API version to the current date
 const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
@@ -48,11 +52,11 @@ export async function POST(request: NextRequest) {
     console.log('Received messages:', JSON.stringify(messages));
     
     // Use the known working user ID
-    const userId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
+    const userId = requestBody.userId || 'test-user';
     console.log('Using User ID:', userId);
     
-    // Default replica ID - using the known working ID
-    const replicaId = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
+    // Default replica ID - using the environment variable
+    const replicaId = SENSAY_REPLICA_ID;
     console.log('Using Replica ID:', replicaId);
     
     try {
