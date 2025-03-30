@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const Sidebar = ({ children }: { children?: React.ReactNode }) => {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
@@ -10,19 +11,55 @@ const Sidebar = ({ children }: { children?: React.ReactNode }) => {
   });
 
   const prototypes = [
-    { name: 'Bonding Replicas', path: '/prototypes/BondingReplicas' },
-    { name: 'Chatroom', path: '/prototypes/Chatroom' },
+    { 
+      name: 'Bonding Replicas', 
+      children: [
+        { name: 'Concept', path: '/prototypes/BondingReplicas-Concept' },
+        { name: 'Prototype', path: '/prototypes/BondingReplicas' }
+      ]
+    },
+    { 
+      name: 'Chatroom', 
+      children: [
+        { name: 'Concept', path: '/prototypes/Chatroom-Concept' },
+        { name: 'Prototype', path: '/prototypes/Chatroom' }
+      ]
+    },
     { 
       name: 'MCP', 
       children: [
-        { name: 'Prototype', path: '/prototypes/MCP' },
-        { name: 'Concept', path: '/prototypes/MCP-Concept' }
+        { name: 'Concept', path: '/prototypes/MCP-Concept' },
+        { name: 'Prototype', path: '/prototypes/MCP' }
       ]
     },
-    { name: 'Pure Voice', path: '/prototypes/PureVoice' },
-    { name: 'Replica Task Memory', path: '/prototypes/ReplicaTaskMemory' },
-    { name: 'Token-Gated Memories', path: '/prototypes/TokenGatedMemories' },
-    { name: 'Token-Guided Evolution', path: '/prototypes/TokenGuidedEvolution' },
+    { 
+      name: 'Pure Voice', 
+      children: [
+        { name: 'Concept', path: '/prototypes/PureVoice-Concept' },
+        { name: 'Prototype', path: '/prototypes/PureVoice' }
+      ]
+    },
+    { 
+      name: 'Replica Task Memory', 
+      children: [
+        { name: 'Concept', path: '/prototypes/ReplicaTaskMemory-Concept' },
+        { name: 'Prototype', path: '/prototypes/ReplicaTaskMemory' }
+      ]
+    },
+    { 
+      name: 'Token-Gated Memories', 
+      children: [
+        { name: 'Concept', path: '/prototypes/TokenGatedMemories-Concept' },
+        { name: 'Prototype', path: '/prototypes/TokenGatedMemories' }
+      ]
+    },
+    { 
+      name: 'Token-Guided Evolution', 
+      children: [
+        { name: 'Concept', path: '/prototypes/TokenGuidedEvolution-Concept' },
+        { name: 'Prototype', path: '/prototypes/TokenGuidedEvolution' }
+      ]
+    },
   ];
 
   // Sort prototypes alphabetically by name
@@ -39,39 +76,39 @@ const Sidebar = ({ children }: { children?: React.ReactNode }) => {
     <div className="w-64 h-screen bg-gray-800 text-white p-5 flex flex-col">
       <h2 className="text-xl font-semibold mb-6">Prototypes</h2>
       <nav className="flex-grow">
-        <ul>
+        <ul className="space-y-1">
           <li className="mb-3">
-            <Link href="/" className="hover:text-gray-300">
+            <Link href="/" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-700 transition-colors">
               Home
             </Link>
           </li>
           {prototypes.map((proto) => (
-            <li key={proto.name} className="mb-3">
-              {proto.children ? (
-                <div>
-                  <div 
-                    className="flex items-center cursor-pointer hover:text-gray-300"
-                    onClick={() => toggleExpand(proto.name)}
-                  >
-                    <span className="mr-2">{expandedItems[proto.name] ? '▼' : '►'}</span>
-                    <span>{proto.name}</span>
-                  </div>
-                  {expandedItems[proto.name] && (
-                    <ul className="ml-6 mt-2">
-                      {proto.children.map((child) => (
-                        <li key={child.path} className="mb-2">
-                          <Link href={child.path} className="hover:text-gray-300 text-gray-400">
-                            {child.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ) : (
-                <Link href={proto.path} className="hover:text-gray-300">
-                  {proto.name}
-                </Link>
+            <li key={proto.name} className="mb-1">
+              <div 
+                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer hover:bg-gray-700 transition-colors"
+                onClick={() => toggleExpand(proto.name)}
+              >
+                <span>{proto.name}</span>
+                <span className="text-gray-400">
+                  {expandedItems[proto.name] ? 
+                    <ChevronDown className="h-4 w-4" /> : 
+                    <ChevronRight className="h-4 w-4" />
+                  }
+                </span>
+              </div>
+              {expandedItems[proto.name] && proto.children && (
+                <ul className="ml-4 mt-1 space-y-1 border-l border-gray-700 pl-2">
+                  {proto.children.map((child) => (
+                    <li key={child.path}>
+                      <Link 
+                        href={child.path} 
+                        className="flex items-center px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+                      >
+                        {child.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               )}
             </li>
           ))}

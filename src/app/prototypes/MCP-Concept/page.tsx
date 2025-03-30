@@ -75,35 +75,59 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code>
               <p className="my-2">Here's how a Sensay API endpoint could be defined as an MCP tool:</p>
               <pre className="bg-gray-100 p-3 rounded-md text-sm overflow-x-auto my-3">
                 <code className="language-json">{`{
-  "tool_name": "replica_chat_completion",
-  "description": "Get a completion response from a replica",
+  "tool_name": "sensay.natural_language_query",
+  "description": "Query the Sensay knowledge base using natural language",
   "parameters": {
-    "replicaUUID": {
+    "query": {
       "type": "string",
-      "format": "uuid",
-      "description": "The UUID of the replica to chat with"
+      "description": "The natural language query to process"
     },
-    "content": {
-      "type": "string",
-      "description": "Message content to send to the replica"
+    "max_results": {
+      "type": "integer",
+      "description": "Maximum number of results to return",
+      "default": 5
     },
-    "source": {
-      "type": "string",
-      "enum": ["discord", "telegram", "embed", "web", "telegram_autopilot"],
-      "default": "web"
-    },
-    "skip_chat_history": {
+    "include_sources": {
       "type": "boolean",
-      "default": false
+      "description": "Whether to include source information in results",
+      "default": true
     }
   },
   "returns": {
-    "content": {
-      "type": "string",
-      "description": "The replica's response"
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "List of matching results"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "query_processed": {
+          "type": "string"
+        },
+        "total_results_available": {
+          "type": "integer"
+        },
+        "processing_time_ms": {
+          "type": "integer"
+        }
+      }
     }
   },
-  "endpoint": "/v1/replicas/{replicaUUID}/chat/completions"
+  "endpoint": "/v1/natural_language/query"
 }`}</code>
               </pre>
 
@@ -126,11 +150,9 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code>
               <pre className="bg-gray-100 p-3 rounded-md text-sm overflow-x-auto my-3">
                 <code className="language-json">{`{
   "command": "execute_tool",
-  "tool": "replica_chat_completion",
+  "tool": "sensay.natural_language_query",
   "parameters": {
-    "replicaUUID": "03db5651-cb61-4bdf-9ef0-89561f7c9c53",
-    "content": "How can you help me with dementia care?",
-    "source": "web"
+    "query": "What are the benefits of meditation for mental health?"
   },
   "auth": {
     "type": "bearer",
@@ -146,21 +168,13 @@ Client App ← MCP Client ← MCP Server ← Sensay API`}</code>
   "command": "execute_chain",
   "chain": [
     {
-      "tool": "find_replica",
-      "parameters": { "tags": ["Healthcare", "Dementia"] },
-      "output_map": { "items[0].uuid": "replicaUUID" }
-    },
-    {
-      "tool": "replica_chat_completion",
-      "parameters": {
-        "replicaUUID": "\${replicaUUID}",
-        "content": "What's your experience with memory care?"
-      },
-      "output_map": { "content": "response" }
+      "tool": "sensay.natural_language_query",
+      "parameters": { "query": "What are the benefits of meditation for mental health?" },
+      "output_map": { "results[0].title": "result_title" }
     },
     {
       "tool": "summarize_response",
-      "parameters": { "text": "\${response}" }
+      "parameters": { "text": "\${result_title}" }
     }
   ]
 }`}</code>
