@@ -106,29 +106,33 @@ export async function POST(request: NextRequest) {
       // Now try the chat completion API with the same authentication approach
       console.log('Attempting to call Chat Completions API with working authentication...');
       
-      // Format messages for the API
-      const apiMessages = messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
+      // Get the content from the first message
+      const messageContent = messages[0]?.content || '';
       
-      // Define the request body
+      // Define the request body according to Sensay API requirements
       const apiRequestBody = {
-        messages: apiMessages,
-        stream: false
+        content: messageContent,
+        source: 'web',
+        skip_chat_history: false
       };
       
       // Make the API call to Sensay
       console.log('Sending request to Sensay API...');
       const chatCompletionUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${replicaId}/chat/completions`;
       
+      // Add user ID to headers
+      const headers = {
+        ...getAuthHeaders(),
+        'X-USER-ID': userId
+      };
+      
       // Log the headers and request body we're sending
-      console.log('Headers:', JSON.stringify(getAuthHeaders()));
+      console.log('Headers:', JSON.stringify(headers));
       console.log('Request body:', JSON.stringify(apiRequestBody));
       
       const apiResponse = await fetch(chatCompletionUrl, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: headers,
         body: JSON.stringify(apiRequestBody),
       });
       
@@ -163,16 +167,25 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
       
-      // Extract the assistant's message from the response
-      const assistantMessage = parsedResponse.choices?.[0]?.message;
-      
-      if (!assistantMessage) {
-        console.log('No assistant message found in response');
+      // Check if the response has the expected format
+      if (!parsedResponse.hasOwnProperty('success')) {
+        console.log('Unexpected response format from Sensay API');
         return NextResponse.json({
           success: false,
           status: apiResponse.status,
           response: parsedResponse,
-          error: 'No assistant message found in Sensay API response'
+          error: 'Unexpected response format from Sensay API'
+        }, { status: 500 });
+      }
+      
+      // Check if the API call was successful
+      if (!parsedResponse.success) {
+        console.log('Sensay API returned an error:', parsedResponse.error);
+        return NextResponse.json({
+          success: false,
+          status: apiResponse.status,
+          response: parsedResponse,
+          error: parsedResponse.error || 'Unknown error from Sensay API'
         }, { status: 500 });
       }
       
@@ -180,7 +193,7 @@ export async function POST(request: NextRequest) {
       console.log('Successfully received response from Sensay API');
       return NextResponse.json({
         success: true,
-        message: assistantMessage,
+        content: parsedResponse.content,
         response: parsedResponse
       });
     } catch (error) {

@@ -6,27 +6,13 @@ import { Loader2 } from 'lucide-react';
 // Define structure for the request body sent to our backend API
 interface ApiResponse {
     success: boolean;
-    message?: {
-        role?: string;
-        content?: string;
-        [key: string]: unknown;
-    };
+    content?: string;
     response?: {
-        choices?: Array<{
-            message?: {
-                role?: string;
-                content?: string;
-            }
-        }>;
-        [key: string]: unknown;
-    };
-    userCreationAttempts?: Array<{
-        method?: string;
-        status?: number;
-        response?: string;
+        success?: boolean;
+        content?: string;
         error?: string;
         [key: string]: unknown;
-    }>;
+    };
     error?: string;
 }
 
@@ -68,8 +54,8 @@ const SensayApiTestPage = () => {
             const data = await response.json();
             setApiResponse(data); // Store the raw JSON response
 
-            if (!response.ok) {
-                setError(`API Error (${response.status}): ${data.error?.message || data.error || JSON.stringify(data)}`);
+            if (!response.ok || !data.success) {
+                setError(`API Error (${response.status}): ${data.error || JSON.stringify(data)}`);
             }
         } catch (err) {
             console.error('Fetch error:', err);
