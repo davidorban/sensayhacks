@@ -55,11 +55,7 @@ const ReplicaTaskMemoryPage = () => {
     };
     setMessages(prevMessages => [...prevMessages, userMessage]);
 
-    // Prepare message history for API (sending only the last user message based on current backend)
-    // If backend needs full history, adjust this
-    const messagesForApi = [
-        { role: 'user', content: userInput } as const // Use OpenAI-compatible format
-    ];
+    // Prepare message for API (sending only the user message content)
 
     // Add a temporary loading message for the replica
     const loadingMessageId = Date.now() + 1;
@@ -85,14 +81,14 @@ const ReplicaTaskMemoryPage = () => {
               'X-USER-ID': userId, // Send the user ID header
           },
           body: JSON.stringify({
-              messages: messagesForApi,
-              // replicaId: 'rdavidorban' // Removed - API route now uses hardcoded UUID
+              messages: [{ role: 'user', content: userInput }],
+              // Optional: Add replicaId here if you want to override the default
           }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
           console.error("API Error:", data.error);
           // Update loading message with error
           setMessages(prevMessages => prevMessages.map(msg =>
@@ -108,7 +104,7 @@ const ReplicaTaskMemoryPage = () => {
           // Update the loading message with the actual reply
           setMessages(prevMessages => prevMessages.map(msg =>
               msg.id === loadingMessageId
-                  ? { ...msg, text: data.reply || "[No reply content]", isLoading: false }
+                  ? { ...msg, text: data.content || "[No reply content]", isLoading: false }
                   : msg
           ));
 

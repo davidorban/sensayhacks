@@ -119,138 +119,93 @@ export async function POST(request: Request) {
   ];
 
   // --- Call Sensay API --- //
-  // Prepare both standard and experimental API URLs
-  const standardApiUrl = `${SENSAY_API_URL_BASE}/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
-  const experimentalApiUrl = `${SENSAY_API_URL_BASE}/experimental/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
+  // Prepare API URL
+  const apiUrl = `${SENSAY_API_URL_BASE}/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
 
   // --- DEBUG LOGGING --- //
-  console.log('Attempting to call Sensay API with standard path first');
-  console.log('Standard URL:', standardApiUrl);
-  console.log('Experimental URL (fallback):', experimentalApiUrl);
+  console.log('Attempting to call Sensay API');
+  console.log('API URL:', apiUrl);
   console.log('Headers:', {
       'Content-Type': 'application/json',
       'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET ? '********' : 'MISSING', // Don't log the actual key
-      'X-API-Version': '2025-03-25',
+      'X-USER-ID': userId
   });
   
-  // Extract the content of the last message for standard API format
+  // Extract the content of the last message for API format
   const lastMessageContent = userMessages.length > 0 ? userMessages[userMessages.length - 1].content : '';
   console.log('Last message content:', lastMessageContent);
   // --- END DEBUG LOGGING ---
 
   let sensayResponseData: unknown;
   let replyContent: string | null | undefined;
-  let usedApiPath = 'unknown';
 
   try {
-    // --- First try standard API path --- //
-    console.log('Trying standard API path first...');
-    const standardRequestBody = { content: lastMessageContent };
-    console.log('Standard request body:', JSON.stringify(standardRequestBody, null, 2));
+    // Prepare request body with the format that works with the Sensay API
+    const requestBody = {
+      content: lastMessageContent,
+      source: 'web',
+      skip_chat_history: false
+    };
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
     
-    const standardResponse = await fetch(standardApiUrl, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
-        'X-USER-ID': userId,  // Include user ID in headers
-        'X-API-Version': '2025-03-25',
+        'X-USER-ID': userId  // Include user ID in headers
       },
-      body: JSON.stringify(standardRequestBody),
+      body: JSON.stringify(requestBody),
     });
 
-    const standardResponseText = await standardResponse.text();
-    console.log('Standard API response status:', standardResponse.status);
-    console.log('Standard API response body:', standardResponseText);
+    const responseText = await response.text();
+    console.log('API response status:', response.status);
+    console.log('API response body:', responseText);
 
-    if (standardResponse.ok) {
+    if (response.ok) {
       try {
-        sensayResponseData = JSON.parse(standardResponseText);
-        usedApiPath = 'standard';
-        console.log('Standard API call succeeded');
+        sensayResponseData = JSON.parse(responseText);
+        console.log('API call succeeded');
       } catch (e) {
-        console.error('Failed to parse standard API response as JSON:', e);
-        throw new Error('Failed to parse standard API response');
+        console.error('Failed to parse API response as JSON:', e);
+        throw new Error('Failed to parse API response');
       }
     } else {
-      console.log('Standard API call failed, trying experimental path...');
-    }
-
-    // --- If standard failed, try experimental API path --- //
-    if (!standardResponse.ok) {
-      console.log('Trying experimental API path as fallback...');
-      const experimentalRequestBody = { messages: messagesForApi, model: "sensay-default" };
-      console.log('Experimental request body:', JSON.stringify(experimentalRequestBody, null, 2));
-      
-      const experimentalResponse = await fetch(experimentalApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
-          'X-USER-ID': userId,
-          'X-API-Version': '2025-03-25',
-        },
-        body: JSON.stringify(experimentalRequestBody),
-      });
-
-      const experimentalResponseText = await experimentalResponse.text();
-      console.log('Experimental API response status:', experimentalResponse.status);
-      console.log('Experimental API response body:', experimentalResponseText);
-
-      if (experimentalResponse.ok) {
-        try {
-          sensayResponseData = JSON.parse(experimentalResponseText);
-          usedApiPath = 'experimental';
-          console.log('Experimental API call succeeded');
-        } catch (e) {
-          console.error('Failed to parse experimental API response as JSON:', e);
-          throw new Error('Failed to parse experimental API response');
-        }
-      } else {
-        // Both API calls failed
-        let errorMessage = 'Unknown Sensay API error';
-        try {
-          const jsonError = JSON.parse(experimentalResponseText);
-          errorMessage = typeof jsonError.error === 'string' ? jsonError.error : 
-                        (jsonError.message || 'Unknown error format');
-        } catch {
-          // Use text if JSON parsing fails
-          errorMessage = experimentalResponseText || experimentalResponse.statusText;
-        }
-        console.error(`Both API paths failed. Last error (${experimentalResponse.status}):`, errorMessage);
-        throw new Error(`Sensay API Error (${experimentalResponse.status}): ${errorMessage}`);
+      // API call failed
+      let errorMessage = 'Unknown Sensay API error';
+      try {
+        const jsonError = JSON.parse(responseText);
+        errorMessage = typeof jsonError.error === 'string' ? jsonError.error : 
+                      (jsonError.message || 'Unknown error format');
+      } catch {
+        // Use text if JSON parsing fails
+        errorMessage = responseText || response.statusText;
       }
+      console.error(`API call failed. Error (${response.status}):`, errorMessage);
+      throw new Error(`Sensay API Error (${response.status}): ${errorMessage}`);
     }
 
-    // --- Parse the successful response --- //
-    if (hasChoicesProperty(sensayResponseData) && Array.isArray(sensayResponseData.choices) && sensayResponseData.choices.length > 0) {
-        const firstChoice = sensayResponseData.choices[0];
-        if (typeof firstChoice === 'object' && firstChoice !== null && 'message' in firstChoice) {
-            const message = firstChoice.message;
-            if (typeof message === 'object' && message !== null && 'content' in message && typeof message.content === 'string') {
-                replyContent = message.content;
-            }
-        }
+    // Extract content from the response
+    if (sensayResponseData && typeof sensayResponseData === 'object' && sensayResponseData !== null) {
+      if ('content' in sensayResponseData && typeof sensayResponseData.content === 'string') {
+        replyContent = sensayResponseData.content;
+      }
     }
 
     if (replyContent === undefined) {
-        console.error('Could not extract valid reply content from Sensay success response:', sensayResponseData);
-        replyContent = "[Error: Failed to parse reply content from Sensay]";
+      console.error('Could not extract valid content from Sensay response:', sensayResponseData);
+      replyContent = "[Error: Failed to parse content from Sensay]";
     }
 
-    console.log(`Sensay API Success (${usedApiPath}). Reply:`, replyContent);
+    console.log(`Sensay API Success. Reply:`, replyContent);
   } catch (error: unknown) {
     console.error('Error calling Sensay API:', error);
     // Network or other fetch error, return generic error and tasks fetched earlier
     // Use the tasks fetched *before* the failed Sensay call in the response
     return NextResponse.json({ 
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to communicate with Sensay API', 
-      tasks: tasksFromSupabase,
-      apiDetails: {
-        standardApiUrl,
-        experimentalApiUrl,
-        lastUsedPath: usedApiPath
-      }
+      tasks: tasksFromSupabase
     }, { status: 500 });
   }
 
@@ -353,5 +308,9 @@ export async function POST(request: Request) {
 
   // --- Return Response --- //
   // Return the Sensay reply and the final tasks list (potentially updated)
-  return NextResponse.json({ reply: replyContent, tasks: tasksFromSupabase });
+  return NextResponse.json({ 
+    success: true, 
+    content: replyContent, 
+    tasks: tasksFromSupabase 
+  });
 }
