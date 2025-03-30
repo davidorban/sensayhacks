@@ -531,6 +531,46 @@ const TokenGatedMemoriesPage = () => {
     return freshness;
   };
 
+  // Handle memory unlock
+  const handleUnlockMemory = (memory: MemoryItem) => {
+    if (tokenBalance < memory.tokenCost) {
+      alert('Insufficient token balance to unlock this memory.');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      // Update token balance
+      setTokenBalance(prev => prev - memory.tokenCost);
+      
+      // Add transaction to history
+      const newTransaction: Transaction = {
+        id: `tx-${transactionHistory.length + 1}`,
+        type: 'unlock',
+        amount: memory.tokenCost,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        status: 'completed',
+        memoryId: memory.id,
+        memoryTitle: memory.title
+      };
+      
+      setTransactionHistory(prev => [newTransaction, ...prev]);
+      
+      // Update memory to be unlocked
+      setMemories(prev => 
+        prev.map(m => 
+          m.id === memory.id 
+            ? { ...m, tier: 'public', tokenCost: 0 } 
+            : m
+        )
+      );
+      
+      setIsLoading(false);
+    }, 1000);
+  };
+
   // Handle memory evolution
   const handleEvolveMemory = (memory: MemoryItem, stage: EvolutionStage) => {
     if (tokenBalance < stage.tokenCost) {
@@ -866,7 +906,7 @@ const TokenGatedMemoriesPage = () => {
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex items-center">
-                              <div className={`p-2 rounded-full mr-3 ${tokenBalance >= tier.tokenRequirement ? 'bg-green-100' : 'bg-gray-200'}`}>
+                              <div className={`p-2 rounded-full mr-3 ${tokenBalance >= tier.tokenRequirement ? 'bg-green-100' : tier.color}`}>
                                 {tokenBalance >= tier.tokenRequirement ? <Unlock className="h-5 w-5 text-green-600" /> : tier.icon}
                               </div>
                               <div>
