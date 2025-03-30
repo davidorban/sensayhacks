@@ -119,7 +119,7 @@ function suggestFixes(errorLog) {
  */
 async function getLatestDeploymentId() {
   try {
-    const output = await executeCommandAsync('vercel ls --limit 1');
+    const output = await executeCommandAsync('vercel list');
     const lines = output.split('\n').filter(line => line.trim() !== '');
     
     // Skip the header line and get the first deployment

@@ -70,7 +70,7 @@ For each detected error, the monitor will provide a specific suggestion based on
 
 The monitor uses the following approach:
 
-1. **Polling**: Checks for new deployments every 10 seconds using `vercel ls`
+1. **Polling**: Checks for new deployments every 10 seconds using `vercel list`
 2. **Deployment Tracking**: When a new deployment is detected, monitors its status
 3. **Status Checks**: Polls the deployment status every 5 seconds using `vercel inspect`
 4. **Error Handling**: If a deployment fails, retrieves and analyzes the logs
