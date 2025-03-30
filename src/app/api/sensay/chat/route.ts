@@ -20,9 +20,7 @@ interface Task {
 }
 
 // Type guard to check if an object has a 'choices' property (basic Sensay success check)
-function hasChoicesProperty(data: unknown): data is { choices: unknown } {
-    return typeof data === 'object' && data !== null && 'choices' in data;
-}
+// Removed unused function
 
 // Initialize Supabase client details (ensure these are in Vercel env vars)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -111,12 +109,10 @@ export async function POST(request: Request) {
       ).join('\n')
     : "You currently have no tasks in the database.";
 
-  // Construct messages array for Sensay API (OpenAI format)
-  const messagesForApi: RequestMessage[] = [
-    { role: 'system', content: taskContext }, // Inject tasks as a system message
-    // Add messages from the request body AFTER the system message
-    ...userMessages
-  ];
+  // Construct task context message for API
+  // Note: We're not using the full messages array in the current API format
+  // but keeping the task context for future reference
+  const taskContextMessage: RequestMessage = { role: 'system', content: taskContext };
 
   // --- Call Sensay API --- //
   // Prepare API URL
