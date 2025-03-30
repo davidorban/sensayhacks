@@ -14,6 +14,11 @@
 const { execSync, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const localLogFile = args.find(arg => arg.startsWith('--log='))?.split('=')[1];
 
 // Configuration
 const POLL_INTERVAL = 10000; // Time between deployment checks in milliseconds
@@ -30,51 +35,46 @@ const colors = {
   blue: '\x1b[34m',
   magenta: '\x1b[35m',
   cyan: '\x1b[36m',
-  white: '\x1b[37m',
   bold: '\x1b[1m'
 };
 
 // Common error patterns and suggested fixes
 const errorPatterns = [
   {
-    pattern: /'(\w+)' is assigned a value but never used/,
-    fix: (match) => `Fix unused variable '${match[1]}' by either removing it, using an underscore prefix (_${match[1]}), or using empty destructuring if it's from useState().`
+    pattern: /'([^']+)' is defined but never used/,
+    fix: (match) => `Remove the unused variable '${match[1]}' or prefix it with an underscore (_${match[1]}) to indicate it's intentionally unused.`
   },
   {
-    pattern: /Missing dependency: '(\w+)'/,
-    fix: (match) => `Add '${match[1]}' to the dependency array in useEffect().`
+    pattern: /React Hook useEffect has a missing dependency: '([^']+)'/,
+    fix: (match) => `Add '${match[1]}' to the dependency array of your useEffect hook.`
   },
   {
-    pattern: /"use client"/i,
-    fix: () => `Add "use client" directive at the top of the file if using client-side React features.`
+    pattern: /Component cannot be rendered outside the context of a Client Component/,
+    fix: () => `Add "use client" directive at the top of your component file.`
   },
   {
     pattern: /Each child in a list should have a unique "key" prop/,
-    fix: () => `Add a unique key prop to each element in the mapped array.`
+    fix: () => `Add a unique 'key' prop to each element in your mapped array.`
+  },
+  {
+    pattern: /Cannot find module '([^']+)'/,
+    fix: (match) => `Install the missing module with: npm install ${match[1]}`
+  },
+  {
+    pattern: /Module not found: Can't resolve '([^']+)'/,
+    fix: (match) => `Install the missing dependency: npm install ${match[1]}`
+  },
+  {
+    pattern: /An error occurred in `next\/font`/,
+    fix: () => `Check your font configuration in next.config.js and make sure all required dependencies like autoprefixer are installed`
   }
 ];
 
-// Store the latest deployment ID to avoid re-processing
-let latestDeploymentId = null;
-
 /**
- * Logs a message to the console with optional color
+ * Logs a message to the console with color
  */
-function log(message, color = colors.white) {
+function log(message, color = colors.reset) {
   console.log(`${color}${message}${colors.reset}`);
-}
-
-/**
- * Executes a command and returns the output
- */
-function executeCommand(command) {
-  try {
-    return execSync(command, { encoding: 'utf8' });
-  } catch (error) {
-    log(`Error executing command: ${command}`, colors.red);
-    log(error.message, colors.red);
-    return null;
-  }
 }
 
 /**
@@ -82,36 +82,14 @@ function executeCommand(command) {
  */
 function executeCommandAsync(command) {
   return new Promise((resolve, reject) => {
-    exec(command, { encoding: 'utf8' }, (error, stdout, stderr) => {
+    exec(command, (error, stdout, stderr) => {
       if (error) {
-        reject(error);
+        reject(new Error(`${error.message}\n${stderr}`));
         return;
       }
       resolve(stdout);
     });
   });
-}
-
-/**
- * Parses error logs and suggests fixes
- */
-function suggestFixes(errorLog) {
-  const lines = errorLog.split('\n');
-  const suggestions = [];
-  
-  for (const line of lines) {
-    for (const { pattern, fix } of errorPatterns) {
-      const match = line.match(pattern);
-      if (match) {
-        suggestions.push({
-          error: line.trim(),
-          suggestion: fix(match)
-        });
-      }
-    }
-  }
-  
-  return suggestions;
 }
 
 /**
@@ -141,6 +119,188 @@ async function getLatestDeploymentId() {
 }
 
 /**
+ * Analyzes error logs and suggests fixes
+ */
+function suggestFixesForErrors(logContent) {
+  log('\nAnalyzing errors and suggesting fixes...', colors.blue);
+  
+  let fixesSuggested = false;
+  
+  for (const { pattern, fix } of errorPatterns) {
+    const regex = new RegExp(pattern);
+    const match = regex.exec(logContent);
+    
+    if (match) {
+      const suggestion = fix(match);
+      log(`\n🔍 Found issue: ${match[0]}`, colors.yellow);
+      log(`✅ Suggested fix: ${suggestion}`, colors.green);
+      fixesSuggested = true;
+    }
+  }
+  
+  if (!fixesSuggested) {
+    log('\nNo specific fixes could be suggested for these errors.', colors.yellow);
+    log('Please review the error logs manually for more details.', colors.yellow);
+  }
+  
+  // Check for missing dependencies
+  const missingDependencies = extractMissingDependencies(logContent);
+  if (missingDependencies.length > 0) {
+    log('\n📦 Missing dependencies detected:', colors.yellow);
+    missingDependencies.forEach(dep => {
+      log(`   - ${dep}`, colors.yellow);
+    });
+    log(`\n💡 Run the following command to install missing dependencies:`, colors.green);
+    log(`npm install ${missingDependencies.join(' ')}`, colors.cyan);
+  }
+}
+
+/**
+ * Extract missing dependencies from error logs
+ */
+function extractMissingDependencies(logContent) {
+  const missingModules = [];
+  const regex = /Cannot find module '([^']+)'|Can't resolve '([^']+)'/g;
+  let match;
+  
+  while ((match = regex.exec(logContent)) !== null) {
+    const moduleName = match[1] || match[2];
+    if (moduleName && !missingModules.includes(moduleName) && !moduleName.startsWith('.')) {
+      missingModules.push(moduleName);
+    }
+  }
+  
+  return missingModules;
+}
+
+/**
+ * Automatically fix common issues
+ */
+async function fixCommonIssues(errorLog) {
+  const missingModules = extractMissingDependencies(errorLog);
+  
+  if (missingModules.length > 0) {
+    log(`\nDetected missing modules: ${missingModules.join(', ')}`, colors.yellow);
+    log(`Would you like to install these modules? (y/n)`, colors.cyan);
+    
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    const response = await new Promise(resolve => {
+      rl.question('', (answer) => {
+        rl.close();
+        resolve(answer.toString().trim().toLowerCase());
+      });
+    });
+    
+    if (response === 'y' || response === 'yes') {
+      log(`\nInstalling missing modules...`, colors.green);
+      try {
+        await executeCommandAsync(`npm install ${missingModules.join(' ')}`);
+        log(`Modules installed successfully!`, colors.green);
+        return true;
+      } catch (error) {
+        log(`Failed to install modules: ${error.message}`, colors.red);
+        return false;
+      }
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Extract errors from log content
+ */
+function extractErrorsFromLog(logContent) {
+  // Look for specific Next.js and webpack error patterns
+  const errorPatterns = [
+    /Error: Cannot find module '([^']+)'/g,
+    /Failed to compile/g,
+    /Module not found: Can't resolve '([^']+)'/g,
+    /An error occurred in/g,
+    /[^\s]+ is defined but never used/g,
+    /Component cannot be rendered outside the context of a Client Component/g,
+    /Each child in a list should have a unique "key" prop/g
+  ];
+  
+  const errorLines = [];
+  const lines = logContent.split('\n');
+  
+  // Extract lines that match error patterns or are near error lines
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    const isErrorLine = errorPatterns.some(pattern => pattern.test(line));
+    if (isErrorLine) {
+      // Include some context (lines before and after the error)
+      const contextStart = Math.max(0, i - 2);
+      const contextEnd = Math.min(lines.length - 1, i + 3);
+      
+      for (let j = contextStart; j <= contextEnd; j++) {
+        errorLines.push(lines[j]);
+      }
+      
+      // Skip ahead to avoid duplicate context
+      i = contextEnd;
+    }
+  }
+  
+  return errorLines;
+}
+
+/**
+ * Display extracted errors
+ */
+function displayErrors(errorLines) {
+  if (errorLines.length === 0) {
+    log('No specific errors found in the logs.', colors.yellow);
+    return;
+  }
+  
+  log('\n🔍 Extracted Error Information:', colors.red + colors.bold);
+  log('----------------------------', colors.red);
+  
+  errorLines.forEach(line => {
+    // Highlight error lines
+    if (/error|failed|cannot|undefined|not found/i.test(line)) {
+      log(line, colors.red);
+    } else {
+      log(line);
+    }
+  });
+  
+  log('----------------------------', colors.red);
+}
+
+/**
+ * Process a local log file
+ */
+function processLocalLogFile(filePath) {
+  try {
+    const logContent = fs.readFileSync(filePath, 'utf8');
+    log('Processing local log file...', colors.cyan);
+    
+    // Extract and process errors
+    const errorLines = extractErrorsFromLog(logContent);
+    displayErrors(errorLines);
+    
+    // Suggest fixes
+    suggestFixesForErrors(logContent);
+    
+    // Offer to fix common issues
+    fixCommonIssues(logContent);
+    
+    return true;
+  } catch (error) {
+    log(`Error processing log file: ${error.message}`, colors.red);
+    return false;
+  }
+}
+
+/**
  * Monitors a deployment until it completes or fails
  */
 async function monitorDeployment(deploymentId) {
@@ -165,50 +325,59 @@ async function monitorDeployment(deploymentId) {
           log(`❌ Deployment failed!`, colors.red + colors.bold);
           
           // Get build logs
-          const logs = await executeCommandAsync(`vercel logs ${deploymentId}`);
-          if (logs) {
-            // Save logs to file
-            fs.writeFileSync(ERROR_LOG_FILE, logs);
-            log(`Build logs saved to: ${ERROR_LOG_FILE}`, colors.yellow);
-            
-            // Extract and display error messages
-            const errorLines = logs.split('\n').filter(line => 
-              line.includes('Error:') || 
-              line.includes('error') || 
-              line.includes('Failed')
-            );
-            
-            if (errorLines.length > 0) {
-              log(`\nBuild Errors:`, colors.red);
-              errorLines.forEach(line => log(`  ${line}`, colors.red));
+          try {
+            const logs = await executeCommandAsync(`vercel logs ${deploymentId} --output=json`);
+            if (logs) {
+              // Save logs to file
+              fs.writeFileSync(ERROR_LOG_FILE, logs);
+              log(`Build logs saved to ${ERROR_LOG_FILE}`, colors.blue);
+              
+              // Extract and display errors
+              const errorLines = extractErrorsFromLog(logs);
+              displayErrors(errorLines);
               
               // Suggest fixes
-              const suggestions = suggestFixes(logs);
-              if (suggestions.length > 0) {
-                log(`\nSuggested Fixes:`, colors.green);
-                suggestions.forEach(({ error, suggestion }) => {
-                  log(`  Error: ${error}`, colors.yellow);
-                  log(`  Fix: ${suggestion}`, colors.green);
-                  log('');
-                });
+              suggestFixesForErrors(logs);
+              
+              // Offer to fix common issues
+              await fixCommonIssues(logs);
+            }
+          } catch (logError) {
+            log(`Failed to get logs: ${logError.message}`, colors.red);
+            
+            // Try with regular logs command as fallback
+            try {
+              const regularLogs = await executeCommandAsync(`vercel logs ${deploymentId}`);
+              if (regularLogs) {
+                fs.writeFileSync(ERROR_LOG_FILE, regularLogs);
+                log(`Basic logs saved to ${ERROR_LOG_FILE}`, colors.blue);
+                
+                // Process logs
+                const errorLines = extractErrorsFromLog(regularLogs);
+                displayErrors(errorLines);
+                suggestFixesForErrors(regularLogs);
+                await fixCommonIssues(regularLogs);
               }
+            } catch (fallbackError) {
+              log(`Failed to get logs with fallback method: ${fallbackError.message}`, colors.red);
             }
           }
           
-          return { success: false, logs };
-        } else {
-          log(`Deployment status: ${deploymentState} (check ${retries + 1}/${MAX_RETRIES})`, colors.blue);
+          return { success: false };
         }
       }
+      
+      retries++;
+      log(`Deployment status: ${deploymentState || 'Building'} (check ${retries}/${MAX_RETRIES})`, colors.blue);
+      await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
     } catch (error) {
       log(`Error checking deployment status: ${error.message}`, colors.red);
+      retries++;
+      await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
     }
-    
-    retries++;
-    await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
   }
   
-  log(`Monitoring timed out after ${MAX_RETRIES} checks.`, colors.yellow);
+  log(`Timed out waiting for deployment to complete.`, colors.yellow);
   return { success: false, timedOut: true };
 }
 
@@ -217,32 +386,31 @@ async function monitorDeployment(deploymentId) {
  */
 async function pollForDeployments() {
   log('Starting deployment monitor...', colors.cyan);
-  log('Polling for new deployments...', colors.cyan);
+  
+  let lastDeploymentId = null;
   
   while (true) {
-    try {
-      const deploymentId = await getLatestDeploymentId();
+    log('Polling for new deployments...', colors.blue);
+    
+    const deploymentId = await getLatestDeploymentId();
+    
+    if (deploymentId && deploymentId !== lastDeploymentId) {
+      log(`\nNew deployment detected: ${deploymentId}`, colors.magenta);
+      lastDeploymentId = deploymentId;
       
-      if (deploymentId && deploymentId !== latestDeploymentId) {
-        log(`\nNew deployment detected: ${deploymentId}`, colors.magenta);
-        latestDeploymentId = deploymentId;
-        
-        const result = await monitorDeployment(deploymentId);
-        
-        if (!result.success && !result.timedOut) {
-          log(`\nRefer to the linting guide for more information on fixing these errors:`, colors.cyan);
-          log(`${path.join(__dirname, 'documentation', 'linting-guide.md')}`, colors.cyan);
-        }
-      }
-    } catch (error) {
-      log(`Error polling for deployments: ${error.message}`, colors.red);
+      await monitorDeployment(deploymentId);
     }
     
     await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
   }
 }
 
-// Start polling
-pollForDeployments().catch(error => {
-  log(`Error in deployment monitor: ${error.message}`, colors.red);
-});
+// Main execution
+if (localLogFile) {
+  processLocalLogFile(localLogFile);
+} else {
+  // Start normal polling
+  pollForDeployments().catch(error => {
+    log(`Error in deployment monitor: ${error.message}`, colors.red);
+  });
+}

@@ -10,6 +10,8 @@ This tool automatically monitors Vercel deployments for the SensayHacks project,
 - **Error Analysis**: Identifies common linting and build issues
 - **Fix Suggestions**: Provides actionable suggestions based on the linting guide
 - **Log Saving**: Stores detailed build logs for reference
+- **Missing Dependency Detection**: Automatically identifies and offers to install missing dependencies
+- **Local Log Processing**: Can analyze log files copied from the Vercel dashboard
 
 ## Usage
 
@@ -29,6 +31,20 @@ node monitor-deployment.js
 3. The monitor will start polling for new deployments
 4. Keep the terminal open while you work on the project
 
+### Processing Local Log Files
+
+If you've already copied build logs from the Vercel dashboard, you can analyze them directly:
+
+```bash
+# Process a local log file
+node monitor-deployment.js --log=path/to/build-error-log.txt
+```
+
+This is useful when:
+- You already have logs from a failed deployment
+- The automatic log retrieval fails
+- You want to analyze historical build failures
+
 ### Workflow
 
 1. Start the monitor before making changes to the codebase
@@ -39,6 +55,8 @@ node monitor-deployment.js
    - Track its progress
    - Capture any build errors
    - Suggest fixes based on the error patterns
+   - Identify missing dependencies
+   - Offer to install missing packages
 
 ### Understanding the Output
 
@@ -55,6 +73,43 @@ The monitor provides color-coded output:
 
 If a build fails, the error logs are saved to `vercel-build-errors.log` in the project root. These logs contain detailed information about what went wrong during the build process.
 
+## How It Works
+
+The monitor uses the following approach:
+
+1. **Polling**: Checks for new deployments every 10 seconds using `vercel list --yes`
+2. **Deployment Tracking**: When a new deployment is detected, monitors its status
+3. **Status Checks**: Polls the deployment status every 5 seconds using `vercel inspect`
+4. **Error Handling**: If a deployment fails, retrieves and analyzes the logs with `vercel logs`
+5. **Error Analysis**: Extracts and displays relevant error messages with context
+6. **Dependency Detection**: Identifies missing dependencies from error messages
+7. **Interactive Fixes**: Offers to automatically install missing dependencies
+
+## Advanced Features
+
+### Error Pattern Detection
+
+The monitor recognizes these common error patterns:
+
+1. **Unused Variables**: Variables that are defined but never used
+2. **Missing Dependencies**: useEffect hooks with missing dependencies
+3. **Client Directives**: Components using client-side features without "use client" directive
+4. **Missing Key Props**: List items without unique key props
+5. **Missing Modules**: NPM modules that need to be installed
+6. **Module Resolution**: Webpack module resolution errors
+7. **Font Configuration**: Next.js font loading errors
+
+### Automatic Dependency Installation
+
+When missing dependencies are detected, the monitor will:
+
+1. Extract the package names from error messages
+2. Display a list of missing packages
+3. Offer to install them automatically
+4. Run the appropriate npm install command if confirmed
+
+This saves time by eliminating the need to manually identify and install missing packages.
+
 ## Common Error Patterns
 
 The monitor automatically recognizes and suggests fixes for common errors:
@@ -65,15 +120,6 @@ The monitor automatically recognizes and suggests fixes for common errors:
 4. **Missing Key Props**: List items without unique key props
 
 For each detected error, the monitor will provide a specific suggestion based on our [Linting Guide](./linting-guide.md).
-
-## How It Works
-
-The monitor uses the following approach:
-
-1. **Polling**: Checks for new deployments every 10 seconds using `vercel list --yes`
-2. **Deployment Tracking**: When a new deployment is detected, monitors its status
-3. **Status Checks**: Polls the deployment status every 5 seconds using `vercel inspect`
-4. **Error Handling**: If a deployment fails, retrieves and analyzes the logs with `vercel logs`
 
 ## Troubleshooting
 
