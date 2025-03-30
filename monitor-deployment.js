@@ -119,7 +119,7 @@ function suggestFixes(errorLog) {
  */
 async function getLatestDeploymentId() {
   try {
-    const output = await executeCommandAsync('vercel list');
+    const output = await executeCommandAsync('vercel list --yes');
     const lines = output.split('\n').filter(line => line.trim() !== '');
     
     // Skip the header line and get the first deployment
@@ -151,7 +151,7 @@ async function monitorDeployment(deploymentId) {
   
   while (retries < MAX_RETRIES) {
     try {
-      const output = await executeCommandAsync(`vercel inspect ${deploymentId}`);
+      const output = await executeCommandAsync(`vercel inspect ${deploymentId} --yes`);
       
       // Extract state from the output
       const stateMatch = output.match(/State:\s+(\w+)/);
@@ -165,7 +165,7 @@ async function monitorDeployment(deploymentId) {
           log(`❌ Deployment failed!`, colors.red + colors.bold);
           
           // Get build logs
-          const logs = await executeCommandAsync(`vercel logs ${deploymentId}`);
+          const logs = await executeCommandAsync(`vercel logs ${deploymentId} --yes`);
           if (logs) {
             // Save logs to file
             fs.writeFileSync(ERROR_LOG_FILE, logs);
