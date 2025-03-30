@@ -18,7 +18,10 @@ import {
   HelpCircle,
   TrendingUp,
   Award,
-  Star
+  Star,
+  GitBranch,
+  BarChart,
+  Sparkles
 } from 'lucide-react';
 import { Tooltip } from "@/components/ui/tooltip";
 
@@ -33,6 +36,25 @@ interface MemoryItem {
   decayRate: number;
   creator: string;
   popularity: number;
+  evolutionStage?: number;
+  evolutionPath?: string;
+  capabilities?: string[];
+}
+
+interface EvolutionPath {
+  id: string;
+  name: string;
+  description: string;
+  stages: EvolutionStage[];
+}
+
+interface EvolutionStage {
+  id: number;
+  name: string;
+  description: string;
+  tokenCost: number;
+  capabilities: string[];
+  prerequisites: { stage: number; path?: string }[];
 }
 
 interface AccessTier {
@@ -71,6 +93,11 @@ const TokenGatedMemoriesPage = () => {
   const [stakeAmount, setStakeAmount] = useState(10);
   const [marketplaceMemories, setMarketplaceMemories] = useState<MemoryItem[]>([]);
   const [showMemoryDecay, setShowMemoryDecay] = useState(true);
+  const [evolutionPaths, setEvolutionPaths] = useState<EvolutionPath[]>([]);
+  const [selectedEvolutionPath, setSelectedEvolutionPath] = useState<string | null>(null);
+  const [showEvolutionModal, setShowEvolutionModal] = useState(false);
+  const [selectedMemory, setSelectedMemory] = useState<MemoryItem | null>(null);
+  const [availableEvolutionStages, setAvailableEvolutionStages] = useState<EvolutionStage[]>([]);
 
   // Define access tiers
   const accessTiers: AccessTier[] = [
@@ -124,300 +151,459 @@ const TokenGatedMemoriesPage = () => {
   const memories: MemoryItem[] = [
     {
       id: 'mem-1',
-      title: 'Project Roadmap Overview',
-      content: 'The project roadmap includes four major milestones for Q2 2025, focusing on user acquisition and platform stability.',
+      title: 'Introduction to AI Ethics',
+      content: 'AI ethics is the branch of ethics that focuses on the moral issues surrounding artificial intelligence systems, including their design, development, and deployment. Key principles include fairness, transparency, privacy, and accountability.',
       tier: 'public',
       tokenCost: 0,
-      category: 'Project Management',
+      category: 'AI Fundamentals',
       timestamp: '2025-03-15',
-      decayRate: 0,
-      creator: 'System',
-      popularity: 85
+      decayRate: 0.2,
+      creator: 'Sensay Team',
+      popularity: 85,
+      evolutionStage: 1,
+      evolutionPath: 'analytical',
+      capabilities: ['basic_understanding']
     },
     {
       id: 'mem-2',
-      title: 'Basic Market Analysis',
-      content: 'Current market trends show increasing adoption of AI assistants in enterprise environments, with 37% growth YoY.',
-      tier: 'public',
-      tokenCost: 0,
-      category: 'Market Research',
+      title: 'Advanced Neural Network Architectures',
+      content: 'Recent advancements in neural network architectures have led to significant improvements in model performance across various tasks. This memory covers transformer-based models, mixture of experts, and sparse architectures.',
+      tier: 'premium',
+      tokenCost: 25,
+      category: 'Technical',
       timestamp: '2025-03-20',
-      decayRate: 0,
-      creator: 'System',
-      popularity: 92
+      decayRate: 0.1,
+      creator: 'AI Research Group',
+      popularity: 92,
+      evolutionStage: 2,
+      evolutionPath: 'technical',
+      capabilities: ['architecture_analysis', 'performance_optimization']
     },
     {
       id: 'mem-3',
-      title: 'Premium Strategy Document',
-      content: 'The competitive analysis reveals three key opportunities for market differentiation: (1) Enhanced privacy controls, (2) Specialized industry knowledge bases, and (3) Seamless multi-platform integration.',
-      tier: 'premium',
-      tokenCost: 50,
-      category: 'Strategic Planning',
-      timestamp: '2025-03-22',
-      decayRate: 5,
-      creator: 'Market Research Team',
-      popularity: 78
+      title: 'Market Analysis: AI Industry Trends 2025',
+      content: 'Comprehensive analysis of AI industry trends for 2025, including market size, growth projections, key players, and emerging technologies. Valuable insights for investors and industry professionals.',
+      tier: 'expert',
+      tokenCost: 75,
+      category: 'Market Intelligence',
+      timestamp: '2025-03-25',
+      decayRate: 0.5,
+      creator: 'Market Insights Team',
+      popularity: 88,
+      evolutionStage: 3,
+      evolutionPath: 'analytical',
+      capabilities: ['trend_identification', 'market_forecasting', 'competitive_analysis']
     },
     {
       id: 'mem-4',
-      title: 'Customer Feedback Analysis',
-      content: 'Analysis of recent customer feedback indicates strong demand for improved data visualization features and faster response times for complex queries.',
-      tier: 'premium',
-      tokenCost: 50,
-      category: 'User Research',
-      timestamp: '2025-03-25',
-      decayRate: 8,
-      creator: 'UX Research Team',
-      popularity: 65
-    },
-    {
-      id: 'mem-5',
-      title: 'Expert Technical Architecture',
-      content: 'The proposed system architecture implements a novel approach to memory segmentation using a three-layer cache system with predictive preloading based on contextual relevance scoring.',
-      tier: 'expert',
-      tokenCost: 200,
-      category: 'Technical Design',
-      timestamp: '2025-03-27',
-      decayRate: 2,
-      creator: 'Engineering Team',
-      popularity: 88
-    },
-    {
-      id: 'mem-6',
-      title: 'Advanced Financial Projections',
-      content: 'Financial modeling suggests a potential 3.2x ROI within 18 months based on current growth trajectories and the proposed premium tier pricing strategy.',
-      tier: 'expert',
-      tokenCost: 200,
-      category: 'Financial Analysis',
+      title: 'Quantum Computing Applications in AI',
+      content: 'Exploration of how quantum computing technologies are being applied to artificial intelligence problems, with a focus on quantum machine learning algorithms and their potential to revolutionize the field.',
+      tier: 'exclusive',
+      tokenCost: 150,
+      category: 'Emerging Tech',
       timestamp: '2025-03-28',
-      decayRate: 10,
-      creator: 'Finance Team',
-      popularity: 72
-    },
-    {
-      id: 'mem-7',
-      title: 'Exclusive Partnership Opportunity',
-      content: 'Confidential: Preliminary discussions with [REDACTED] indicate strong interest in a strategic partnership that could accelerate market penetration by 40% in key European markets.',
-      tier: 'exclusive',
-      tokenCost: 500,
-      category: 'Business Development',
-      timestamp: '2025-03-29',
-      decayRate: 15,
-      creator: 'Business Development Team',
-      popularity: 95
-    },
-    {
-      id: 'mem-8',
-      title: 'Proprietary Algorithm Details',
-      content: 'The core algorithm utilizes a novel approach to semantic memory compression that achieves 3.7x better performance than the current industry standard while reducing computational requirements by 42%.',
-      tier: 'exclusive',
-      tokenCost: 500,
-      category: 'R&D',
-      timestamp: '2025-03-30',
-      decayRate: 1,
-      creator: 'Research Team',
-      popularity: 98
+      decayRate: 0.3,
+      creator: 'Quantum AI Lab',
+      popularity: 95,
+      evolutionStage: 4,
+      evolutionPath: 'technical',
+      capabilities: ['quantum_algorithms', 'advanced_computation', 'theoretical_modeling']
     }
   ];
 
-  // Initialize marketplace memories
+  // Initialize data
   useEffect(() => {
-    // Simulate marketplace memories
-    const marketplace: MemoryItem[] = [
+    // Initialize memories
+    setMemories([
+      {
+        id: 'mem-1',
+        title: 'Introduction to AI Ethics',
+        content: 'AI ethics is the branch of ethics that focuses on the moral issues surrounding artificial intelligence systems, including their design, development, and deployment. Key principles include fairness, transparency, privacy, and accountability.',
+        tier: 'public',
+        tokenCost: 0,
+        category: 'AI Fundamentals',
+        timestamp: '2025-03-15',
+        decayRate: 0.2,
+        creator: 'Sensay Team',
+        popularity: 85,
+        evolutionStage: 1,
+        evolutionPath: 'analytical',
+        capabilities: ['basic_understanding']
+      },
+      {
+        id: 'mem-2',
+        title: 'Advanced Neural Network Architectures',
+        content: 'Recent advancements in neural network architectures have led to significant improvements in model performance across various tasks. This memory covers transformer-based models, mixture of experts, and sparse architectures.',
+        tier: 'premium',
+        tokenCost: 25,
+        category: 'Technical',
+        timestamp: '2025-03-20',
+        decayRate: 0.1,
+        creator: 'AI Research Group',
+        popularity: 92,
+        evolutionStage: 2,
+        evolutionPath: 'technical',
+        capabilities: ['architecture_analysis', 'performance_optimization']
+      },
+      {
+        id: 'mem-3',
+        title: 'Market Analysis: AI Industry Trends 2025',
+        content: 'Comprehensive analysis of AI industry trends for 2025, including market size, growth projections, key players, and emerging technologies. Valuable insights for investors and industry professionals.',
+        tier: 'expert',
+        tokenCost: 75,
+        category: 'Market Intelligence',
+        timestamp: '2025-03-25',
+        decayRate: 0.5,
+        creator: 'Market Insights Team',
+        popularity: 88,
+        evolutionStage: 3,
+        evolutionPath: 'analytical',
+        capabilities: ['trend_identification', 'market_forecasting', 'competitive_analysis']
+      },
+      {
+        id: 'mem-4',
+        title: 'Quantum Computing Applications in AI',
+        content: 'Exploration of how quantum computing technologies are being applied to artificial intelligence problems, with a focus on quantum machine learning algorithms and their potential to revolutionize the field.',
+        tier: 'exclusive',
+        tokenCost: 150,
+        category: 'Emerging Tech',
+        timestamp: '2025-03-28',
+        decayRate: 0.3,
+        creator: 'Quantum AI Lab',
+        popularity: 95,
+        evolutionStage: 4,
+        evolutionPath: 'technical',
+        capabilities: ['quantum_algorithms', 'advanced_computation', 'theoretical_modeling']
+      }
+    ]);
+
+    // Initialize marketplace memories
+    setMarketplaceMemories([
       {
         id: 'market-1',
-        title: 'AI Agent Collaboration Framework',
-        content: 'A comprehensive framework for enabling multiple AI agents to collaborate effectively on complex tasks with minimal human supervision.',
+        title: 'Creative Writing Techniques for AI',
+        content: 'Advanced techniques for improving AI-generated creative writing, including narrative structure, character development, and stylistic elements. Based on analysis of literary masterpieces.',
         tier: 'premium',
-        tokenCost: 75,
-        category: 'Research',
-        timestamp: '2025-03-28',
-        decayRate: 3,
-        creator: 'AI Research Collective',
-        popularity: 89
+        tokenCost: 35,
+        category: 'Creative',
+        timestamp: '2025-03-22',
+        decayRate: 0.1,
+        creator: 'Creative AI Studio',
+        popularity: 89,
+        evolutionStage: 2,
+        evolutionPath: 'creative',
+        capabilities: ['storytelling', 'style_adaptation']
       },
       {
         id: 'market-2',
-        title: 'Emerging Market Opportunities Q2 2025',
-        content: 'Analysis of untapped market segments in Southeast Asia with specific entry strategies and potential partnership opportunities.',
+        title: 'Financial Market Prediction Models',
+        content: 'Proprietary models for financial market prediction using advanced AI techniques. Includes historical performance data and implementation guidelines.',
         tier: 'expert',
-        tokenCost: 250,
-        category: 'Market Analysis',
-        timestamp: '2025-03-29',
-        decayRate: 12,
-        creator: 'Global Markets Institute',
-        popularity: 76
+        tokenCost: 120,
+        category: 'Finance',
+        timestamp: '2025-03-26',
+        decayRate: 0.4,
+        creator: 'FinTech Innovations',
+        popularity: 91,
+        evolutionStage: 3,
+        evolutionPath: 'analytical',
+        capabilities: ['financial_modeling', 'risk_assessment', 'portfolio_optimization']
       },
       {
         id: 'market-3',
-        title: 'Next-Gen Neural Architecture Blueprint',
-        content: 'Detailed technical specifications for a revolutionary neural network architecture optimized for multimodal reasoning and contextual understanding.',
+        title: 'Medical Diagnosis Enhancement',
+        content: 'Specialized knowledge for enhancing medical diagnosis capabilities in AI systems. Covers symptom analysis, differential diagnosis techniques, and integration with medical imaging.',
         tier: 'exclusive',
-        tokenCost: 600,
-        category: 'Technical',
-        timestamp: '2025-03-30',
-        decayRate: 1,
-        creator: 'Neural Systems Lab',
-        popularity: 97
+        tokenCost: 200,
+        category: 'Healthcare',
+        timestamp: '2025-03-27',
+        decayRate: 0.2,
+        creator: 'MedAI Research',
+        popularity: 94,
+        evolutionStage: 4,
+        evolutionPath: 'domain',
+        capabilities: ['medical_diagnosis', 'symptom_analysis', 'treatment_recommendation']
       }
-    ];
-    
-    setMarketplaceMemories(marketplace);
+    ]);
+
+    // Initialize evolution paths
+    setEvolutionPaths([
+      {
+        id: 'analytical',
+        name: 'Analytical Enhancement',
+        description: 'Evolve memories to enhance analytical capabilities, including data processing, pattern recognition, and predictive modeling.',
+        stages: [
+          {
+            id: 1,
+            name: 'Basic Analysis',
+            description: 'Foundational analytical capabilities',
+            tokenCost: 0,
+            capabilities: ['basic_understanding'],
+            prerequisites: []
+          },
+          {
+            id: 2,
+            name: 'Advanced Data Analysis',
+            description: 'Enhanced capabilities for pattern recognition and data processing',
+            tokenCost: 50,
+            capabilities: ['statistical_analysis', 'trend_identification', 'data_visualization'],
+            prerequisites: [{ stage: 1 }]
+          },
+          {
+            id: 3,
+            name: 'Predictive Modeling',
+            description: 'Ability to create and evaluate predictive models',
+            tokenCost: 100,
+            capabilities: ['forecasting', 'scenario_analysis', 'risk_assessment'],
+            prerequisites: [{ stage: 2, path: 'analytical' }]
+          },
+          {
+            id: 4,
+            name: 'Strategic Intelligence',
+            description: 'Advanced strategic analysis and decision-making capabilities',
+            tokenCost: 200,
+            capabilities: ['strategic_planning', 'competitive_intelligence', 'decision_optimization'],
+            prerequisites: [{ stage: 3, path: 'analytical' }]
+          }
+        ]
+      },
+      {
+        id: 'technical',
+        name: 'Technical Enhancement',
+        description: 'Evolve memories to enhance technical capabilities, including programming, system design, and computational methods.',
+        stages: [
+          {
+            id: 1,
+            name: 'Basic Technical Understanding',
+            description: 'Foundational technical knowledge',
+            tokenCost: 0,
+            capabilities: ['basic_understanding'],
+            prerequisites: []
+          },
+          {
+            id: 2,
+            name: 'Advanced Technical Skills',
+            description: 'Enhanced capabilities for technical problem-solving',
+            tokenCost: 60,
+            capabilities: ['code_generation', 'system_design', 'debugging'],
+            prerequisites: [{ stage: 1 }]
+          },
+          {
+            id: 3,
+            name: 'Architecture Optimization',
+            description: 'Ability to optimize and improve technical architectures',
+            tokenCost: 120,
+            capabilities: ['performance_tuning', 'scalability_design', 'security_implementation'],
+            prerequisites: [{ stage: 2, path: 'technical' }]
+          },
+          {
+            id: 4,
+            name: 'Cutting-Edge Innovation',
+            description: 'Advanced capabilities for technical innovation and research',
+            tokenCost: 250,
+            capabilities: ['research_methods', 'prototype_development', 'technical_writing'],
+            prerequisites: [{ stage: 3, path: 'technical' }]
+          }
+        ]
+      },
+      {
+        id: 'creative',
+        name: 'Creative Enhancement',
+        description: 'Evolve memories to enhance creative capabilities, including content generation, artistic expression, and innovative thinking.',
+        stages: [
+          {
+            id: 1,
+            name: 'Basic Creative Skills',
+            description: 'Foundational creative capabilities',
+            tokenCost: 0,
+            capabilities: ['basic_understanding'],
+            prerequisites: []
+          },
+          {
+            id: 2,
+            name: 'Advanced Creative Expression',
+            description: 'Enhanced capabilities for creative content generation',
+            tokenCost: 40,
+            capabilities: ['storytelling', 'content_generation', 'style_adaptation'],
+            prerequisites: [{ stage: 1 }]
+          },
+          {
+            id: 3,
+            name: 'Artistic Mastery',
+            description: 'Sophisticated artistic capabilities across multiple domains',
+            tokenCost: 90,
+            capabilities: ['narrative_design', 'visual_composition', 'emotional_resonance'],
+            prerequisites: [{ stage: 2, path: 'creative' }]
+          },
+          {
+            id: 4,
+            name: 'Creative Innovation',
+            description: 'Cutting-edge creative capabilities for groundbreaking work',
+            tokenCost: 180,
+            capabilities: ['concept_development', 'cross_domain_synthesis', 'audience_engagement'],
+            prerequisites: [{ stage: 3, path: 'creative' }]
+          }
+        ]
+      },
+      {
+        id: 'domain',
+        name: 'Domain Expertise',
+        description: 'Evolve memories to develop specialized knowledge in specific domains like finance, medicine, or law.',
+        stages: [
+          {
+            id: 1,
+            name: 'Domain Introduction',
+            description: 'Basic understanding of domain concepts',
+            tokenCost: 0,
+            capabilities: ['basic_understanding'],
+            prerequisites: []
+          },
+          {
+            id: 2,
+            name: 'Domain Proficiency',
+            description: 'Working knowledge of domain principles and practices',
+            tokenCost: 70,
+            capabilities: ['terminology_mastery', 'process_understanding', 'basic_application'],
+            prerequisites: [{ stage: 1 }]
+          },
+          {
+            id: 3,
+            name: 'Domain Expertise',
+            description: 'Advanced domain knowledge and specialized skills',
+            tokenCost: 150,
+            capabilities: ['advanced_application', 'problem_solving', 'domain_analysis'],
+            prerequisites: [{ stage: 2, path: 'domain' }]
+          },
+          {
+            id: 4,
+            name: 'Domain Authority',
+            description: 'Cutting-edge expertise and thought leadership in the domain',
+            tokenCost: 300,
+            capabilities: ['innovation', 'thought_leadership', 'complex_problem_solving'],
+            prerequisites: [{ stage: 3, path: 'domain' }]
+          }
+        ]
+      }
+    ]);
+
+    // Initialize transaction history
+    setTransactionHistory([
+      {
+        id: 'tx-1',
+        type: 'purchase',
+        amount: 100,
+        timestamp: '2025-03-15 09:30',
+        status: 'completed'
+      },
+      {
+        id: 'tx-2',
+        type: 'unlock',
+        amount: 25,
+        timestamp: '2025-03-16 14:45',
+        status: 'completed',
+        memoryId: 'mem-2',
+        memoryTitle: 'Advanced Neural Network Architectures'
+      },
+      {
+        id: 'tx-3',
+        type: 'stake',
+        amount: 50,
+        timestamp: '2025-03-18 11:20',
+        status: 'completed'
+      },
+      {
+        id: 'tx-4',
+        type: 'evolution',
+        amount: 50,
+        timestamp: '2025-03-22 16:15',
+        status: 'completed',
+        memoryId: 'mem-1',
+        memoryTitle: 'Introduction to AI Ethics'
+      }
+    ]);
+
+    // Set initial token balance
+    setTokenBalance(200);
   }, []);
 
-  // Calculate memory decay
-  const getMemoryFreshness = (timestamp: string, decayRate: number) => {
-    if (!showMemoryDecay || decayRate === 0) return 100;
+  // Check if a memory can be evolved
+  const canEvolveMemory = (memory: MemoryItem) => {
+    if (!memory.evolutionPath || !memory.evolutionStage) return false;
     
-    const memoryDate = new Date(timestamp);
-    const currentDate = new Date('2025-03-30');
-    const daysDifference = Math.floor((currentDate.getTime() - memoryDate.getTime()) / (1000 * 60 * 60 * 24));
+    const path = evolutionPaths.find(p => p.id === memory.evolutionPath);
+    if (!path) return false;
     
-    // Calculate freshness based on decay rate and days since creation
-    const freshness = Math.max(0, 100 - (daysDifference * decayRate));
-    return freshness;
+    const nextStage = path.stages.find(s => s.id === (memory.evolutionStage || 0) + 1);
+    return !!nextStage && tokenBalance >= nextStage.tokenCost;
   };
 
-  // Handle staking tokens
-  const handleStakeTokens = () => {
-    if (tokenBalance < stakeAmount) {
-      alert('Insufficient token balance to stake this amount.');
+  // Get available evolution stages for a memory
+  const getAvailableEvolutionStages = (memory: MemoryItem) => {
+    if (!memory.evolutionPath) return [];
+    
+    const path = evolutionPaths.find(p => p.id === memory.evolutionPath);
+    if (!path) return [];
+    
+    return path.stages.filter(stage => {
+      // Check if all prerequisites are met
+      return stage.prerequisites.every(prereq => {
+        if (prereq.path && prereq.path !== memory.evolutionPath) return false;
+        return (memory.evolutionStage || 0) >= prereq.stage;
+      });
+    });
+  };
+
+  // Handle memory evolution
+  const handleEvolveMemory = (memory: MemoryItem, stage: EvolutionStage) => {
+    if (tokenBalance < stage.tokenCost) {
+      alert('Insufficient token balance to evolve this memory.');
       return;
     }
 
     setIsLoading(true);
-    console.log(`(Mock) Staking ${stakeAmount} $SNSY tokens...`);
-
-    // Simulate staking delay
+    
+    // Simulate API call
     setTimeout(() => {
-      setTokenBalance(prev => prev - stakeAmount);
-      setStakedTokens(prev => prev + stakeAmount);
+      // Update token balance
+      setTokenBalance(prev => prev - stage.tokenCost);
+      
+      // Update memory with new evolution stage
+      setMemories(prev => prev.map(m => {
+        if (m.id === memory.id) {
+          return {
+            ...m,
+            evolutionStage: stage.id,
+            capabilities: [...(m.capabilities || []), ...stage.capabilities]
+          };
+        }
+        return m;
+      }));
       
       // Add transaction record
       setTransactionHistory(prev => [
         {
           id: `tx-${Date.now()}`,
-          type: 'stake',
-          amount: stakeAmount,
+          type: 'evolution',
+          amount: stage.tokenCost,
           timestamp: new Date().toLocaleString(),
-          status: 'completed'
-        },
-        ...prev
-      ]);
-      
-      setIsLoading(false);
-      setShowStakingModal(false);
-      
-      // Calculate rewards
-      const rewards = Math.floor(stakedTokens * 0.05);
-      setStakingRewards(rewards);
-    }, 2000);
-  };
-
-  // Handle token purchase
-  const handlePurchaseTokens = () => {
-    setIsLoading(true);
-    console.log(`(Mock) Purchasing ${purchaseAmount} $SNSY tokens...`);
-
-    // Simulate purchase delay
-    setTimeout(() => {
-      setTokenBalance(prev => prev + purchaseAmount);
-      setTransactionHistory(prev => [
-        {
-          id: `tx-${Date.now()}`,
-          type: 'purchase',
-          amount: purchaseAmount,
-          timestamp: new Date().toLocaleString(),
-          status: 'completed'
-        },
-        ...prev
-      ]);
-      setIsLoading(false);
-      setShowPurchaseModal(false);
-    }, 2000);
-  };
-
-  // Handle unlocking a memory
-  const handleUnlockMemory = (memory: MemoryItem) => {
-    if (tokenBalance < memory.tokenCost) {
-      alert('Insufficient token balance to unlock this memory.');
-      return;
-    }
-
-    setIsLoading(true);
-    console.log(`(Mock) Unlocking memory: ${memory.title} for ${memory.tokenCost} $SNSY tokens...`);
-
-    // Simulate unlock delay
-    setTimeout(() => {
-      setTokenBalance(prev => prev - memory.tokenCost);
-      setTransactionHistory(prev => [
-        {
-          id: `tx-${Date.now()}`,
-          type: 'unlock',
+          status: 'completed',
           memoryId: memory.id,
-          memoryTitle: memory.title,
-          amount: memory.tokenCost,
-          timestamp: new Date().toLocaleString(),
-          status: 'completed'
+          memoryTitle: memory.title
         },
         ...prev
       ]);
+      
       setIsLoading(false);
+      setShowEvolutionModal(false);
     }, 1500);
   };
 
-  // Purchase a marketplace memory
-  const purchaseMarketplaceMemory = (memory: MemoryItem) => {
-    if (tokenBalance < memory.tokenCost) {
-      alert('Insufficient token balance to purchase this memory.');
-      return;
-    }
-
-    setTokenBalance(prev => prev - memory.tokenCost);
-    
-    // Add transaction record
-    setTransactionHistory(prev => [
-      {
-        id: `tx-${Date.now()}`,
-        type: 'purchase',
-        amount: memory.tokenCost,
-        timestamp: new Date().toLocaleString(),
-        status: 'completed',
-        memoryId: memory.id,
-        memoryTitle: memory.title
-      },
-      ...prev
-    ]);
-    
-    // Remove from marketplace and add to user memories
-    setMarketplaceMemories(prev => prev.filter(m => m.id !== memory.id));
-    // In a real app, we would add this to the user's memories
-  };
-
-  // Check if a memory is accessible based on token balance
-  const canAccessMemory = (memory: MemoryItem) => {
-    if (memory.tier === 'public') return true;
-    
-    const tierIndex = accessTiers.findIndex(tier => tier.name === memory.tier);
-    const requiredTokens = accessTiers[tierIndex].tokenRequirement;
-    
-    return tokenBalance >= requiredTokens;
-  };
-
-  // Filter memories by tier
-  const getFilteredMemories = () => {
-    if (!selectedTier) return memories;
-    return memories.filter(memory => memory.tier === selectedTier);
-  };
-
-  // Get the highest accessible tier based on token balance
-  const getHighestAccessibleTier = () => {
-    for (let i = accessTiers.length - 1; i >= 0; i--) {
-      if (tokenBalance >= accessTiers[i].tokenRequirement) {
-        return accessTiers[i].name;
-      }
-    }
-    return 'public';
+  // Open evolution modal for a memory
+  const openEvolutionModal = (memory: MemoryItem) => {
+    setSelectedMemory(memory);
+    const availableStages = getAvailableEvolutionStages(memory);
+    setAvailableEvolutionStages(availableStages);
+    setShowEvolutionModal(true);
   };
 
   return (
@@ -512,6 +698,10 @@ const TokenGatedMemoriesPage = () => {
                 <TabsTrigger value="concept" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:shadow-none rounded-none">
                   <Info className="h-4 w-4 mr-2" />
                   Concept
+                </TabsTrigger>
+                <TabsTrigger value="evolution" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:shadow-none rounded-none">
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Evolution
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -653,8 +843,9 @@ const TokenGatedMemoriesPage = () => {
                   
                   <div className="space-y-6">
                     {accessTiers.map((tier) => {
-                      const isAccessible = tokenBalance >= tier.tokenRequirement;
-                      const progress = Math.min(100, (tokenBalance / tier.tokenRequirement) * 100) || 0;
+                      const tierIndex = accessTiers.findIndex(t => t.name === tier.name);
+                      const requiredTokens = accessTiers[tierIndex].tokenRequirement;
+                      const progress = Math.min(100, (tokenBalance / (tier.tokenRequirement || 1)) * 100) || 0;
                       
                       return (
                         <div 
@@ -664,7 +855,7 @@ const TokenGatedMemoriesPage = () => {
                           <div className="flex justify-between items-center">
                             <div className="flex items-center">
                               <div className={`p-2 rounded-full mr-3 ${isAccessible ? 'bg-green-100' : 'bg-gray-200'}`}>
-                                {isAccessible ? <Unlock className="h-5 w-5 text-green-600" /> : <Lock className="h-5 w-5 text-gray-500" />}
+                                {isAccessible ? <Unlock className="h-5 w-5 text-green-600" /> : tier.icon}
                               </div>
                               <div>
                                 <h4 className="font-semibold text-gray-800 capitalize">{tier.name} Tier</h4>
@@ -1043,6 +1234,140 @@ const TokenGatedMemoriesPage = () => {
                 </div>
               </div>
             </TabsContent>
+            
+            {/* Evolution Tab */}
+            <TabsContent value="evolution" className="flex-1 p-0 mt-0">
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Evolutionary Pathways</h3>
+                  <p className="text-gray-600 mb-6">
+                    Evolve your memories along different pathways to unlock new capabilities and insights. Each evolution stage enhances the value and utility of your memories.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    {evolutionPaths.map(path => (
+                      <Card key={path.id} className="overflow-hidden border-2 hover:border-indigo-300 transition-all cursor-pointer" onClick={() => setSelectedEvolutionPath(path.id === selectedEvolutionPath ? null : path.id)}>
+                        <div className="p-4">
+                          <div className="flex items-center mb-2">
+                            {path.id === 'analytical' && <BarChart className="h-5 w-5 text-indigo-600 mr-2" />}
+                            {path.id === 'technical' && <Zap className="h-5 w-5 text-indigo-600 mr-2" />}
+                            {path.id === 'creative' && <Sparkles className="h-5 w-5 text-indigo-600 mr-2" />}
+                            {path.id === 'domain' && <Database className="h-5 w-5 text-indigo-600 mr-2" />}
+                            <h4 className="font-semibold text-indigo-700">{path.name}</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">{path.description}</p>
+                          
+                          {selectedEvolutionPath === path.id && (
+                            <div className="mt-4 space-y-3">
+                              {path.stages.map(stage => (
+                                <div key={stage.id} className="bg-gray-50 p-3 rounded border border-gray-200">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <div>
+                                      <h5 className="font-semibold text-gray-800">Stage {stage.id}: {stage.name}</h5>
+                                      <p className="text-xs text-gray-600">{stage.description}</p>
+                                    </div>
+                                    <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">
+                                      {stage.tokenCost} $SNSY
+                                    </Badge>
+                                  </div>
+                                  
+                                  {stage.capabilities.length > 0 && (
+                                    <div className="mt-2">
+                                      <h6 className="text-xs font-semibold text-gray-700">Capabilities:</h6>
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {stage.capabilities.map(capability => (
+                                          <Badge key={capability} variant="outline" className="text-xs">
+                                            {capability.replace('_', ' ')}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  <h3 className="text-lg font-semibold text-gray-800 mt-8">Your Evolvable Memories</h3>
+                  <div className="space-y-4 mt-4">
+                    {memories.filter(m => m.evolutionPath).map((memory) => {
+                      const path = evolutionPaths.find(p => p.id === memory.evolutionPath);
+                      const currentStage = path?.stages.find(s => s.id === memory.evolutionStage);
+                      const nextStage = path?.stages.find(s => s.id === (memory.evolutionStage || 0) + 1);
+                      const canEvolve = canEvolveMemory(memory);
+                      
+                      return (
+                        <div 
+                          key={memory.id}
+                          className="border rounded-lg overflow-hidden"
+                        >
+                          <div className={`p-4 border-b ${memory.tier === 'premium' ? 'bg-blue-50 border-blue-100' : memory.tier === 'expert' ? 'bg-purple-50 border-purple-100' : memory.tier === 'exclusive' ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="font-semibold text-gray-800">{memory.title}</h4>
+                                <div className="flex items-center text-sm text-gray-500 mt-1">
+                                  <Badge className="mr-2 capitalize">{memory.tier}</Badge>
+                                  <span className="mr-2">{memory.category}</span>
+                                  <span>by {memory.creator}</span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-semibold text-indigo-700">{memory.tokenCost} $SNSY</div>
+                                <div className="text-xs text-gray-500">Popularity: {memory.popularity}%</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="p-4">
+                            <p className="text-sm text-gray-700 mb-4">{memory.content.substring(0, 120)}...</p>
+                            
+                            <div className="bg-gray-50 p-3 rounded border border-gray-200 mb-4">
+                              <div className="flex items-center mb-2">
+                                <GitBranch className="h-4 w-4 text-indigo-600 mr-2" />
+                                <span className="font-semibold text-indigo-700">
+                                  Current: Stage {memory.evolutionStage}
+                                </span>
+                              </div>
+                              
+                              <div className="text-sm text-gray-700">
+                                {memory.capabilities && memory.capabilities.length > 0 && (
+                                  <div className="mt-2">
+                                    <div className="text-xs font-semibold text-gray-700">Current Capabilities:</div>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {memory.capabilities.map(capability => (
+                                        <Badge key={capability} variant="outline" className="text-xs">
+                                          {capability.replace('_', ' ')}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4">
+                              <Button 
+                                variant="default" 
+                                className="w-full"
+                                disabled={!canEvolve}
+                                onClick={() => openEvolutionModal(memory)}
+                              >
+                                <GitBranch className="h-4 w-4 mr-2" />
+                                {canEvolve ? 'Evolve to Next Stage' : nextStage ? `Need ${nextStage.tokenCost} $SNSY to Evolve` : 'Fully Evolved'}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -1106,7 +1431,7 @@ const TokenGatedMemoriesPage = () => {
                             </div>
                             <div>
                               <h5 className="font-medium text-gray-800 capitalize">{tier.name} Tier</h5>
-                              <p className="text-xs text-gray-500">{tier.description}</p>
+                              <p className="text-xs text-gray-600">{tier.description}</p>
                             </div>
                           </div>
                           <div className="text-right">
@@ -1255,6 +1580,98 @@ const TokenGatedMemoriesPage = () => {
                 disabled={stakingRewards <= 0}
               >
                 Claim Rewards
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Evolution Modal */}
+      {showEvolutionModal && selectedMemory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">Evolve Memory</h3>
+              <p className="text-sm text-gray-600">
+                Enhance "{selectedMemory.title}" with new capabilities
+              </p>
+            </div>
+            
+            <div className="p-4">
+              <div className="bg-gray-50 p-3 rounded border border-gray-200 mb-4">
+                <div className="flex items-center mb-2">
+                  <GitBranch className="h-4 w-4 text-indigo-600 mr-2" />
+                  <span className="font-semibold text-indigo-700">
+                    Current: Stage {selectedMemory.evolutionStage}
+                  </span>
+                </div>
+                
+                <div className="text-sm text-gray-700">
+                  {selectedMemory.capabilities && selectedMemory.capabilities.length > 0 && (
+                    <div className="mt-2">
+                      <div className="text-xs font-semibold text-gray-700">Current Capabilities:</div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedMemory.capabilities.map(capability => (
+                          <Badge key={capability} variant="outline" className="text-xs">
+                            {capability.replace('_', ' ')}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <h4 className="font-semibold text-gray-800 mb-2">Available Evolution Stages</h4>
+              
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {availableEvolutionStages
+                  .filter(stage => stage.id > (selectedMemory.evolutionStage || 0))
+                  .map(stage => (
+                    <div 
+                      key={stage.id}
+                      className="bg-indigo-50 p-3 rounded border border-indigo-100 cursor-pointer hover:border-indigo-300 transition-all"
+                      onClick={() => handleEvolveMemory(selectedMemory, stage)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h5 className="font-semibold text-indigo-700">Stage {stage.id}: {stage.name}</h5>
+                          <p className="text-xs text-gray-600">{stage.description}</p>
+                        </div>
+                        <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">
+                          {stage.tokenCost} $SNSY
+                        </Badge>
+                      </div>
+                      
+                      {stage.capabilities.length > 0 && (
+                        <div className="mt-2">
+                          <h6 className="text-xs font-semibold text-gray-700">New Capabilities:</h6>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {stage.capabilities.map(capability => (
+                              <Badge key={capability} variant="outline" className="text-xs bg-white">
+                                {capability.replace('_', ' ')}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                
+                {availableEvolutionStages.filter(stage => stage.id > (selectedMemory.evolutionStage || 0)).length === 0 && (
+                  <div className="text-center p-4 text-gray-500">
+                    This memory has reached its maximum evolution stage.
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-200 flex justify-end space-x-2">
+              <Button 
+                variant="outline"
+                onClick={() => setShowEvolutionModal(false)}
+              >
+                Cancel
               </Button>
             </div>
           </div>
