@@ -47,7 +47,7 @@ The application includes the following mock UI prototypes accessible via the sid
     - **File:** `src/app/prototypes/PureVoice/page.tsx`
 
 3.  **MCP Client/Server:**
-    - **Concept:** Simulates a UI triggering a backend Micro-process Controller (MCP) with input data and displaying the processed output.
+    - **Concept:** Simulates a UI triggering a backend Model Control Protocol (MCP) with input data and displaying the processed output.
     - **Features:** Text area for input (e.g., JSON), button to trigger the mock MCP call, loading state during simulation, displays mock JSON output.
     - **File:** `src/app/prototypes/MCPClient/page.tsx`
 
