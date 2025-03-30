@@ -328,8 +328,18 @@ async function monitorDeployment(deploymentId) {
       } else {
         // Fallback to CLI
         statusOutput = execSync(`vercel inspect ${deploymentId}`).toString();
-        const statusMatch = statusOutput.match(/status\s+●\s+(\w+)/);
-        status = statusMatch ? statusMatch[1] : null;
+        
+        // More robust status detection - look for the status line and extract the word after any bullet character
+        let statusMatch = null;
+        const statusLine = statusOutput.split('\n').find(line => line.trim().startsWith('status'));
+        if (statusLine) {
+          // Extract the status word, ignoring any bullet point or special character
+          const statusWordMatch = statusLine.match(/status.*?(\w+)$/);
+          if (statusWordMatch) {
+            status = statusWordMatch[1];
+          }
+        }
+        
         log(`Deployment status (via CLI): ${status}`, colors.blue);
       }
       
@@ -390,10 +400,10 @@ async function monitorDeployment(deploymentId) {
           log(`Error log saved to ${ERROR_LOG_FILE}`, colors.yellow);
         }
         
-        return;
+        return 'error';
       } else if (status === 'READY' || status === 'Ready') {
         log(`Deployment successful with status: ${status}`, colors.green);
-        return;
+        return 'success';
       }
       
       retries++;
@@ -406,6 +416,7 @@ async function monitorDeployment(deploymentId) {
   }
   
   log(`Exceeded maximum retries (${MAX_RETRIES}) while checking deployment status.`, colors.red);
+  return 'error';
 }
 
 /**
@@ -415,8 +426,9 @@ async function pollForDeployments() {
   log('Starting deployment monitor...', colors.cyan);
   
   let lastDeploymentId = null;
+  let deploymentSuccessful = false;
   
-  while (true) {
+  while (!deploymentSuccessful) {
     log('Polling for new deployments...', colors.blue);
     
     const deploymentId = await getLatestDeploymentId();
@@ -425,10 +437,19 @@ async function pollForDeployments() {
       log(`\nNew deployment detected: ${deploymentId}`, colors.magenta);
       lastDeploymentId = deploymentId;
       
-      await monitorDeployment(deploymentId);
+      // Monitor the deployment and get the result
+      const result = await monitorDeployment(deploymentId);
+      
+      // If deployment was successful, set flag to exit the loop
+      if (result === 'success') {
+        deploymentSuccessful = true;
+        log('Deployment monitoring completed successfully.', colors.green + colors.bold);
+      }
     }
     
-    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+    if (!deploymentSuccessful) {
+      await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+    }
   }
 }
 
