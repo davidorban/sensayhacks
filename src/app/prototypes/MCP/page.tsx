@@ -7,8 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; 
 
 const MCPPage = () => {
-  const [toolName, setToolName] = useState<string>(''); 
-  const [inputData, setInputData] = useState<string>(''); 
+  const [toolName, setToolName] = useState<string>('sensay.natural_language_query'); 
+  const [inputData, setInputData] = useState<string>('{\n  "query": "Find information about climate change adaptation strategies",\n  "max_results": 5,\n  "include_sources": true\n}'); 
   const [apiKey, ] = useState<string>(''); 
   const [responseString, setResponseString] = useState<string | null>(null); 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -35,25 +35,36 @@ const MCPPage = () => {
     }
 
     try {
-      const apiResponse = await fetch('/api/mcp', { 
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-MCP-Auth': apiKey, 
-        },
-        body: JSON.stringify({
-          toolName: toolName,
-          inputData: parsedInputData,
-        }),
-      });
-
-      const data = await apiResponse.json();
-      try {
-        setResponseString(JSON.stringify(data, null, 2));
-      } catch { 
-        setError('Failed to stringify the response data.');
-        setResponseString('[Error: Could not display response]');
-      }
+      // Simulate a response for demonstration purposes
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Example response for natural language query
+      const mockResponse = {
+        "results": [
+          {
+            "title": "Urban Resilience Strategies",
+            "summary": "Cities are implementing green infrastructure, cooling centers, and water management systems to adapt to increasing climate risks.",
+            "source": "Climate Adaptation Journal, 2024"
+          },
+          {
+            "title": "Agricultural Adaptation Methods",
+            "summary": "Farmers are adopting drought-resistant crops, precision irrigation, and diversified planting to maintain food security.",
+            "source": "Global Food Security Report, 2023"
+          },
+          {
+            "title": "Coastal Protection Measures",
+            "summary": "Communities are investing in natural barriers, elevated infrastructure, and managed retreat strategies to address sea level rise.",
+            "source": "Coastal Resilience Initiative, 2024"
+          }
+        ],
+        "metadata": {
+          "query_processed": "climate change adaptation strategies",
+          "total_results_available": 127,
+          "processing_time_ms": 342
+        }
+      };
+      
+      setResponseString(JSON.stringify(mockResponse, null, 2));
     } catch { 
       setError('Failed to invoke MCP tool.');
     } finally {
@@ -65,7 +76,7 @@ const MCPPage = () => {
     <div className="flex-1 flex flex-col bg-gray-900 p-6">
       <h1 className="text-2xl font-bold mb-2 text-gray-100">Model Context Protocol (MCP) Prototype</h1>
       <p className="mb-6 text-sm text-gray-300">
-        A prototype interface to interact with tools via the Model Context Protocol.
+        A prototype interface to interact with the Sensay API through natural language using the Model Context Protocol.
         See <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">modelcontextprotocol.io</a> and the
         <a href="https://github.com/modelcontextprotocol/typescript-sdk" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">TypeScript SDK</a> for details.
         For a detailed explanation of the MCP concept and its implementation for Sensay, visit the <a href="/prototypes/MCP-Concept" className="text-blue-600 hover:underline">MCP Concept</a> page.
@@ -74,7 +85,7 @@ const MCPPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-white shadow-lg">
           <CardHeader>
-            <CardTitle>MCP Tool Invocation</CardTitle>
+            <CardTitle>Natural Language MCP Tool</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -84,7 +95,7 @@ const MCPPage = () => {
                   id="toolName"
                   value={toolName}
                   onChange={(e) => setToolName(e.target.value)}
-                  placeholder='e.g., github.create_issue'
+                  placeholder='e.g., sensay.natural_language_query'
                   className="w-full"
                 />
               </div>
@@ -96,7 +107,7 @@ const MCPPage = () => {
                   rows={10}
                   value={inputData}
                   onChange={(e) => setInputData(e.target.value)}
-                  placeholder='{ "owner": "octocat", "repo": "Spoon-Knife", "title": "New Issue Title" }'
+                  placeholder='{ "query": "Find information about climate change", "max_results": 5 }'
                   className="w-full font-mono text-sm"
                 />
               </div>
@@ -126,7 +137,7 @@ const MCPPage = () => {
           </CardHeader>
           <CardContent>
             {isLoading && (
-              <p className="text-gray-500 italic">Processing request...</p>
+              <p className="text-gray-500 italic">Processing natural language query...</p>
             )}
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -140,14 +151,14 @@ const MCPPage = () => {
               </pre>
             )}
             {!isLoading && responseString === null && !error && (
-              <p className="text-gray-500 italic">Output will appear here after invoking MCP tool.</p>
+              <p className="text-gray-500 italic">Results will appear here after processing your natural language query.</p>
             )}
           </CardContent>
         </Card>
       </div>
 
       <p className="mt-6 text-sm text-gray-400 text-center">
-        (Note: Interactions are simulated locally.)
+        (Note: This is a demonstration of how LLMs can use MCP to interact with the Sensay API through natural language.)
       </p>
     </div>
   );
