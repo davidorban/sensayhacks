@@ -214,23 +214,38 @@ export async function POST(request: Request) {
   const lastUserMessage = userMessages[userMessages.length - 1]?.content.toLowerCase() || '';
 
   try {
+    console.log('Task detection - analyzing message:', lastUserMessage);
+    
     // --- ADD --- //
     // Check for various ways to add a task or reminder
-    if (lastUserMessage.startsWith('add task ') || 
-        lastUserMessage.includes('remind me to ') || 
-        lastUserMessage.includes('can you remind me to ') ||
-        (lastUserMessage.includes('remind') && lastUserMessage.includes('tomorrow'))) {
+    const hasAddTask = lastUserMessage.startsWith('add task ');
+    const hasRemindMeTo = lastUserMessage.includes('remind me to ');
+    const hasCanYouRemindMeTo = lastUserMessage.includes('can you remind me to ');
+    const hasRemindAndTomorrow = lastUserMessage.includes('remind') && lastUserMessage.includes('tomorrow');
+    
+    console.log('Task patterns detected:', { 
+      hasAddTask, 
+      hasRemindMeTo, 
+      hasCanYouRemindMeTo, 
+      hasRemindAndTomorrow 
+    });
+    
+    if (hasAddTask || hasRemindMeTo || hasCanYouRemindMeTo || hasRemindAndTomorrow) {
+      console.log('Task intent detected!');
       
       // Extract the task text from different patterns
       let taskText = '';
       
-      if (lastUserMessage.startsWith('add task ')) {
+      if (hasAddTask) {
         taskText = lastUserMessage.replace(/^add task\s+/i, '').trim();
-      } else if (lastUserMessage.includes('remind me to ')) {
+        console.log('Extracted from add task pattern:', taskText);
+      } else if (hasRemindMeTo) {
         taskText = lastUserMessage.substring(lastUserMessage.indexOf('remind me to ') + 'remind me to '.length).trim();
-      } else if (lastUserMessage.includes('can you remind me to ')) {
+        console.log('Extracted from remind me to pattern:', taskText);
+      } else if (hasCanYouRemindMeTo) {
         taskText = lastUserMessage.substring(lastUserMessage.indexOf('can you remind me to ') + 'can you remind me to '.length).trim();
-      } else if (lastUserMessage.includes('remind') && lastUserMessage.includes('tomorrow')) {
+        console.log('Extracted from can you remind me to pattern:', taskText);
+      } else if (hasRemindAndTomorrow) {
         // Extract what comes after 'remind' and before 'tomorrow' or until the end
         const reminderIndex = lastUserMessage.indexOf('remind');
         const tomorrowIndex = lastUserMessage.indexOf('tomorrow');
@@ -246,20 +261,43 @@ export async function POST(request: Request) {
         // Clean up the task text
         taskText = taskText.replace(/^(me|you|us)\s+(to|about)\s+/i, '').trim();
         taskText = taskText.replace(/\s+tomorrow\s*/i, '').trim();
+        console.log('Extracted from remind+tomorrow pattern:', taskText);
       }
       if (taskText) {
         console.log(`Attempting to add task: "${taskText}" for user ${userId}`);
-        const { error: insertError } = await supabase
-          .from('tasks')
-          .insert({ user_id: userId, text: taskText, completed: false }); // Ensure user_id is set
+        
+        try {
+          // Check if the tasks table exists and is accessible
+          const { data: tablesData, error: tablesError } = await supabase
+            .from('tasks')
+            .select('count')
+            .limit(1);
+            
+          if (tablesError) {
+            console.error('Error accessing tasks table:', tablesError);
+            console.log('Table access error details:', JSON.stringify(tablesError));
+          } else {
+            console.log('Tasks table is accessible, proceeding with insert');
+          }
+          
+          // Insert the task
+          const { data: insertData, error: insertError } = await supabase
+            .from('tasks')
+            .insert({ user_id: userId, text: taskText, completed: false })
+            .select(); // Return the inserted row
 
-        if (insertError) {
-          console.error('Supabase insert error:', insertError);
-          // Optionally inform the user via replyContent? For now, just log.
-        } else {
-          console.log('Supabase task inserted successfully.');
-          tasksModified = true;
+          if (insertError) {
+            console.error('Supabase insert error:', insertError);
+            console.log('Insert error details:', JSON.stringify(insertError));
+          } else {
+            console.log('Supabase task inserted successfully:', insertData);
+            tasksModified = true;
+          }
+        } catch (dbError) {
+          console.error('Unexpected database error:', dbError);
         }
+      } else {
+        console.log('No valid task text extracted from message');
       }
     }
     // --- COMPLETE --- //
@@ -338,9 +376,18 @@ export async function POST(request: Request) {
 
   // --- Return Response --- //
   // Return the Sensay reply and the final tasks list (potentially updated)
+  console.log('Returning final response with tasks:', tasksFromSupabase);
+  
+  // Append task information to the reply if tasks were modified
+  let finalContent = replyContent;
+  if (tasksModified && tasksFromSupabase.length > 0) {
+    // Add a note about the task being added to the database
+    finalContent = `${replyContent}\n\nI've added this to your task list.`;
+  }
+  
   return NextResponse.json({ 
     success: true, 
-    content: replyContent, 
+    content: finalContent, 
     tasks: tasksFromSupabase 
   });
 }
