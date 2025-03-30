@@ -52,9 +52,17 @@ The application includes the following mock UI prototypes accessible via the sid
     - **File:** `src/app/prototypes/MCPClient/page.tsx`
 
 4.  **Token-Gated Memories:**
-    - **Concept:** Demonstrates accessing exclusive content (memories) by requiring a mock payment/unlock using $SNSY tokens.
-    - **Features:** Shows locked/unlocked status with icons/colors, provides a button to simulate unlocking with $SNSY (includes loading state), displays mock exclusive content when unlocked.
+    - **Concept:** A comprehensive token economy for accessing, evolving, and trading AI memories using $SNSY tokens.
+    - **Features:** 
+      - **Token Economy:** Purchase tokens, stake for rewards, spend on memories
+      - **Tiered Access:** Public, Premium, Expert, and Exclusive memory tiers
+      - **Memory Evolution:** Four evolutionary pathways (Analytical, Technical, Creative, Domain) with four stages each
+      - **Capability Framework:** Each evolution stage unlocks new memory capabilities
+      - **Memory Marketplace:** Discover and purchase new memories
+      - **Time-Based Decay:** Memories lose freshness over time
+      - **Transaction History:** Complete record of token transactions
     - **File:** `src/app/prototypes/TokenGatedMemories/page.tsx`
+    - **Documentation:** `src/app/prototypes/TokenGatedMemories/README.md`
 
 5.  **Token-Guided Evolution:**
     - **Concept:** Allows a user to guide the development or "evolution" of a digital entity (e.g., AI persona) by spending $SNSY tokens.
