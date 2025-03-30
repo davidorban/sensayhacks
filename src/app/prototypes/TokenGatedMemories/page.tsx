@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,9 @@ interface MemoryItem {
   tokenCost: number;
   category: string;
   timestamp: string;
+  decayRate: number;
+  creator: string;
+  popularity: number;
 }
 
 interface AccessTier {
@@ -62,6 +65,12 @@ const TokenGatedMemoriesPage = () => {
   const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(50);
+  const [stakedTokens, setStakedTokens] = useState(0);
+  const [stakingRewards, setStakingRewards] = useState(0);
+  const [showStakingModal, setShowStakingModal] = useState(false);
+  const [stakeAmount, setStakeAmount] = useState(10);
+  const [marketplaceMemories, setMarketplaceMemories] = useState<MemoryItem[]>([]);
+  const [showMemoryDecay, setShowMemoryDecay] = useState(true);
 
   // Define access tiers
   const accessTiers: AccessTier[] = [
@@ -120,7 +129,10 @@ const TokenGatedMemoriesPage = () => {
       tier: 'public',
       tokenCost: 0,
       category: 'Project Management',
-      timestamp: '2025-03-15'
+      timestamp: '2025-03-15',
+      decayRate: 0,
+      creator: 'System',
+      popularity: 85
     },
     {
       id: 'mem-2',
@@ -129,7 +141,10 @@ const TokenGatedMemoriesPage = () => {
       tier: 'public',
       tokenCost: 0,
       category: 'Market Research',
-      timestamp: '2025-03-20'
+      timestamp: '2025-03-20',
+      decayRate: 0,
+      creator: 'System',
+      popularity: 92
     },
     {
       id: 'mem-3',
@@ -138,7 +153,10 @@ const TokenGatedMemoriesPage = () => {
       tier: 'premium',
       tokenCost: 50,
       category: 'Strategic Planning',
-      timestamp: '2025-03-22'
+      timestamp: '2025-03-22',
+      decayRate: 5,
+      creator: 'Market Research Team',
+      popularity: 78
     },
     {
       id: 'mem-4',
@@ -147,7 +165,10 @@ const TokenGatedMemoriesPage = () => {
       tier: 'premium',
       tokenCost: 50,
       category: 'User Research',
-      timestamp: '2025-03-25'
+      timestamp: '2025-03-25',
+      decayRate: 8,
+      creator: 'UX Research Team',
+      popularity: 65
     },
     {
       id: 'mem-5',
@@ -156,7 +177,10 @@ const TokenGatedMemoriesPage = () => {
       tier: 'expert',
       tokenCost: 200,
       category: 'Technical Design',
-      timestamp: '2025-03-27'
+      timestamp: '2025-03-27',
+      decayRate: 2,
+      creator: 'Engineering Team',
+      popularity: 88
     },
     {
       id: 'mem-6',
@@ -165,7 +189,10 @@ const TokenGatedMemoriesPage = () => {
       tier: 'expert',
       tokenCost: 200,
       category: 'Financial Analysis',
-      timestamp: '2025-03-28'
+      timestamp: '2025-03-28',
+      decayRate: 10,
+      creator: 'Finance Team',
+      popularity: 72
     },
     {
       id: 'mem-7',
@@ -174,7 +201,10 @@ const TokenGatedMemoriesPage = () => {
       tier: 'exclusive',
       tokenCost: 500,
       category: 'Business Development',
-      timestamp: '2025-03-29'
+      timestamp: '2025-03-29',
+      decayRate: 15,
+      creator: 'Business Development Team',
+      popularity: 95
     },
     {
       id: 'mem-8',
@@ -183,9 +213,160 @@ const TokenGatedMemoriesPage = () => {
       tier: 'exclusive',
       tokenCost: 500,
       category: 'R&D',
-      timestamp: '2025-03-30'
+      timestamp: '2025-03-30',
+      decayRate: 1,
+      creator: 'Research Team',
+      popularity: 98
     }
   ];
+
+  // Initialize marketplace memories
+  useEffect(() => {
+    // Simulate marketplace memories
+    const marketplace: MemoryItem[] = [
+      {
+        id: 'market-1',
+        title: 'AI Agent Collaboration Framework',
+        content: 'A comprehensive framework for enabling multiple AI agents to collaborate effectively on complex tasks with minimal human supervision.',
+        tier: 'premium',
+        tokenCost: 75,
+        category: 'Research',
+        timestamp: '2025-03-28',
+        decayRate: 3,
+        creator: 'AI Research Collective',
+        popularity: 89
+      },
+      {
+        id: 'market-2',
+        title: 'Emerging Market Opportunities Q2 2025',
+        content: 'Analysis of untapped market segments in Southeast Asia with specific entry strategies and potential partnership opportunities.',
+        tier: 'expert',
+        tokenCost: 250,
+        category: 'Market Analysis',
+        timestamp: '2025-03-29',
+        decayRate: 12,
+        creator: 'Global Markets Institute',
+        popularity: 76
+      },
+      {
+        id: 'market-3',
+        title: 'Next-Gen Neural Architecture Blueprint',
+        content: 'Detailed technical specifications for a revolutionary neural network architecture optimized for multimodal reasoning and contextual understanding.',
+        tier: 'exclusive',
+        tokenCost: 600,
+        category: 'Technical',
+        timestamp: '2025-03-30',
+        decayRate: 1,
+        creator: 'Neural Systems Lab',
+        popularity: 97
+      }
+    ];
+    
+    setMarketplaceMemories(marketplace);
+  }, []);
+
+  // Calculate memory decay
+  const getMemoryFreshness = (timestamp: string, decayRate: number) => {
+    if (!showMemoryDecay || decayRate === 0) return 100;
+    
+    const memoryDate = new Date(timestamp);
+    const currentDate = new Date('2025-03-30');
+    const daysDifference = Math.floor((currentDate.getTime() - memoryDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Calculate freshness based on decay rate and days since creation
+    const freshness = Math.max(0, 100 - (daysDifference * decayRate));
+    return freshness;
+  };
+
+  // Handle staking tokens
+  const handleStakeTokens = () => {
+    if (tokenBalance < stakeAmount) {
+      alert('Insufficient token balance to stake this amount.');
+      return;
+    }
+
+    setIsLoading(true);
+    console.log(`(Mock) Staking ${stakeAmount} $SNSY tokens...`);
+
+    // Simulate staking delay
+    setTimeout(() => {
+      setTokenBalance(prev => prev - stakeAmount);
+      setStakedTokens(prev => prev + stakeAmount);
+      
+      // Add transaction record
+      setTransactionHistory(prev => [
+        {
+          id: `tx-${Date.now()}`,
+          type: 'stake',
+          amount: stakeAmount,
+          timestamp: new Date().toLocaleString(),
+          status: 'completed'
+        },
+        ...prev
+      ]);
+      
+      setIsLoading(false);
+      setShowStakingModal(false);
+      
+      // Calculate rewards
+      calculateStakingRewards();
+    }, 2000);
+  };
+
+  // Calculate staking rewards
+  const calculateStakingRewards = () => {
+    // Simple reward calculation: 5% of staked tokens
+    const rewards = Math.floor(stakedTokens * 0.05);
+    setStakingRewards(rewards);
+  };
+
+  // Claim staking rewards
+  const claimStakingRewards = () => {
+    if (stakingRewards <= 0) return;
+    
+    setTokenBalance(prev => prev + stakingRewards);
+    setStakingRewards(0);
+    
+    // Add transaction record
+    setTransactionHistory(prev => [
+      {
+        id: `tx-${Date.now()}`,
+        type: 'reward',
+        amount: stakingRewards,
+        timestamp: new Date().toLocaleString(),
+        status: 'completed'
+      },
+      ...prev
+    ]);
+  };
+
+  // Purchase a marketplace memory
+  const purchaseMarketplaceMemory = (memory: MemoryItem) => {
+    if (tokenBalance < memory.tokenCost) {
+      alert('Insufficient token balance to purchase this memory.');
+      return;
+    }
+
+    setTokenBalance(prev => prev - memory.tokenCost);
+    
+    // Add transaction record
+    setTransactionHistory(prev => [
+      {
+        id: `tx-${Date.now()}`,
+        type: 'purchase',
+        amount: memory.tokenCost,
+        timestamp: new Date().toLocaleString(),
+        status: 'completed',
+        memoryId: memory.id,
+        memoryTitle: memory.title
+      },
+      ...prev
+    ]);
+    
+    // Remove from marketplace and add to user memories
+    setMarketplaceMemories(prev => prev.filter(m => m.id !== memory.id));
+    // In a real app, we would add this to the user's memories
+  };
 
   // Handle token purchase
   const handlePurchaseTokens = () => {
@@ -299,6 +480,15 @@ const TokenGatedMemoriesPage = () => {
               Purchase Tokens
             </Button>
             
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowStakingModal(true)}
+            >
+              <Award className="h-4 w-4 mr-2" />
+              Stake Tokens
+            </Button>
+            
             <Tooltip 
               content={`Your current token balance gives you access to all ${getHighestAccessibleTier()} tier memories and below.`}
               placement="bottom"
@@ -327,6 +517,14 @@ const TokenGatedMemoriesPage = () => {
                 <TabsTrigger value="transactions" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:shadow-none rounded-none">
                   <History className="h-4 w-4 mr-2" />
                   Transaction History
+                </TabsTrigger>
+                <TabsTrigger value="marketplace" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:shadow-none rounded-none">
+                  <Coins className="h-4 w-4 mr-2" />
+                  Marketplace
+                </TabsTrigger>
+                <TabsTrigger value="concept" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:shadow-none rounded-none">
+                  <Info className="h-4 w-4 mr-2" />
+                  Concept
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -360,93 +558,96 @@ const TokenGatedMemoriesPage = () => {
                   {getFilteredMemories().map((memory) => {
                     const isAccessible = canAccessMemory(memory);
                     const tier = accessTiers.find(t => t.name === memory.tier);
+                    const freshness = getMemoryFreshness(memory.timestamp, memory.decayRate);
                     
                     return (
                       <Card key={memory.id} className={`overflow-hidden ${isAccessible ? '' : 'bg-gray-50'}`}>
-                        <CardHeader className="p-4 pb-2 flex flex-row justify-between items-start space-y-0">
-                          <div>
-                            <CardTitle className="text-base font-semibold">{memory.title}</CardTitle>
-                            <CardDescription>{memory.category} • {memory.timestamp}</CardDescription>
+                        {isAccessible ? (
+                          <div className="p-4">
+                            <div className="flex items-center text-sm text-green-600 mb-2">
+                              <Unlock className="h-3 w-3 mr-1" />
+                              <span>Unlocked Memory</span>
+                            </div>
+                            <p className="text-sm text-gray-700">{memory.content}</p>
+                            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                              <span className="text-xs text-gray-500">
+                                {memory.tier === 'public' ? 'Free Access' : `${memory.tokenCost} $SNSY tokens`}
+                              </span>
+                              <Tooltip 
+                                content={`This memory is part of the ${memory.tier} tier`}
+                                placement="right"
+                              />
+                            </div>
+                            
+                            {showMemoryDecay && memory.decayRate > 0 && (
+                              <div className="mt-3">
+                                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                  <span>Memory Freshness</span>
+                                  <span>{freshness}%</span>
+                                </div>
+                                <Progress value={freshness} />
+                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                  <span>Created: {memory.timestamp}</span>
+                                  <span>By: {memory.creator}</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <Badge className={`${tier?.color} capitalize`}>
-                            {tier?.icon}
-                            <span className="ml-1">{memory.tier}</span>
-                          </Badge>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-2">
-                          {isAccessible ? (
-                            <div>
-                              <div className="flex items-center mb-2 text-green-600 text-xs">
-                                <Unlock className="h-3 w-3 mr-1" />
-                                <span>Unlocked Memory</span>
-                              </div>
-                              <p className="text-sm text-gray-700">{memory.content}</p>
-                              <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
-                                <span className="text-xs text-gray-500">
-                                  {memory.tier === 'public' ? 'Free Access' : `${memory.tokenCost} $SNSY tokens`}
+                        ) : (
+                          <div className="bg-gray-100 p-4 rounded-md flex flex-col items-center justify-center space-y-3 border border-gray-200">
+                            <div className="flex items-center text-gray-500">
+                              <Lock className="h-5 w-5 mr-2" />
+                              <span>This memory requires {tier?.tokenRequirement} $SNSY tokens to access</span>
+                            </div>
+                            <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                              <div 
+                                className="bg-indigo-500 h-full" 
+                                style={{ 
+                                  width: `${Math.min(100, (tokenBalance / (tier?.tokenRequirement || 1)) * 100)}%` 
+                                }}
+                              ></div>
+                            </div>
+                            <div className="text-xs text-gray-500 w-full flex justify-between">
+                              <span>Your balance: {tokenBalance}</span>
+                              <span>Required: {tier?.tokenRequirement}</span>
+                            </div>
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={() => handleUnlockMemory(memory)}
+                              disabled={isLoading || tokenBalance < memory.tokenCost}
+                            >
+                              {isLoading ? (
+                                <span className="flex items-center">
+                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Unlocking...
                                 </span>
-                                <Tooltip 
-                                  content={`This memory is part of the ${memory.tier} tier`}
-                                  placement="right"
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="bg-gray-100 p-4 rounded-md flex flex-col items-center justify-center space-y-3 border border-gray-200">
-                              <div className="flex items-center text-gray-500">
-                                <Lock className="h-5 w-5 mr-2" />
-                                <span>This memory requires {tier?.tokenRequirement} $SNSY tokens to access</span>
-                              </div>
-                              <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                                <div 
-                                  className="bg-indigo-500 h-full" 
-                                  style={{ 
-                                    width: `${Math.min(100, (tokenBalance / (tier?.tokenRequirement || 1)) * 100)}%` 
-                                  }}
-                                ></div>
-                              </div>
-                              <div className="text-xs text-gray-500 w-full flex justify-between">
-                                <span>Your balance: {tokenBalance}</span>
-                                <span>Required: {tier?.tokenRequirement}</span>
-                              </div>
-                              <Button 
-                                variant="default" 
-                                size="sm"
-                                onClick={() => handleUnlockMemory(memory)}
-                                disabled={isLoading || tokenBalance < memory.tokenCost}
-                              >
-                                {isLoading ? (
-                                  <span className="flex items-center">
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Unlocking...
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center">
-                                    <Key className="h-4 w-4 mr-1" />
-                                    Unlock with {memory.tokenCost} $SNSY
-                                  </span>
-                                )}
-                              </Button>
-                              {tokenBalance < memory.tokenCost && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="w-full"
-                                  onClick={() => {
-                                    setPurchaseAmount(memory.tokenCost - tokenBalance);
-                                    setShowPurchaseModal(true);
-                                  }}
-                                >
-                                  <Coins className="h-4 w-4 mr-1" />
-                                  Purchase {memory.tokenCost - tokenBalance} more tokens
-                                </Button>
+                              ) : (
+                                <span className="flex items-center">
+                                  <Key className="h-4 w-4 mr-1" />
+                                  Unlock with {memory.tokenCost} $SNSY
+                                </span>
                               )}
-                            </div>
-                          )}
-                        </CardContent>
+                            </Button>
+                            {tokenBalance < memory.tokenCost && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full"
+                                onClick={() => {
+                                  setPurchaseAmount(memory.tokenCost - tokenBalance);
+                                  setShowPurchaseModal(true);
+                                }}
+                              >
+                                <Coins className="h-4 w-4 mr-1" />
+                                Purchase {memory.tokenCost - tokenBalance} more tokens
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </Card>
                     );
                   })}
@@ -687,6 +888,174 @@ const TokenGatedMemoriesPage = () => {
                 )}
               </div>
             </TabsContent>
+            
+            {/* Marketplace Tab */}
+            <TabsContent value="marketplace" className="flex-1 p-0 mt-0">
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Memory Marketplace</h3>
+                  <p className="text-gray-600 mb-6">
+                    Discover and purchase valuable memories from trusted creators. All marketplace memories are verified for quality and relevance.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {marketplaceMemories.map((memory) => {
+                      const canPurchase = tokenBalance >= memory.tokenCost;
+                      const freshness = getMemoryFreshness(memory.timestamp, memory.decayRate);
+                      
+                      return (
+                        <div 
+                          key={memory.id}
+                          className="border rounded-lg overflow-hidden"
+                        >
+                          <div className={`p-4 border-b ${memory.tier === 'premium' ? 'bg-blue-50 border-blue-100' : memory.tier === 'expert' ? 'bg-purple-50 border-purple-100' : 'bg-amber-50 border-amber-100'}`}>
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="font-semibold text-gray-800">{memory.title}</h4>
+                                <div className="flex items-center text-sm text-gray-500 mt-1">
+                                  <Badge className="mr-2 capitalize">{memory.tier}</Badge>
+                                  <span className="mr-2">{memory.category}</span>
+                                  <span>by {memory.creator}</span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-semibold text-indigo-700">{memory.tokenCost} $SNSY</div>
+                                <div className="text-xs text-gray-500">Popularity: {memory.popularity}%</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="p-4">
+                            <p className="text-sm text-gray-700">{memory.content.substring(0, 150)}...</p>
+                            
+                            {showMemoryDecay && (
+                              <div className="mt-3">
+                                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                  <span>Memory Freshness</span>
+                                  <span>{freshness}%</span>
+                                </div>
+                                <Progress value={freshness} />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {freshness > 80 ? 'Very fresh content' : 
+                                   freshness > 50 ? 'Moderately fresh content' : 
+                                   'Content may need updating soon'}
+                                </p>
+                              </div>
+                            )}
+                            
+                            <div className="mt-4">
+                              <Button 
+                                variant={canPurchase ? "default" : "outline"}
+                                className="w-full"
+                                disabled={!canPurchase}
+                                onClick={() => purchaseMarketplaceMemory(memory)}
+                              >
+                                <Coins className="h-4 w-4 mr-2" />
+                                {canPurchase ? 'Purchase Memory' : 'Insufficient Tokens'}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            {/* Concept Tab */}
+            <TabsContent value="concept" className="flex-1 p-0 mt-0">
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-indigo-700 mt-0">Core Concept</h3>
+                  <p className="text-gray-700 mb-4">
+                    Token Gated Memories is a framework that uses blockchain tokens ($SNSY) to control access to specific AI memories, knowledge, and capabilities.
+                  </p>
+                  
+                  <h4 className="text-lg font-semibold text-gray-800 mt-6">How It Works</h4>
+                  <div className="space-y-4 mt-3">
+                    <div className="flex items-start">
+                      <div className="bg-indigo-100 p-2 rounded-full mr-3">
+                        <Key className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-gray-800">Access Control</h5>
+                        <p className="text-gray-600 text-sm">
+                          Token holdings determine which memory tiers a user can access. Higher token holdings unlock more valuable information.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="bg-indigo-100 p-2 rounded-full mr-3">
+                        <Coins className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-gray-800">Token Economy</h5>
+                        <p className="text-gray-600 text-sm">
+                          Users can purchase, stake, and earn $SNSY tokens. Tokens can be spent to unlock memories or staked to earn passive rewards.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="bg-indigo-100 p-2 rounded-full mr-3">
+                        <Database className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-gray-800">Memory Marketplace</h5>
+                        <p className="text-gray-600 text-sm">
+                          A decentralized marketplace where users can discover, purchase, and sell valuable memories, creating a knowledge economy.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="bg-indigo-100 p-2 rounded-full mr-3">
+                        <TrendingUp className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-gray-800">Memory Decay</h5>
+                        <p className="text-gray-600 text-sm">
+                          Memories have varying decay rates, reflecting how quickly information becomes outdated. Fresher memories provide more value.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <h4 className="text-lg font-semibold text-gray-800 mt-8">Use Cases</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-gray-800">Premium Knowledge Services</h5>
+                      <p className="text-gray-600 text-sm mt-1">
+                        Organizations can monetize specialized knowledge by gating access to premium insights and analysis.
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-gray-800">Exclusive Communities</h5>
+                      <p className="text-gray-600 text-sm mt-1">
+                        Communities can use token holdings to determine access to exclusive discussions and shared knowledge.
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-gray-800">Enterprise Solutions</h5>
+                      <p className="text-gray-600 text-sm mt-1">
+                        Businesses can implement tiered access to sensitive information based on employee roles and clearance levels.
+                      </p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-gray-800">Research Collaboration</h5>
+                      <p className="text-gray-600 text-sm mt-1">
+                        Research teams can share findings with appropriate access controls while maintaining intellectual property rights.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -815,6 +1184,70 @@ const TokenGatedMemoriesPage = () => {
                     Purchase {purchaseAmount} Tokens
                   </span>
                 )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Staking Modal */}
+      {showStakingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Stake $SNSY Tokens</h3>
+            
+            <div className="mb-4">
+              <p className="text-gray-600 mb-4">
+                Stake your tokens to earn passive rewards. Staked tokens continue to count toward your tier access levels.
+              </p>
+              
+              <div className="bg-indigo-50 p-4 rounded-lg mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700">Current Balance:</span>
+                  <span className="font-semibold">{tokenBalance} $SNSY</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-700">Currently Staked:</span>
+                  <span className="font-semibold">{stakedTokens} $SNSY</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-700">Reward Rate:</span>
+                  <span className="font-semibold text-green-600">5% per period</span>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Amount to Stake
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type="range"
+                    min="1"
+                    max={tokenBalance}
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(parseInt(e.target.value))}
+                    className="w-full mr-4"
+                    disabled={tokenBalance === 0}
+                  />
+                  <span className="font-semibold text-indigo-700 w-16 text-right">{stakeAmount} $SNSY</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowStakingModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleStakeTokens}
+                disabled={isLoading || tokenBalance < stakeAmount}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                {isLoading ? 'Processing...' : 'Stake Tokens'}
               </Button>
             </div>
           </div>
