@@ -1,0 +1,3 @@
+@echo off
+echo Starting Vercel Deployment Monitor...
+node monitor-deployment.js
