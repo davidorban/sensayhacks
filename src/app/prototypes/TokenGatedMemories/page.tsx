@@ -463,7 +463,7 @@ const TokenGatedMemoriesPage = () => {
 
     // Set initial token balance
     setTokenBalance(200);
-  }, []);
+  }, []);  
 
   // Check if a memory can be evolved
   const canEvolveMemory = (memory: MemoryItem) => {
@@ -490,6 +490,45 @@ const TokenGatedMemoriesPage = () => {
         return (memory.evolutionStage || 0) >= prereq.stage;
       });
     });
+  };
+
+  // Get the highest accessible tier based on token balance
+  const getHighestAccessibleTier = () => {
+    for (let i = accessTiers.length - 1; i >= 0; i--) {
+      if (tokenBalance >= accessTiers[i].tokenRequirement) {
+        return accessTiers[i].name;
+      }
+    }
+    return 'public';
+  };
+
+  // Check if a memory is accessible based on token balance
+  const canAccessMemory = (memory: MemoryItem) => {
+    if (memory.tier === 'public') return true;
+    
+    const tierIndex = accessTiers.findIndex(tier => tier.name === memory.tier);
+    const requiredTokens = accessTiers[tierIndex].tokenRequirement;
+    
+    return tokenBalance >= requiredTokens;
+  };
+
+  // Filter memories by tier
+  const getFilteredMemories = () => {
+    if (!selectedTier) return memories;
+    return memories.filter(memory => memory.tier === selectedTier);
+  };
+
+  // Calculate memory decay
+  const getMemoryFreshness = (timestamp: string, decayRate: number) => {
+    if (!showMemoryDecay || decayRate === 0) return 100;
+    
+    const memoryDate = new Date(timestamp);
+    const currentDate = new Date('2025-03-30');
+    const daysDifference = Math.floor((currentDate.getTime() - memoryDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Calculate freshness based on decay rate and days since creation
+    const freshness = Math.max(0, 100 - (daysDifference * decayRate));
+    return freshness;
   };
 
   // Handle memory evolution
