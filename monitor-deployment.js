@@ -5,20 +5,20 @@
  * 
  * This script monitors Vercel deployments and catches build errors automatically.
  * It will:
- * 1. Watch for new deployments
+ * 1. Poll for new deployments
  * 2. Track deployment status
  * 3. Capture and display build errors
  * 4. Suggest fixes based on common error patterns
  */
 
-const { execSync, spawn } = require('child_process');
+const { execSync, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
 
 // Configuration
+const POLL_INTERVAL = 10000; // Time between deployment checks in milliseconds
 const MAX_RETRIES = 60; // Maximum number of status checks
-const CHECK_INTERVAL = 5000; // Time between checks in milliseconds
+const CHECK_INTERVAL = 5000; // Time between status checks in milliseconds
 const ERROR_LOG_FILE = path.join(__dirname, 'vercel-build-errors.log');
 
 // ANSI color codes for terminal output
@@ -54,6 +54,9 @@ const errorPatterns = [
   }
 ];
 
+// Store the latest deployment ID to avoid re-processing
+let latestDeploymentId = null;
+
 /**
  * Logs a message to the console with optional color
  */
@@ -72,6 +75,21 @@ function executeCommand(command) {
     log(error.message, colors.red);
     return null;
   }
+}
+
+/**
+ * Executes a command asynchronously
+ */
+function executeCommandAsync(command) {
+  return new Promise((resolve, reject) => {
+    exec(command, { encoding: 'utf8' }, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(stdout);
+    });
+  });
 }
 
 /**
@@ -97,6 +115,32 @@ function suggestFixes(errorLog) {
 }
 
 /**
+ * Gets the latest deployment ID
+ */
+async function getLatestDeploymentId() {
+  try {
+    const output = await executeCommandAsync('vercel ls --limit 1');
+    const lines = output.split('\n').filter(line => line.trim() !== '');
+    
+    // Skip the header line and get the first deployment
+    if (lines.length >= 2) {
+      const deploymentLine = lines[1];
+      const parts = deploymentLine.split(/\s+/);
+      
+      // The deployment ID is typically in the first column
+      if (parts.length > 0) {
+        return parts[0];
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    log(`Error getting latest deployment: ${error.message}`, colors.red);
+    return null;
+  }
+}
+
+/**
  * Monitors a deployment until it completes or fails
  */
 async function monitorDeployment(deploymentId) {
@@ -106,9 +150,9 @@ async function monitorDeployment(deploymentId) {
   let deploymentState = null;
   
   while (retries < MAX_RETRIES) {
-    const output = executeCommand(`vercel inspect ${deploymentId}`);
-    
-    if (output) {
+    try {
+      const output = await executeCommandAsync(`vercel inspect ${deploymentId}`);
+      
       // Extract state from the output
       const stateMatch = output.match(/State:\s+(\w+)/);
       if (stateMatch) {
@@ -121,7 +165,7 @@ async function monitorDeployment(deploymentId) {
           log(`❌ Deployment failed!`, colors.red + colors.bold);
           
           // Get build logs
-          const logs = executeCommand(`vercel logs ${deploymentId}`);
+          const logs = await executeCommandAsync(`vercel logs ${deploymentId}`);
           if (logs) {
             // Save logs to file
             fs.writeFileSync(ERROR_LOG_FILE, logs);
@@ -156,6 +200,8 @@ async function monitorDeployment(deploymentId) {
           log(`Deployment status: ${deploymentState} (check ${retries + 1}/${MAX_RETRIES})`, colors.blue);
         }
       }
+    } catch (error) {
+      log(`Error checking deployment status: ${error.message}`, colors.red);
     }
     
     retries++;
@@ -167,47 +213,36 @@ async function monitorDeployment(deploymentId) {
 }
 
 /**
- * Watches for new deployments
+ * Polls for new deployments
  */
-async function watchDeployments() {
+async function pollForDeployments() {
   log('Starting deployment monitor...', colors.cyan);
-  log('Watching for new deployments...', colors.cyan);
+  log('Polling for new deployments...', colors.cyan);
   
-  // Run vercel in watch mode
-  const vercelProcess = spawn('vercel', ['--listen'], { shell: true });
-  
-  const rl = readline.createInterface({
-    input: vercelProcess.stdout,
-    terminal: false
-  });
-  
-  rl.on('line', async (line) => {
-    // Look for deployment creation messages
-    const deploymentMatch = line.match(/Deployment created: (https:\/\/vercel\.com\/[^\s]+)/);
-    if (deploymentMatch) {
-      const deploymentUrl = deploymentMatch[1];
-      const deploymentId = deploymentUrl.split('/').pop();
+  while (true) {
+    try {
+      const deploymentId = await getLatestDeploymentId();
       
-      log(`\nNew deployment detected: ${deploymentUrl}`, colors.magenta);
-      const result = await monitorDeployment(deploymentId);
-      
-      if (!result.success && !result.timedOut) {
-        log(`\nRefer to the linting guide for more information on fixing these errors:`, colors.cyan);
-        log(`${path.join(__dirname, 'documentation', 'linting-guide.md')}`, colors.cyan);
+      if (deploymentId && deploymentId !== latestDeploymentId) {
+        log(`\nNew deployment detected: ${deploymentId}`, colors.magenta);
+        latestDeploymentId = deploymentId;
+        
+        const result = await monitorDeployment(deploymentId);
+        
+        if (!result.success && !result.timedOut) {
+          log(`\nRefer to the linting guide for more information on fixing these errors:`, colors.cyan);
+          log(`${path.join(__dirname, 'documentation', 'linting-guide.md')}`, colors.cyan);
+        }
       }
+    } catch (error) {
+      log(`Error polling for deployments: ${error.message}`, colors.red);
     }
-  });
-  
-  vercelProcess.stderr.on('data', (data) => {
-    log(`Error: ${data}`, colors.red);
-  });
-  
-  vercelProcess.on('close', (code) => {
-    log(`Vercel process exited with code ${code}`, colors.yellow);
-  });
+    
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+  }
 }
 
-// Start monitoring
-watchDeployments().catch(error => {
+// Start polling
+pollForDeployments().catch(error => {
   log(`Error in deployment monitor: ${error.message}`, colors.red);
 });

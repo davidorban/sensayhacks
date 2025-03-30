@@ -4,7 +4,8 @@ This tool automatically monitors Vercel deployments for the SensayHacks project,
 
 ## Features
 
-- **Real-time Deployment Monitoring**: Watches for new deployments and tracks their status
+- **Automatic Deployment Detection**: Polls for new deployments at regular intervals
+- **Real-time Status Tracking**: Monitors deployment progress until completion
 - **Automatic Error Detection**: Captures build errors without manual intervention
 - **Error Analysis**: Identifies common linting and build issues
 - **Fix Suggestions**: Provides actionable suggestions based on the linting guide
@@ -25,7 +26,7 @@ monitor-deployment.bat
 node monitor-deployment.js
 ```
 
-3. The monitor will start watching for new deployments
+3. The monitor will start polling for new deployments
 4. Keep the terminal open while you work on the project
 
 ### Workflow
@@ -64,6 +65,15 @@ The monitor automatically recognizes and suggests fixes for common errors:
 4. **Missing Key Props**: List items without unique key props
 
 For each detected error, the monitor will provide a specific suggestion based on our [Linting Guide](./linting-guide.md).
+
+## How It Works
+
+The monitor uses the following approach:
+
+1. **Polling**: Checks for new deployments every 10 seconds using `vercel ls`
+2. **Deployment Tracking**: When a new deployment is detected, monitors its status
+3. **Status Checks**: Polls the deployment status every 5 seconds using `vercel inspect`
+4. **Error Handling**: If a deployment fails, retrieves and analyzes the logs
 
 ## Troubleshooting
 
