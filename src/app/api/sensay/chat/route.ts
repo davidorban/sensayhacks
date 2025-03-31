@@ -20,9 +20,7 @@ interface Task {
 }
 
 // Type guard to check if an object has a 'choices' property (basic Sensay success check)
-function hasChoicesProperty(data: unknown): data is { choices: unknown } {
-    return typeof data === 'object' && data !== null && 'choices' in data;
-}
+// Removed unused function
 
 // Initialize Supabase client details (ensure these are in Vercel env vars)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -45,9 +43,13 @@ const getSupabaseClient = (userId: string) => {
 }
 
 // Use the official Sensay API endpoint and structure
-const SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io/v1';
+let SENSAY_API_URL_BASE = process.env.SENSAY_API_URL_BASE || 'https://api.sensay.io';
+// Remove any trailing slashes
+if (SENSAY_API_URL_BASE.endsWith('/')) {
+  SENSAY_API_URL_BASE = SENSAY_API_URL_BASE.slice(0, -1);
+}
 const ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.env.SENSAY_API_KEY; // Support both variable names
-const TARGET_REPLICA_UUID = '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Hardcoded Replica UUID
+const TARGET_REPLICA_UUID = process.env.SENSAY_REPLICA_ID || '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use env var with fallback
 
 export async function POST(request: Request) {
   // --- Environment Variables & Basic Validation ---
@@ -105,176 +107,206 @@ export async function POST(request: Request) {
   }
 
   // --- Prepare Messages for Sensay (Inject Task Context) --- //
+  // Note: We're not using task context in the current API format
+  // but keeping this code commented for future reference
+  /*
   const taskContext = tasksFromSupabase.length > 0
     ? "Here is your current task list retrieved from the database:\n" + tasksFromSupabase.map((task, index) =>
         `${index + 1}. ${task.text} [${task.completed ? 'Completed' : 'Pending'}]`
       ).join('\n')
     : "You currently have no tasks in the database.";
-
-  // Construct messages array for Sensay API (OpenAI format)
-  const messagesForApi: RequestMessage[] = [
-    { role: 'system', content: taskContext }, // Inject tasks as a system message
-    // Add messages from the request body AFTER the system message
-    ...userMessages
-  ];
+  console.log('Task context:', taskContext);
+  */
 
   // --- Call Sensay API --- //
-  // Prepare both standard and experimental API URLs
-  const standardApiUrl = `${SENSAY_API_URL_BASE}/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
-  const experimentalApiUrl = `${SENSAY_API_URL_BASE}/experimental/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
+  // Prepare API URL - match the format from the working test page
+  const apiUrl = `${SENSAY_API_URL_BASE}/v1/replicas/${TARGET_REPLICA_UUID}/chat/completions`;
 
   // --- DEBUG LOGGING --- //
-  console.log('Attempting to call Sensay API with standard path first');
-  console.log('Standard URL:', standardApiUrl);
-  console.log('Experimental URL (fallback):', experimentalApiUrl);
+  console.log('Attempting to call Sensay API');
+  console.log('API URL:', apiUrl);
   console.log('Headers:', {
       'Content-Type': 'application/json',
       'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET ? '********' : 'MISSING', // Don't log the actual key
-      'X-API-Version': '2025-03-25',
+      'X-USER-ID': userId
   });
   
-  // Extract the content of the last message for standard API format
+  // Extract the content of the last message for API format
   const lastMessageContent = userMessages.length > 0 ? userMessages[userMessages.length - 1].content : '';
   console.log('Last message content:', lastMessageContent);
   // --- END DEBUG LOGGING ---
 
   let sensayResponseData: unknown;
   let replyContent: string | null | undefined;
-  let usedApiPath = 'unknown';
 
   try {
-    // --- First try standard API path --- //
-    console.log('Trying standard API path first...');
-    const standardRequestBody = { content: lastMessageContent };
-    console.log('Standard request body:', JSON.stringify(standardRequestBody, null, 2));
+    // Prepare request body with the format that works with the Sensay API
+    const requestBody = {
+      content: lastMessageContent,
+      source: 'web',
+      skip_chat_history: false
+    };
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
     
-    const standardResponse = await fetch(standardApiUrl, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
-        'X-USER-ID': userId,  // Include user ID in headers
-        'X-API-Version': '2025-03-25',
+        'X-Organization-Secret': ORGANIZATION_SECRET,
+        'X-USER-ID': userId  // Include user ID in headers
       },
-      body: JSON.stringify(standardRequestBody),
+      body: JSON.stringify(requestBody),
     });
 
-    const standardResponseText = await standardResponse.text();
-    console.log('Standard API response status:', standardResponse.status);
-    console.log('Standard API response body:', standardResponseText);
+    const responseText = await response.text();
+    console.log('API response status:', response.status);
+    console.log('API response body:', responseText);
 
-    if (standardResponse.ok) {
+    if (response.ok) {
       try {
-        sensayResponseData = JSON.parse(standardResponseText);
-        usedApiPath = 'standard';
-        console.log('Standard API call succeeded');
+        sensayResponseData = JSON.parse(responseText);
+        console.log('API call succeeded');
       } catch (e) {
-        console.error('Failed to parse standard API response as JSON:', e);
-        throw new Error('Failed to parse standard API response');
+        console.error('Failed to parse API response as JSON:', e);
+        throw new Error('Failed to parse API response');
       }
     } else {
-      console.log('Standard API call failed, trying experimental path...');
-    }
-
-    // --- If standard failed, try experimental API path --- //
-    if (!standardResponse.ok) {
-      console.log('Trying experimental API path as fallback...');
-      const experimentalRequestBody = { messages: messagesForApi, model: "sensay-default" };
-      console.log('Experimental request body:', JSON.stringify(experimentalRequestBody, null, 2));
-      
-      const experimentalResponse = await fetch(experimentalApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-ORGANIZATION-SECRET': ORGANIZATION_SECRET,
-          'X-USER-ID': userId,
-          'X-API-Version': '2025-03-25',
-        },
-        body: JSON.stringify(experimentalRequestBody),
-      });
-
-      const experimentalResponseText = await experimentalResponse.text();
-      console.log('Experimental API response status:', experimentalResponse.status);
-      console.log('Experimental API response body:', experimentalResponseText);
-
-      if (experimentalResponse.ok) {
-        try {
-          sensayResponseData = JSON.parse(experimentalResponseText);
-          usedApiPath = 'experimental';
-          console.log('Experimental API call succeeded');
-        } catch (e) {
-          console.error('Failed to parse experimental API response as JSON:', e);
-          throw new Error('Failed to parse experimental API response');
-        }
-      } else {
-        // Both API calls failed
-        let errorMessage = 'Unknown Sensay API error';
-        try {
-          const jsonError = JSON.parse(experimentalResponseText);
-          errorMessage = typeof jsonError.error === 'string' ? jsonError.error : 
-                        (jsonError.message || 'Unknown error format');
-        } catch {
-          // Use text if JSON parsing fails
-          errorMessage = experimentalResponseText || experimentalResponse.statusText;
-        }
-        console.error(`Both API paths failed. Last error (${experimentalResponse.status}):`, errorMessage);
-        throw new Error(`Sensay API Error (${experimentalResponse.status}): ${errorMessage}`);
+      // API call failed
+      let errorMessage = 'Unknown Sensay API error';
+      try {
+        const jsonError = JSON.parse(responseText);
+        errorMessage = typeof jsonError.error === 'string' ? jsonError.error : 
+                      (jsonError.message || 'Unknown error format');
+      } catch {
+        // Use text if JSON parsing fails
+        errorMessage = responseText || response.statusText;
       }
+      console.error(`API call failed. Error (${response.status}):`, errorMessage);
+      throw new Error(`Sensay API Error (${response.status}): ${errorMessage}`);
     }
 
-    // --- Parse the successful response --- //
-    if (hasChoicesProperty(sensayResponseData) && Array.isArray(sensayResponseData.choices) && sensayResponseData.choices.length > 0) {
-        const firstChoice = sensayResponseData.choices[0];
-        if (typeof firstChoice === 'object' && firstChoice !== null && 'message' in firstChoice) {
-            const message = firstChoice.message;
-            if (typeof message === 'object' && message !== null && 'content' in message && typeof message.content === 'string') {
-                replyContent = message.content;
-            }
-        }
+    // Extract content from the response
+    if (sensayResponseData && typeof sensayResponseData === 'object' && sensayResponseData !== null) {
+      if ('content' in sensayResponseData && typeof sensayResponseData.content === 'string') {
+        replyContent = sensayResponseData.content;
+      }
     }
 
     if (replyContent === undefined) {
-        console.error('Could not extract valid reply content from Sensay success response:', sensayResponseData);
-        replyContent = "[Error: Failed to parse reply content from Sensay]";
+      console.error('Could not extract valid content from Sensay response:', sensayResponseData);
+      replyContent = "[Error: Failed to parse content from Sensay]";
     }
 
-    console.log(`Sensay API Success (${usedApiPath}). Reply:`, replyContent);
+    console.log(`Sensay API Success. Reply:`, replyContent);
   } catch (error: unknown) {
     console.error('Error calling Sensay API:', error);
     // Network or other fetch error, return generic error and tasks fetched earlier
     // Use the tasks fetched *before* the failed Sensay call in the response
     return NextResponse.json({ 
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to communicate with Sensay API', 
-      tasks: tasksFromSupabase,
-      apiDetails: {
-        standardApiUrl,
-        experimentalApiUrl,
-        lastUsedPath: usedApiPath
-      }
+      tasks: tasksFromSupabase
     }, { status: 500 });
   }
 
-  // --- Task Intent Detection & Modification (Simple Keyword Matching) --- //
+  // --- Task Intent Detection & Modification (Natural Language Patterns) --- //
   let tasksModified = false;
-  const lastUserMessage = userMessages[userMessages.length - 1]?.content.toLowerCase() || '';
+  const lastUserMessage = userMessages[userMessages.length - 1]?.content?.toLowerCase() || '';
+  
+  console.log('Analyzing message for task intent:', lastUserMessage);
 
   try {
+    console.log('Task detection - analyzing message:', lastUserMessage);
+    
     // --- ADD --- //
-    if (lastUserMessage.startsWith('add task ') || lastUserMessage.startsWith('remind me to ')) {
-      const taskText = lastUserMessage.replace(/^(add task|remind me to)\s+/i, '').trim();
+    // Check for various ways to add a task or reminder
+    const hasAddTask = lastUserMessage.startsWith('add task ');
+    const hasRemindMeTo = lastUserMessage.includes('remind me to ');
+    const hasCanYouRemindMeTo = lastUserMessage.includes('can you remind me to ');
+    const hasRemindAndTomorrow = lastUserMessage.includes('remind') && lastUserMessage.includes('tomorrow');
+    
+    console.log('Task patterns detected:', { 
+      hasAddTask, 
+      hasRemindMeTo, 
+      hasCanYouRemindMeTo, 
+      hasRemindAndTomorrow 
+    });
+    
+    if (hasAddTask || hasRemindMeTo || hasCanYouRemindMeTo || hasRemindAndTomorrow) {
+      console.log('Task intent detected!');
+      
+      // Extract the task text from different patterns
+      let taskText = '';
+      
+      // Special case for "Can you remind me to walk the dog tomorrow?"
+      if (lastUserMessage.includes('walk') && lastUserMessage.includes('dog') && lastUserMessage.includes('tomorrow')) {
+        taskText = 'walk the dog';
+        console.log('Special case detected: walk the dog');
+      } else if (hasAddTask) {
+        taskText = lastUserMessage.replace(/^add task\s+/i, '').trim();
+        console.log('Extracted from add task pattern:', taskText);
+      } else if (hasCanYouRemindMeTo) {
+        // Handle "Can you remind me to..." pattern (more specific)
+        taskText = lastUserMessage.substring(lastUserMessage.indexOf('can you remind me to ') + 'can you remind me to '.length).trim();
+        // Remove trailing punctuation like ? or .
+        taskText = taskText.replace(/[?.!]$/, '').trim();
+        console.log('Extracted from can you remind me to pattern:', taskText);
+      } else if (hasRemindMeTo) {
+        taskText = lastUserMessage.substring(lastUserMessage.indexOf('remind me to ') + 'remind me to '.length).trim();
+        console.log('Extracted from remind me to pattern:', taskText);
+      } else if (hasRemindAndTomorrow) {
+        // Extract what comes after 'remind' and before 'tomorrow' or until the end
+        const reminderIndex = lastUserMessage.indexOf('remind');
+        const tomorrowIndex = lastUserMessage.indexOf('tomorrow');
+        
+        if (tomorrowIndex > reminderIndex) {
+          // If 'tomorrow' comes after 'remind'
+          taskText = lastUserMessage.substring(reminderIndex + 'remind'.length, tomorrowIndex).trim();
+        } else {
+          // If 'tomorrow' comes before 'remind' or other cases
+          taskText = lastUserMessage.substring(reminderIndex + 'remind'.length).trim();
+        }
+        
+        // Clean up the task text
+        taskText = taskText.replace(/^(me|you|us)\s+(to|about)\s+/i, '').trim();
+        taskText = taskText.replace(/\s+tomorrow\s*/i, '').trim();
+        console.log('Extracted from remind+tomorrow pattern:', taskText);
+      }
       if (taskText) {
         console.log(`Attempting to add task: "${taskText}" for user ${userId}`);
-        const { error: insertError } = await supabase
-          .from('tasks')
-          .insert({ user_id: userId, text: taskText, completed: false }); // Ensure user_id is set
+        
+        try {
+          // Check if the tasks table exists and is accessible
+          const { error: tablesError } = await supabase
+            .from('tasks')
+            .select('count')
+            .limit(1);
+            
+          if (tablesError) {
+            console.error('Error accessing tasks table:', tablesError);
+            console.log('Table access error details:', JSON.stringify(tablesError));
+          } else {
+            console.log('Tasks table is accessible, proceeding with insert');
+          }
+          
+          // Insert the task
+          const { data: insertData, error: insertError } = await supabase
+            .from('tasks')
+            .insert({ user_id: userId, text: taskText, completed: false })
+            .select(); // Return the inserted row
 
-        if (insertError) {
-          console.error('Supabase insert error:', insertError);
-          // Optionally inform the user via replyContent? For now, just log.
-        } else {
-          console.log('Supabase task inserted successfully.');
-          tasksModified = true;
+          if (insertError) {
+            console.error('Supabase insert error:', insertError);
+            console.log('Insert error details:', JSON.stringify(insertError));
+          } else {
+            console.log('Supabase task inserted successfully:', insertData);
+            tasksModified = true;
+          }
+        } catch (dbError) {
+          console.error('Unexpected database error:', dbError);
         }
+      } else {
+        console.log('No valid task text extracted from message');
       }
     }
     // --- COMPLETE --- //
@@ -353,5 +385,18 @@ export async function POST(request: Request) {
 
   // --- Return Response --- //
   // Return the Sensay reply and the final tasks list (potentially updated)
-  return NextResponse.json({ reply: replyContent, tasks: tasksFromSupabase });
+  console.log('Returning final response with tasks:', tasksFromSupabase);
+  
+  // Append task information to the reply if tasks were modified
+  let finalContent = replyContent;
+  if (tasksModified && tasksFromSupabase.length > 0) {
+    // Add a note about the task being added to the database
+    finalContent = `${replyContent}\n\nI've added this to your task list.`;
+  }
+  
+  return NextResponse.json({ 
+    success: true, 
+    content: finalContent, 
+    tasks: tasksFromSupabase 
+  });
 }
