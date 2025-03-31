@@ -52,11 +52,16 @@ const ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.en
 
 // Get replica ID from environment variable
 const TARGET_REPLICA_UUID = process.env.SENSAY_REPLICA_ID;
-if (!TARGET_REPLICA_UUID) {
-  throw new Error('SENSAY_REPLICA_ID environment variable is required');
-}
 
 export async function POST(request: Request) {
+  // Check required environment variables
+  if (!TARGET_REPLICA_UUID) {
+    return new Response(JSON.stringify({ error: 'SENSAY_REPLICA_ID environment variable is required' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   // --- Environment Variables & Basic Validation ---
   if (!ORGANIZATION_SECRET) {
     console.error('Sensay Organization Secret not found in environment variables.');

@@ -27,9 +27,6 @@ const SENSAY_ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || '';
 
 // Get replica ID from environment variable
 const SENSAY_REPLICA_ID = process.env.SENSAY_REPLICA_ID;
-if (!SENSAY_REPLICA_ID) {
-  throw new Error('SENSAY_REPLICA_ID environment variable is required');
-}
 
 // Set API version to the current date
 const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
@@ -44,6 +41,13 @@ function getAuthHeaders() {
 }
 
 export async function POST(request: NextRequest) {
+  // Check required environment variables
+  if (!SENSAY_REPLICA_ID) {
+    return NextResponse.json({
+      error: 'SENSAY_REPLICA_ID environment variable is required'
+    }, { status: 500 });
+  }
+
   console.log('API call received');
   
   try {
