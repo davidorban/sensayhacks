@@ -104,7 +104,7 @@ This project includes integration with the Sensay API:
 
 - **Environment Variables:**
   - `SENSAY_ORGANIZATION_SECRET`: API key for authenticating with the Sensay API (stored securely in Vercel)
-  - `SENSAY_REPLICA_ID`: ID of the Sensay replica to communicate with (default: 16d38fcc-5cb0-4f94-9cee-3e8398ef4700)
+  - `SENSAY_REPLICA_ID`: ID of the Sensay replica to communicate with (required)
 
 - **API Routes:**
   - `/api/sensay-test/route.ts`: Test endpoint for verifying Sensay API connectivity

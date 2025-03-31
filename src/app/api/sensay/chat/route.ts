@@ -49,7 +49,12 @@ if (SENSAY_API_URL_BASE.endsWith('/')) {
   SENSAY_API_URL_BASE = SENSAY_API_URL_BASE.slice(0, -1);
 }
 const ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || process.env.SENSAY_API_KEY; // Support both variable names
-const TARGET_REPLICA_UUID = process.env.SENSAY_REPLICA_ID || '16d38fcc-5cb0-4f94-9cee-3e8398ef4700'; // Use env var with fallback
+
+// Get replica ID from environment variable
+const TARGET_REPLICA_UUID = process.env.SENSAY_REPLICA_ID;
+if (!TARGET_REPLICA_UUID) {
+  throw new Error('SENSAY_REPLICA_ID environment variable is required');
+}
 
 export async function POST(request: Request) {
   // --- Environment Variables & Basic Validation ---

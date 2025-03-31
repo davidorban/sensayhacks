@@ -25,8 +25,11 @@ if (SENSAY_API_URL_BASE.endsWith('/')) {
 // Authentication secrets
 const SENSAY_ORGANIZATION_SECRET = process.env.SENSAY_ORGANIZATION_SECRET || '';
 
-// Get replica ID from environment variable with a fallback value
-const SENSAY_REPLICA_ID = process.env.SENSAY_REPLICA_ID || '16d38fcc-5cb0-4f94-9cee-3e8398ef4700';
+// Get replica ID from environment variable
+const SENSAY_REPLICA_ID = process.env.SENSAY_REPLICA_ID;
+if (!SENSAY_REPLICA_ID) {
+  throw new Error('SENSAY_REPLICA_ID environment variable is required');
+}
 
 // Set API version to the current date
 const currentDate = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
