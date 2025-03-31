@@ -34,7 +34,7 @@ export default function Home() {
         This project showcases various UI prototypes for potential Sensay features, built using Next.js 14 (App Router), TypeScript, and Tailwind CSS.
       </p>
       <p className="text-md text-gray-300 mb-8 text-center">
-        <a href="https://docs.sensayhacks.com" className="text-indigo-400 hover:text-indigo-300 underline">
+        <a href="https://davidorban.gitbook.io/sensayhacks" className="text-indigo-400 hover:text-indigo-300 underline">
           View Documentation →
         </a>
       </p>
@@ -59,7 +59,7 @@ export default function Home() {
         |
         <Link href="/terms" className="hover:text-gray-200 mx-2">Terms & Conditions</Link>
         |
-        <a href="https://docs.sensayhacks.com" className="hover:text-gray-200 mx-2">Documentation</a>
+        <a href="https://davidorban.gitbook.io/sensayhacks" className="hover:text-gray-200 mx-2">Documentation</a>
       </footer>
 
     </div>
