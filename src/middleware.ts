@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { createMiddlewareClient } from './lib/supabase/server';
 
 // List of routes accessible without authentication
-const publicRoutes = ['/', '/login', '/auth/callback', '/privacy', '/terms', '/about'];
+const publicRoutes = ['/', '/login', '/auth/callback', '/privacy', '/terms', '/about', '/overview'];
 
 // List of routes accessible only to authenticated users with specific domain
 const protectedInternalRoutesPrefix = '/prototypes';
