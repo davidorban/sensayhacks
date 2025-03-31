@@ -53,3 +53,7 @@ logs/
 .npmrc
 
 .vercel
+
+# Slidev
+slides/**/dist/
+slides/**/public/
