@@ -33,11 +33,14 @@ export default function Home() {
       <p className="text-lg text-gray-300 mb-4 text-center"> {/* Light Text */}
         This project showcases various UI prototypes for potential Sensay features, built using Next.js 14 (App Router), TypeScript, and Tailwind CSS.
       </p>
-      <p className="text-md text-gray-300 mb-8 text-center">
+      <div className="flex justify-center gap-6 mb-8">
         <a href="https://davidorban.gitbook.io/sensayhacks" className="text-indigo-400 hover:text-indigo-300 underline">
           View Documentation →
         </a>
-      </p>
+        <a href="https://github.com/davidorban/sensayhacks" className="text-indigo-400 hover:text-indigo-300 underline">
+          View on GitHub →
+        </a>
+      </div>
 
       {/* Content Area - White Rounded Box */}
       <div className="bg-white p-6 rounded-lg shadow-lg flex-1"> 
@@ -60,6 +63,8 @@ export default function Home() {
         <Link href="/terms" className="hover:text-gray-200 mx-2">Terms & Conditions</Link>
         |
         <a href="https://davidorban.gitbook.io/sensayhacks" className="hover:text-gray-200 mx-2">Documentation</a>
+        |
+        <a href="https://github.com/davidorban/sensayhacks" className="hover:text-gray-200 mx-2">GitHub</a>
       </footer>
 
     </div>
