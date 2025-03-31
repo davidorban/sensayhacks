@@ -48,4 +48,8 @@ logs/
 *.log
 *.csv
 
+# Configuration files
+.eslintrc.json
+.npmrc
+
 .vercel

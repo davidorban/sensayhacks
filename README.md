@@ -1,36 +1,100 @@
 # Sensay Hackathon Ideas Showcase
 
-This project showcases various UI prototypes for potential Sensay features, built using Next.js 14 (App Router), TypeScript, and Tailwind CSS.
+This project showcases various AI-powered UI prototypes built using Next.js 14 (App Router), TypeScript, and Tailwind CSS. Each prototype demonstrates different aspects of Sensay's capabilities, including chat interfaces, memory management, and replica interactions.
+
+## Features
+
+### Prototypes
+- **Token-Gated Memories**: Blockchain-based access control for AI memories
+- **Bonding Replicas**: Interconnected AI assistants with shared memory
+- **Chatroom**: Multi-user chat interface with AI moderation (formerly Group Chat)
+- **MCP**: Multi-Context Processing for complex task handling
+- **PureVoice**: Voice-first interface for AI interactions
+- **ReplicaTaskMemory**: Persistent task tracking for AI replicas
+- **TokenGuidedEvolution**: AI system specialization using blockchain tokens
+
+### Technical Stack
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Node.js, Express.js, Supabase
+- **Authentication**: JWT-based authentication
+- **Deployment**: Vercel
+- **Testing**: Jest, Playwright
 
 ## Project Structure
 
-- `src/app/`: Main application routes and pages.
-  - `layout.tsx`: Root layout, includes the sidebar.
-  - `page.tsx`: Main dashboard page.
-  - `prototypes/`: Contains individual pages for each prototype idea.
-- `src/components/`: Reusable React components (e.g., `Sidebar.tsx`).
-- `public/`: Static assets.
-- `tailwind.config.ts`: Tailwind CSS configuration.
-- `next.config.mjs`: Next.js configuration.
-- `tsconfig.json`: TypeScript configuration.
-- `package.json`: Project dependencies and scripts.
+```
+src/
+├── app/
+│   ├── layout.tsx          # Root layout with sidebar
+│   ├── page.tsx           # Main dashboard page
+│   └── prototypes/         # Individual prototype pages
+├── components/            # Reusable React components
+│   └── ui/               # UI component library
+├── lib/                  # Utility functions and configurations
+├── middleware.ts         # API middleware
+└── services/            # External service integrations
+```
 
 ## Getting Started
 
-1.  **Clone the repository (if applicable).**
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    # or
-    yarn dev
-    ```
-4.  Open [http://localhost:3000](http://localhost:3000) in your browser.
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd sensay-hacks
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Set up environment variables**
+Create a `.env` file in the root directory with the following variables:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+NEXT_PUBLIC_SENSAY_API_KEY=your_sensay_api_key
+```
+
+4. **Run the development server**
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:3000`
+
+## Development
+
+### Running Tests
+```bash
+npm test
+```
+
+### Building for Production
+```bash
+npm run build
+```
+
+### Linting
+```bash
+npm run lint
+```
+
+## Deployment
+
+The project is deployed to Vercel. Push your changes to the main branch to trigger a deployment.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Implemented Prototypes
 
