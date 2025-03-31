@@ -4,6 +4,7 @@
 * [Architecture](architecture.md)
 * [Frontend](frontend.md)
 * [Development](development.md)
+* [Contact](contact.md)
 
 ## Concepts
 * [Model Context Protocol (MCP)](concept-mcp.md)
