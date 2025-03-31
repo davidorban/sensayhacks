@@ -1,6 +1,8 @@
-# Sensay Hackathon Ideas Showcase
+# Sensay March 2025 Hackathon Prototypes
 
-This project showcases various AI-powered UI prototypes built using Next.js 14 (App Router), TypeScript, and Tailwind CSS. Each prototype demonstrates different aspects of Sensay's capabilities, including chat interfaces, memory management, and replica interactions.
+This repository contains a collection of innovative AI prototypes developed during the March 2025 Sensay internal hackathon. These prototypes explore cutting-edge concepts in AI interaction, memory management, and system evolution, showcasing the creative potential of Sensay's technology stack.
+
+Each prototype was developed using Next.js 14 (App Router), TypeScript, and Tailwind CSS, demonstrating different aspects of Sensay's capabilities in areas such as chat interfaces, memory management, and replica interactions.
 
 ## Features
 
