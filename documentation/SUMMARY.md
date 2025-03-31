@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Introduction](README.md)
+* [Introduction](introduction.md)
 * [Architecture](architecture.md)
 * [Frontend](frontend.md)
 * [Development](development.md)
