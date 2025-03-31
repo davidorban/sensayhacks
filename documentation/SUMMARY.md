@@ -4,6 +4,7 @@
 * [Architecture](architecture.md)
 * [Frontend](frontend.md)
 * [Development](development.md)
+* [API Improvements](api-improvements.md)
 * [Contact](contact.md)
 
 ## Concepts
