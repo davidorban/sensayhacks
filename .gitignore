@@ -36,7 +36,8 @@ app/.env*.local # Also ignore locals inside app if they ever exist
 .vercel
 
 # typescript
-app/*.tsbuildinfo
+*.tsbuildinfo
+next-env.d.ts
 app/next-env.d.ts
 
 # Repomix output
@@ -57,3 +58,6 @@ logs/
 # Slidev
 slides/**/dist/
 slides/**/public/
+
+# Environment setup scripts
+setup_sensay_env.sh
